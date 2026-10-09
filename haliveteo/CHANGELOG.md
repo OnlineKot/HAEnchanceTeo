@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0
+- Pin to the home screen: per-device manifest (name + start_url with token, needed because iOS home-screen apps have isolated storage), install dialog/hint, Lock Screen steps.
+- Who used what: device "user", every action written to the HA Logbook + sensor.haliveteo_*_last_action sensors, "Usage" tab with per-entity counters; options logbook/sensors.
+
 ## 1.1.1
 - Fix: the layout editor preview no longer ping-pongs watch/states messages endlessly (could freeze the browser and flood the add-on). Server ignores unchanged watch requests.
 - The add-on keeps running (and logs why) when a port is already in use.

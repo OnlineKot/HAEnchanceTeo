@@ -26,6 +26,7 @@ STATIC = Path(__file__).parent / "static"
 DEVICES_FILE = DATA / "devices.json"
 FEED_FILE = DATA / "feed.jsonl"
 ACT_FILE = DATA / "activities.json"
+USAGE_FILE = DATA / "usage.json"
 
 INGRESS_PORT = int(os.environ.get("HAL_INGRESS_PORT", 8099))
 PUBLIC_PORT = int(os.environ.get("HAL_PUBLIC_PORT", 8766))
@@ -43,6 +44,7 @@ states: dict = {}
 feed = collections.deque(maxlen=500)
 clients: set = set()
 _rate: dict = {}
+usage: dict = {}   # device id -> {entity key -> counters}: which entities each device/user actually used
 activities: list = []
 running: dict = {}  # activity id -> runtime info of a Live Activity we started
 
@@ -55,6 +57,8 @@ def load_options():
 
 
 OPTIONS = load_options()
+LOG_LOGBOOK = bool(OPTIONS.get("logbook", True))
+LOG_SENSORS = bool(OPTIONS.get("sensors", True))
 PREFIX = re.sub(r"[^a-z0-9_]", "", str(OPTIONS.get("event_prefix") or "haliveteo").lower()) or "haliveteo"
 
 
@@ -77,7 +81,11 @@ def load_all():
         devices = json.loads(DEVICES_FILE.read_text())
     except (OSError, ValueError):
         devices = []
-    global activities
+    global activities, usage
+    try:
+        usage = json.loads(USAGE_FILE.read_text())
+    except (OSError, ValueError):
+        usage = {}
     try:
         activities = json.loads(ACT_FILE.read_text())
     except (OSError, ValueError):
@@ -436,6 +444,61 @@ async def live_eval(eid):
             log.warning("Live Activity '%s': %s", act["name"], exc.text)
 
 
+
+# ---------------------------------------------------------------- who used what: Logbook + sensors + counters
+def slug(text):
+    return re.sub(r"[^a-z0-9]+", "_", str(text).lower().replace("ł", "l")).strip("_")[:40] or "device"
+
+
+VERB = {"button": "pressed", "toggle": "toggled", "slider": "set", "state": "opened", "event": "sent event"}
+
+
+def save_usage():
+    try:
+        tmp = USAGE_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(usage))
+        tmp.replace(USAGE_FILE)
+    except OSError as exc:
+        log.warning("could not save usage: %s", exc)
+
+
+async def record_usage(device, entry):
+    """Make every action visible in Home Assistant: a Logbook line, sensor entities and per-entity counters."""
+    from datetime import datetime, timezone
+    who = device.get("user") or ""
+    what = entry["label"] or entry["entity_id"] or entry["type"]
+    ent = entry["entity_id"]
+    key = ent or f"{entry['type']}:{what}"
+    row = usage.setdefault(device["id"], {}).setdefault(key, {"n": 0})
+    row.update(n=row["n"] + 1, last=int(time.time()), label=what, type=entry["type"], entity_id=ent)
+    save_usage()
+    total = sum(r["n"] for r in usage[device["id"]].values())
+    detail = f" = {entry['value']}" if entry.get("value") not in (None, "") and not isinstance(entry["value"], dict) else ""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    if LOG_LOGBOOK:
+        data = {"name": f"{who} ({device['name']})" if who else device["name"],
+                "message": f"{VERB.get(entry['type'], 'used')} \"{what}\"{detail}", "domain": "haliveteo"}
+        if ent and ent in states:
+            data["entity_id"] = ent
+        try:
+            await ha_post("/services/logbook/log", data)
+        except web.HTTPException as exc:
+            log.warning("logbook.log failed: %s", exc.text)
+    if LOG_SENSORS:
+        attrs = {"icon": "mdi:gesture-tap-button", "device": device["name"], "device_id": device["id"], "user": who,
+                 "tile": entry["tile"], "type": entry["type"], "entity_id": ent, "value": entry.get("value"),
+                 "source": entry["source"], "time": now_iso, "actions_total": total}
+        for sid, name, state in (
+                (f"sensor.haliveteo_{slug(device['name'])}_last_action", f"{device['name']} last action", what),
+                ("sensor.haliveteo_last_action", "HALiveTeo last action", f"{who or device['name']}: {what}")):
+            try:
+                async with session.post(f"{HA}/states/{sid}", headers=ha_headers(), json={
+                        "state": str(state)[:250], "attributes": {**attrs, "friendly_name": name}}) as r:
+                    if r.status >= 400:
+                        log.warning("sensor update %s failed: %s", sid, r.status)
+            except Exception as exc:  # noqa: BLE001
+                log.warning("sensor update %s failed: %s", sid, exc)
+
 # ---------------------------------------------------------------- actions
 class Client:
     def __init__(self, ws, device, admin):
@@ -522,6 +585,8 @@ async def run_action(device, tile_id, value=None, source="device"):
                 "device", "device_id", "tile", "label", "type", "value", "entity_id", "source")})
         except web.HTTPException:
             pass
+    if ok:
+        asyncio.create_task(record_usage(device, entry))
     device["last_seen"] = int(time.time())
     return {"ok": ok, "error": error}
 
@@ -539,6 +604,7 @@ async def run_event(device, name, payload):
                                                   "event": name, "data": payload})
     except web.HTTPException as exc:
         return {"ok": False, "error": json.loads(exc.text)["error"]}
+    asyncio.create_task(record_usage(device, entry))
     device["last_seen"] = int(time.time())
     return {"ok": True, "error": ""}
 
@@ -661,7 +727,7 @@ async def h_dev_create(request):
         raise err(400, "name required")
     raw, digest, prefix = new_token()
     dev = {"id": uuid.uuid4().hex[:8], "name": name, "icon": s(body.get("icon"), 40) or "mdi:cellphone", "hash": digest,
-           "prefix": prefix, "created": int(time.time()), "last_seen": None, "enabled": True,
+           "prefix": prefix, "created": int(time.time()), "last_seen": None, "enabled": True, "user": s(body.get("user"), 40).strip(),
            "show_feed": bool(body.get("show_feed", True)), "layout": clean_layout(body.get("layout"))}
     devices.append(dev)
     save_devices()
@@ -679,6 +745,8 @@ async def h_dev_update(request):
     dev, body = get_dev(request), await request.json()
     if "name" in body and s(body["name"], 40).strip():
         dev["name"] = s(body["name"], 40).strip()
+    if "user" in body:
+        dev["user"] = s(body["user"], 40).strip()
     if "icon" in body:
         dev["icon"] = s(body["icon"], 40) or "mdi:cellphone"
     for key in ("enabled", "show_feed"):
@@ -774,6 +842,20 @@ async def h_act_preview(request):
     return web.json_response({"service": [f"notify.{p}" for p in act["phones"]], "payload": payload})
 
 
+async def h_usage(request):
+    out = []
+    for d in devices:
+        items = sorted(({"key": k, **v} for k, v in usage.get(d["id"], {}).items()), key=lambda x: -x["n"])
+        out.append({"device_id": d["id"], "device": d["name"], "user": d.get("user", ""), "items": items})
+    return web.json_response(out)
+
+
+async def h_usage_clear(request):
+    usage.clear()
+    USAGE_FILE.unlink(missing_ok=True)
+    return web.json_response({"ok": True})
+
+
 async def h_feed_clear(request):
     feed.clear()
     FEED_FILE.unlink(missing_ok=True)
@@ -815,10 +897,13 @@ async def h_icon(request):
 
 
 async def h_manifest(request):
-    return web.json_response({"name": "HALiveTeo", "short_name": "HALiveTeo", "start_url": ".", "scope": ".",
-                              "display": "standalone", "background_color": "#0e1116", "theme_color": "#009688",
-                              "icons": [{"src": f"icon-{n}.png", "sizes": f"{n}x{n}", "type": "image/png"}
-                                        for n in (192, 512)]},
+    tok = request.query.get("t", "")
+    dev = find_device(tok)
+    name = dev["name"] if dev else "HALiveTeo"
+    start = f"./?t={tok}" if dev else "."
+    return web.json_response({"name": name, "short_name": name[:12], "start_url": start, "scope": ".", "id": start,
+                              "display": "standalone", "background_color": "#111111", "theme_color": "#009ac7",
+                              "icons": [{"src": f"icon-{n}.png", "sizes": f"{n}x{n}", "type": "image/png"} for n in (192, 512)]},
                              content_type="application/manifest+json")
 
 
@@ -847,6 +932,8 @@ def build_apps():
         web.delete("/api/admin/activities/{id}", h_act_delete),
         web.post("/api/admin/activities/{id}/start", h_act_start),
         web.post("/api/admin/activities/{id}/end", h_act_end),
+        web.get("/api/admin/usage", h_usage),
+        web.delete("/api/admin/usage", h_usage_clear),
         web.delete("/api/admin/feed", h_feed_clear)])
     pub = web.Application(client_max_size=256 * 1024)
     pub.add_routes(common + [

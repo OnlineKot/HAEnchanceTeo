@@ -2,6 +2,12 @@ configuration:
   event_prefix:
     name: Event name prefix
     description: "Events fired in Home Assistant are named <prefix>_action and <prefix>_event (default: haliveteo_action / haliveteo_event)."
+  logbook:
+    name: Write actions to the Logbook
+    description: "Every action is written to the Home Assistant Logbook (who used what)."
+  sensors:
+    name: Create last-action sensors
+    description: "Creates sensor.haliveteo_<device>_last_action and sensor.haliveteo_last_action (history + automations)."
   log_level:
     name: Log level
     description: Verbosity of the add-on log.

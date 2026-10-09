@@ -51,6 +51,7 @@ footer{text-align:center;color:var(--mut);font-size:13px;margin:18px 0 6px}foote
     <div class="sec"><span id="tDevices"></span><span class="sp"></span><button class="b sm" id="newBtn"></button></div>
     <div id="newForm" hidden>
       <div class="row"><div class="grow"><label class="f" id="lName"></label><input type="text" id="nName"></div>
+        <div class="grow"><label class="f" id="lUser"></label><input type="text" id="nUser"></div>
         <div><label class="f" id="lIcon"></label><select id="nIcon"></select></div></div>
       <div class="row"><button class="b" id="nCreate"></button><button class="b alt" id="nCancel"></button></div>
     </div>
@@ -64,6 +65,7 @@ footer{text-align:center;color:var(--mut);font-size:13px;margin:18px 0 6px}foote
     <div class="sec"><button class="b alt sm" id="back"></button><span class="sp"></span><span class="badge" id="dirty" hidden></span><button class="b" id="save"></button></div>
     <div class="row">
       <div class="grow"><label class="f" id="eName"></label><input type="text" id="eNameIn"></div>
+      <div class="grow"><label class="f" id="eUser"></label><input type="text" id="eUserIn"></div>
       <div><label class="f" id="eIcon"></label><select id="eIconIn"></select></div>
       <div><label class="f" id="eCols"></label><select id="eColsIn"></select></div>
     </div>
@@ -88,6 +90,12 @@ footer{text-align:center;color:var(--mut);font-size:13px;margin:18px 0 6px}foote
 <div class="view" id="v-live">
   <div class="card"><div class="sec"><span id="tLive"></span><span class="sp"></span><button class="b sm" id="actNew"></button></div>
     <div class="hint" id="liveInfo" style="margin-bottom:12px"></div><div id="actList"></div></div>
+</div>
+
+<div class="view" id="v-usage">
+  <div class="card"><div class="sec"><span id="tUsage"></span><span class="sp"></span>
+    <a class="b alt sm" id="logbookLink" href="/logbook" target="_top" style="text-decoration:none;display:inline-flex;align-items:center"></a><button class="b alt sm" id="usageClear"></button></div>
+    <div class="hint" id="usageInfo" style="margin-bottom:12px"></div><div id="usageList"></div></div>
 </div>
 
 <div class="view" id="v-feed">
@@ -124,6 +132,7 @@ $("tag").textContent = tr("Akcje na żywo z Twoich urządzeń","Live actions fro
 $("by").textContent = tr("Stworzone przez","Created by");
 $("tDevices").textContent = tr("Urządzenia","Devices"); $("newBtn").textContent = tr("+ Nowe urządzenie","+ New device");
 $("lName").textContent = tr("Nazwa (np. Tablet w kuchni)","Name (e.g. Kitchen tablet)"); $("lIcon").textContent = tr("Ikona","Icon");
+$("lUser").textContent = tr("Użytkownik (kto tego używa – trafia do logów)","User (who uses it – goes into the logs)"); $("eUser").textContent = $("lUser").textContent;
 $("nCreate").textContent = tr("Utwórz","Create"); $("nCancel").textContent = tr("Anuluj","Cancel");
 $("back").textContent = "← " + tr("Urządzenia","Devices"); $("save").textContent = tr("Zapisz","Save");
 $("eName").textContent = tr("Nazwa","Name"); $("eIcon").textContent = tr("Ikona","Icon"); $("eCols").textContent = tr("Kolumny","Columns");
@@ -137,13 +146,13 @@ $("barIcon").innerHTML = HL.icon("mdi:lightning-bolt-circle");
 $("eColsIn").innerHTML = [1,2,3,4,5,6].map(i => `<option>${i}</option>`).join("");
 
 // ---------- tabs
-[["devices",tr("Urządzenia","Devices")],["live","🏝️ Live Activities"],["feed",tr("Na żywo","Live")],["help",tr("Pomoc","Help")]].forEach(([id,l]) => {
+[["devices",tr("Urządzenia","Devices")],["live","🏝️ Live Activities"],["usage",tr("Użycie","Usage")],["feed",tr("Na żywo","Live")],["help",tr("Pomoc","Help")]].forEach(([id,l]) => {
   const b = document.createElement("button"); b.textContent = l; b.dataset.id = id; b.onclick = () => show(id); $("tabs").append(b);
 });
 function show(id){
   document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.id === id));
   document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + id));
-  if(id === "feed") renderFeed(); if(id === "help") renderHelp(); if(id === "live") renderActs();
+  if(id === "feed") renderFeed(); if(id === "help") renderHelp(); if(id === "live") renderActs(); if(id === "usage") renderUsage();
 }
 function showEdit(){ document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-edit")); document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("on")); }
 
@@ -186,7 +195,7 @@ function renderDevices(){
   B.devices.forEach(d => {
     const el = document.createElement("div"); el.className = "dev";
     el.innerHTML = `<div class="shape" style="background:color-mix(in srgb,var(--primary-color) 20%,transparent);color:var(--primary-color)">${HL.icon(d.icon)}</div><div class="n"><span class="dot ${d.online ? "on" : ""}"></span> <b></b>
-      <div class="hint">${d.layout.tiles.length} ${tr("kafelków","tiles")} · ${esc(d.prefix)}… · ${d.last_seen ? tr("ostatnio","last seen") + " " + new Date(d.last_seen*1000).toLocaleString() : tr("jeszcze nie połączone","never connected")}
+      <div class="hint">${d.user ? "👤 " + esc(d.user) + " · " : ""}${d.layout.tiles.length} ${tr("kafelków","tiles")} · ${esc(d.prefix)}… · ${d.last_seen ? tr("ostatnio","last seen") + " " + new Date(d.last_seen*1000).toLocaleString() : tr("jeszcze nie połączone","never connected")}
       ${d.enabled ? "" : ` · <span class="badge">${tr("wyłączone","disabled")}</span>`}</div></div>
       <button class="b sm ed">${tr("Edytuj","Edit")}</button><button class="b alt sm tk">${tr("Nowy token / link","New token / link")}</button>
       <button class="b red sm dl">${tr("Usuń","Delete")}</button>`;
@@ -203,7 +212,7 @@ $("newBtn").onclick = () => { $("newForm").hidden = !$("newForm").hidden; };
 $("nCancel").onclick = () => { $("newForm").hidden = true; };
 $("nCreate").onclick = async () => {
   const name = $("nName").value.trim(); if(!name) return toast(tr("Wpisz nazwę","Enter a name"), true);
-  try{ const r = await post("devices", {name, icon:$("nIcon").value, layout:{cols:2,tiles:[]}}); $("nName").value = ""; $("newForm").hidden = true; showCreated(r); await load(); }
+  try{ const r = await post("devices", {name, user:$("nUser").value, icon:$("nIcon").value, layout:{cols:2,tiles:[]}}); $("nName").value = ""; $("nUser").value = ""; $("newForm").hidden = true; showCreated(r); await load(); }
   catch(e){ toast(e.message,true); }
 };
 
@@ -212,18 +221,18 @@ const closeTile = () => { const d = $("tileDlg"); if(d.open) d.close(); };
 function setDirty(v = true){ dirty = v; $("dirty").hidden = !v; $("dirty").textContent = tr("niezapisane zmiany","unsaved changes"); }
 function edit(id){
   cur = B.devices.find(d => d.id === id); W = JSON.parse(JSON.stringify(cur.layout));
-  $("eNameIn").value = cur.name; if(![...$("eIconIn").options].some(o => o.value === cur.icon)) $("eIconIn").add(new Option(cur.icon, cur.icon)); $("eIconIn").value = cur.icon; $("eColsIn").value = W.cols;
+  $("eNameIn").value = cur.name; $("eUserIn").value = cur.user || ""; if(![...$("eIconIn").options].some(o => o.value === cur.icon)) $("eIconIn").add(new Option(cur.icon, cur.icon)); $("eIconIn").value = cur.icon; $("eColsIn").value = W.cols;
   $("eFeed").checked = cur.show_feed; $("eOn").checked = cur.enabled;
   ["auto","jsonBox"].forEach(x => $(x).hidden = true); closeTile();
   setDirty(false); renderTiles(); showEdit(); watchPrev();
 }
 $("back").onclick = () => { if(dirty && !confirm(tr("Porzucić niezapisane zmiany?","Discard unsaved changes?"))) return; cur = null; show("devices"); };
-["eNameIn","eIconIn","eFeed","eOn"].forEach(i => $(i).onchange = () => setDirty());
+["eNameIn","eUserIn","eIconIn","eFeed","eOn"].forEach(i => $(i).onchange = () => setDirty());
 $("eColsIn").onchange = () => { W.cols = +$("eColsIn").value; setDirty(); refreshPrev(); };
 $("save").onclick = async () => {
   try{
     const want = W.tiles.length;
-    const r = await post("devices/" + cur.id, {name:$("eNameIn").value, icon:$("eIconIn").value, show_feed:$("eFeed").checked, enabled:$("eOn").checked, layout:W});
+    const r = await post("devices/" + cur.id, {name:$("eNameIn").value, user:$("eUserIn").value, icon:$("eIconIn").value, show_feed:$("eFeed").checked, enabled:$("eOn").checked, layout:W});
     if(r.layout.tiles.length < want) toast(tr(`${want - r.layout.tiles.length} nieprawidłowych kafelków pominięto`, `${want - r.layout.tiles.length} invalid tile(s) were dropped`), true);
     else toast(tr("Zapisano ✓","Saved ✓"));
     W = r.layout; await load(); cur = B.devices.find(d => d.id === r.id); setDirty(false); renderTiles(); watchPrev();
@@ -470,6 +479,28 @@ function actForm(act){
       await post("activities", v); $("actDlg").close(); toast(tr("Zapisano ✓","Saved ✓")); await load(); renderActs(); }catch(e){ toast(e.message,true); } };
 }
 
+// ---------- usage: which entities each device / user actually used (also written to the HA Logbook + sensors)
+$("tUsage").textContent = tr("Kto czego używał","Who used what"); $("logbookLink").textContent = tr("Otwórz Logbook HA","Open HA Logbook"); $("usageClear").textContent = tr("Wyzeruj","Reset");
+$("usageInfo").innerHTML = tr(
+  "Każda akcja jest zapisywana w <b>Logbooku</b> Home Assistanta („Kto (urządzenie) nacisnął …”) oraz w sensorach <code>sensor.haliveteo_&lt;urządzenie&gt;_last_action</code> i <code>sensor.haliveteo_last_action</code> (historia i automatyzacje). Poniżej licznik użyć encji dla każdego urządzenia.",
+  "Every action is written to the Home Assistant <b>Logbook</b> (“Who (device) pressed …”) and to the sensors <code>sensor.haliveteo_&lt;device&gt;_last_action</code> and <code>sensor.haliveteo_last_action</code> (history and automations). Below: how often each entity was used per device.");
+async function renderUsage(){
+  const box = $("usageList"); let rows;
+  try{ rows = await api("usage"); }catch(e){ return toast(e.message, true); }
+  box.innerHTML = ""; if(!rows.length) box.innerHTML = `<div class="hint">${tr("Brak urządzeń.","No devices.")}</div>`;
+  rows.forEach(r => { const c = document.createElement("div"); c.style.marginBottom = "16px";
+    const total = r.items.reduce((a, x) => a + x.n, 0);
+    c.innerHTML = `<div class="sec" style="margin-bottom:6px"><span></span><span class="sp"></span><span class="badge">${total} ${tr("akcji","actions")}</span></div><div class="ul"></div>`;
+    c.querySelector(".sec span").textContent = (r.user ? "👤 " + r.user + " – " : "") + r.device;
+    const ul = c.querySelector(".ul"); ul.innerHTML = r.items.length ? "" : `<div class="hint">${tr("Jeszcze nic nie użyto.","Nothing used yet.")}</div>`;
+    r.items.forEach(x => { const row = document.createElement("div"); row.className = "tl";
+      row.innerHTML = `<span class="shape" style="color:var(--primary-color)">${HL.icon(x.entity_id ? "mdi:" + (HL.DEFAULT_ICON[x.entity_id.split(".")[0]] || "eye") : "mdi:gesture-tap")}</span><div class="n"><b></b><div class="hint"></div></div><span class="badge">${x.n}×</span>`;
+      row.querySelector("b").textContent = x.label || x.key; row.querySelector(".hint").textContent = (x.entity_id || x.type) + " · " + tr("ostatnio","last") + " " + new Date(x.last * 1000).toLocaleString();
+      ul.append(row); });
+    box.append(c); });
+}
+$("usageClear").onclick = async () => { if(!confirm(tr("Wyzerować liczniki użycia?","Reset usage counters?"))) return; try{ await api("usage", {method:"DELETE"}); renderUsage(); }catch(e){ toast(e.message, true); } };
+
 // ---------- feed
 function renderFeed(){
   const box = $("feedList"); const rows = B.feed.slice().reverse();
@@ -488,16 +519,19 @@ function renderHelp(){
   $("helpBox").innerHTML = tr(`
   <div class="sec">Jak to działa</div>
   <p>Każde urządzenie (telefon, tablet, panel ścienny, skrypt) dostaje własny <b>token</b> i własny <b>układ kafelków</b>. Kafelki działają na żywo: stan z Home Assistanta aktualizuje się natychmiast, a akcje wracają jako zdarzenia.</p>
-  <div class="sec">1. Urządzenie z ekranem</div>
-  <p>Utwórz urządzenie, skopiuj link i otwórz go na telefonie/tablecie. Safari: <b>Udostępnij → Do ekranu początkowego</b>. W menu ⋯ jest „Nie wygaszaj ekranu” i „Pełny ekran” (panel ścienny).</p>
-  <div class="sec">2. Urządzenia bez ekranu / skróty / ESP</div>
+  <div class="sec">1. Przypięcie do ekranu</div>
+  <p><b>iPhone / iPad:</b> otwórz link urządzenia w <b>Safari</b> → <b>Udostępnij → Do ekranu początkowego → Dodaj</b>. Ikona dostaje nazwę urządzenia i otwiera się na pełnym ekranie. <i>Token jest w adresie celowo</i> – aplikacje z ekranu głównego iOS mają własną, osobną pamięć i inaczej nie znałyby tokenu.</p>
+  <p><b>Android:</b> Chrome → menu ⋮ → <b>Zainstaluj aplikację</b>. <b>Ekran blokady iPhone'a:</b> Skróty → nowy skrót → <b>Otwórz URL</b> (link urządzenia) → widżet Skrótów na ekranie blokady albo przycisk Action. Menu ⋯ na urządzeniu ma „Dodaj do ekranu głównego” z tymi krokami i kopiowaniem adresu.</p>
+  <div class="sec">2. Kto czego używał</div>
+  <p>Ustaw urządzeniu <b>Użytkownika</b>. Każda akcja trafia do <b>Logbooka</b> HA oraz do sensorów <code>sensor.haliveteo_…_last_action</code>; zakładka <b>Użycie</b> pokazuje liczniki encji.</p>
+  <div class="sec">3. Urządzenia bez ekranu / skróty / ESP</div>
   <pre>curl -X POST ${host}/api/device/action \\
   -H "Authorization: Bearer TOKEN" -d '{"tile":"ID_KAFELKA"}'
 
 curl -X POST ${host}/api/device/event \\
   -H "Authorization: Bearer TOKEN" -d '{"event":"dzwonek","data":{"pietro":1}}'</pre>
   <p>Urządzenie może wywołać <b>tylko</b> akcje zdefiniowane w jego układzie – nie ma dostępu do reszty HA. Limit: 25 akcji / 10 s.</p>
-  <div class="sec">3. Reakcja w Home Assistant</div>
+  <div class="sec">4. Reakcja w Home Assistant</div>
   <p>Każda akcja wysyła zdarzenie <code>${p}_action</code>, a zdarzenia z urządzeń <code>${p}_event</code>:</p>
   <pre>trigger:
   - platform: event
@@ -508,16 +542,19 @@ action:
     data: {message: "Ktoś nacisnął dzwonek"}</pre>`, `
   <div class="sec">How it works</div>
   <p>Each device (phone, tablet, wall panel, script) gets its own <b>token</b> and its own <b>tile layout</b>. Tiles are live: Home Assistant states update instantly, and actions come back as events.</p>
-  <div class="sec">1. Devices with a screen</div>
-  <p>Create a device, copy the link and open it on the phone/tablet. Safari: <b>Share → Add to Home Screen</b>. The ⋯ menu has “Keep screen on” and “Fullscreen” (wall panel).</p>
-  <div class="sec">2. Screenless devices / Shortcuts / ESP</div>
+  <div class="sec">1. Pin to the screen</div>
+  <p><b>iPhone / iPad:</b> open the device link in <b>Safari</b> → <b>Share → Add to Home Screen → Add</b>. The icon gets the device name and opens full screen. <i>The token is in the address on purpose</i> – iOS home-screen apps have their own isolated storage and would not know it otherwise.</p>
+  <p><b>Android:</b> Chrome → menu ⋮ → <b>Install app</b>. <b>iPhone Lock Screen:</b> Shortcuts → new shortcut → <b>Open URL</b> (the device link) → Shortcuts widget on the Lock Screen or the Action button. The ⋯ menu on the device has “Add to Home Screen” with these steps and a copy-address button.</p>
+  <div class="sec">2. Who used what</div>
+  <p>Set a <b>User</b> on the device. Every action goes to the HA <b>Logbook</b> and to the sensors <code>sensor.haliveteo_…_last_action</code>; the <b>Usage</b> tab shows per-entity counters.</p>
+  <div class="sec">3. Screenless devices / Shortcuts / ESP</div>
   <pre>curl -X POST ${host}/api/device/action \\
   -H "Authorization: Bearer TOKEN" -d '{"tile":"TILE_ID"}'
 
 curl -X POST ${host}/api/device/event \\
   -H "Authorization: Bearer TOKEN" -d '{"event":"doorbell","data":{"floor":1}}'</pre>
   <p>A device can <b>only</b> trigger actions defined in its own layout – it has no access to the rest of HA. Limit: 25 actions / 10 s.</p>
-  <div class="sec">3. React in Home Assistant</div>
+  <div class="sec">4. React in Home Assistant</div>
   <p>Every action fires the event <code>${p}_action</code>; events sent by devices fire <code>${p}_event</code>:</p>
   <pre>trigger:
   - platform: event

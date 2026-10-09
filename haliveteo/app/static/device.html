@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>HALiveTeo</title>
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="manifest" id="mf" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -40,9 +40,10 @@ footer{text-align:center;color:var(--secondary-text-color);font-size:12px;margin
   </div>
   <div id="app" hidden>
     <div class="menu" id="menu">
-      <button id="mWake"></button><button id="mFull"></button><button id="mTok"></button>
+      <button id="mInst"></button><button id="mWake"></button><button id="mFull"></button><button id="mTok"></button>
     </div>
     <div id="banner"></div>
+    <div class="card" id="hint" hidden style="display:none;align-items:center;gap:10px;flex-wrap:wrap"><span id="hintTxt" style="flex:1;min-width:180px"></span><button class="b sm" id="hintHow"></button><button class="b alt sm" id="hintOk"></button></div>
     <div class="grid" id="grid"></div>
     <footer><span id="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
   </div>
@@ -59,18 +60,40 @@ $("by").textContent = tr("Stworzone przez","Created by");
 $("feedBtn").innerHTML = HL.icon("mdi:lightning-bolt-circle"); $("menuBtn").innerHTML = HL.icon("mdi:dots-vertical");
 $("setupTxt").textContent = tr("Wklej token urządzenia z panelu HALiveTeo (lub otwórz link z tokenem).","Paste the device token from the HALiveTeo panel (or open the link that contains it).");
 $("tokGo").textContent = tr("Połącz","Connect");
+$("mInst").innerHTML = HL.icon("mdi:cellphone") + "<span>" + tr("Dodaj do ekranu głównego","Add to Home Screen") + "</span>";
 $("mWake").innerHTML = HL.icon("mdi:brightness-6") + "<span>" + tr("Nie wygaszaj ekranu","Keep screen on") + "</span>";
 $("mFull").innerHTML = HL.icon("mdi:monitor") + "<span>" + tr("Pełny ekran","Fullscreen") + "</span>";
 $("mTok").innerHTML = HL.icon("mdi:key") + "<span>" + tr("Zmień token","Change token") + "</span>";
 
 // token from ?t=… link is stored, then removed from the address bar
 const q = new URLSearchParams(location.search);
-if(q.get("t")){ store.set("hl_token", q.get("t")); history.replaceState(null, "", location.pathname); }
-const token = store.get("hl_token");
+// The token stays in the address on purpose: iOS "Add to Home Screen" apps have their own isolated storage,
+// so the home-screen icon must open a URL that already contains the token.
+if(q.get("t")) store.set("hl_token", q.get("t"));
+const token = q.get("t") || store.get("hl_token");
+if(token) $("mf").href = "manifest.webmanifest?t=" + encodeURIComponent(token);
 if(!token){ $("setup").hidden = false;
   $("tokGo").onclick = () => { const v = $("tokIn").value.trim(); if(v){ store.set("hl_token", v); location.reload(); } };
 } else start();
 
+// ---- pin to the home screen
+function isStandalone(){ return matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; }   // function: start() runs before this point
+let deferredInstall = null;
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredInstall = e; });
+function installDialog(){
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const d = document.createElement("dialog"); d.className = "hd";
+  d.innerHTML = `<div class="hd-card"><h2>${tr("Przypnij do ekranu","Pin to your screen")}</h2>
+    ${ios ? `<ol style="padding-left:20px;line-height:24px"><li>${tr("Otwórz tę stronę w <b>Safari</b> i dotknij <b>Udostępnij</b> (kwadrat ze strzałką).","Open this page in <b>Safari</b> and tap <b>Share</b> (square with an arrow).")}</li>
+      <li>${tr("Wybierz <b>Do ekranu początkowego</b>.","Choose <b>Add to Home Screen</b>.")}</li><li>${tr("Dotknij <b>Dodaj</b> – ikona z nazwą urządzenia pojawi się na ekranie.","Tap <b>Add</b> – an icon with the device name appears on your screen.")}</li></ol>`
+    : `<p>${tr("W Chrome: menu <b>⋮</b> → <b>Zainstaluj aplikację</b> (lub <b>Dodaj do ekranu głównego</b>).","In Chrome: menu <b>⋮</b> → <b>Install app</b> (or <b>Add to Home screen</b>).")}</p>${deferredInstall ? `<p><button class="b" id="doInst">${tr("Zainstaluj teraz","Install now")}</button></p>` : ""}`}
+    <p class="hint"><b>${tr("Ekran blokady (iPhone)","Lock Screen (iPhone)")}:</b> ${tr("aplikacja Skróty → nowy skrót → <b>Otwórz URL</b> (wklej ten adres) → dodaj widżet <b>Skróty</b> na ekran blokady lub przypisz do przycisku Action.","Shortcuts app → new shortcut → <b>Open URL</b> (paste this address) → add a <b>Shortcuts</b> widget to the Lock Screen or assign it to the Action button.")}</p>
+    <div class="row" style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end"><button class="b alt" id="cpUrl">${tr("Kopiuj adres","Copy address")}</button><button class="b" id="clDlg">${tr("Zamknij","Close")}</button></div></div>`;
+  document.body.append(d); d.showModal(); d.onclose = () => d.remove();
+  d.querySelector("#clDlg").onclick = () => d.close();
+  d.querySelector("#cpUrl").onclick = async () => { try{ await navigator.clipboard.writeText(location.href); toast(tr("Skopiowano ✓","Copied ✓")); }catch{ toast(location.href); } };
+  const di = d.querySelector("#doInst"); if(di) di.onclick = async () => { deferredInstall.prompt(); await deferredInstall.userChoice; d.close(); };
+}
 function start(){
   $("app").hidden = false; $("bar").hidden = false;
   let layout = {cols:2,tiles:[]}, st = {}, els = {}, pending = {}, seq = 0, live;
@@ -117,6 +140,14 @@ function start(){
       else if(msg.t === "feed"){ feedRows.push(msg.entry); feedRows = feedRows.slice(-40); drawFeed(); }
     }
   });
+  $("mInst").onclick = installDialog;
+  if(isStandalone()) $("mInst").style.display = "none";
+  else if(/iPhone|iPad|iPod/.test(navigator.userAgent) && !store.get("hl_hint")){   // one-time hint on iOS
+    const h = $("hint"); h.style.display = "flex"; h.hidden = false;
+    $("hintTxt").textContent = tr("Dodaj do ekranu głównego: Udostępnij → Do ekranu początkowego.","Add to your Home Screen: Share → Add to Home Screen.");
+    $("hintHow").textContent = tr("Jak?","How?"); $("hintOk").textContent = tr("Ukryj","Hide");
+    $("hintHow").onclick = installDialog; $("hintOk").onclick = () => { h.style.display = "none"; store.set("hl_hint", "1"); };
+  }
   $("feedBtn").onclick = () => $("drawer").classList.toggle("on");
   $("drawer").onclick = e => { if(e.target.id === "drawer") $("drawer").classList.remove("on"); };
   $("menuBtn").onclick = () => $("menu").classList.toggle("on");

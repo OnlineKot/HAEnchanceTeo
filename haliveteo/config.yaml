@@ -1,5 +1,5 @@
 name: HALiveTeo
-version: "1.1.1"
+version: "1.2.0"
 slug: haliveteo
 description: Live actions from many devices - customizable buttons, toggles, sliders and live states for Home Assistant. By TeodorTeo.com
 url: https://teodorteo.com
@@ -21,7 +21,11 @@ ports_description:
   8766/tcp: "Device interface (phones, tablets, wall panels) + device API"
 options:
   event_prefix: haliveteo
+  logbook: true
+  sensors: true
   log_level: info
 schema:
   event_prefix: str
+  logbook: bool
+  sensors: bool
   log_level: list(debug|info|warning)

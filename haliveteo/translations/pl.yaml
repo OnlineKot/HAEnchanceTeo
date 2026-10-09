@@ -2,6 +2,12 @@ configuration:
   event_prefix:
     name: Prefiks nazw zdarzeń
     description: "Zdarzenia w Home Assistant nazywają się <prefiks>_action i <prefiks>_event (domyślnie haliveteo_action / haliveteo_event)."
+  logbook:
+    name: Zapisuj akcje w Logbooku
+    description: "Każda akcja trafia do Logbooka Home Assistanta (kto czego użył)."
+  sensors:
+    name: Twórz sensory ostatniej akcji
+    description: "Tworzy sensor.haliveteo_<urządzenie>_last_action i sensor.haliveteo_last_action (historia + automatyzacje)."
   log_level:
     name: Poziom logów
     description: Szczegółowość logów dodatku.

@@ -43,6 +43,23 @@ stanów (żółte światła, niebieskie odtwarzacze…), suwaka w stylu `ha-cont
 pola „filled”, czcionki Roboto oraz **ikon Material Design Icons** (tych samych co w HA; `mdi:nazwa`). Długie dotknięcie
 kafelka otwiera okno „więcej informacji” (atrybuty encji).
 
+## Przypięcie do ekranu
+- **iPhone / iPad:** otwórz link urządzenia w **Safari** → *Udostępnij → Do ekranu początkowego → Dodaj*. Ikona ma nazwę urządzenia
+  i otwiera się na pełnym ekranie. Token jest w adresie **celowo** – aplikacje z ekranu głównego iOS mają własną, odizolowaną pamięć
+  (nie widzą tego, co zapamiętał Safari), więc inaczej nie znałyby tokenu.
+- **Android:** Chrome → menu ⋮ → *Zainstaluj aplikację*.
+- **Ekran blokady iPhone'a:** *Skróty → nowy skrót → Otwórz URL* (link urządzenia) → widżet Skrótów na ekranie blokady albo przycisk Action.
+- Menu ⋯ na urządzeniu: **Dodaj do ekranu głównego** (kroki + kopiowanie adresu). Na iOS pokazuje się też jednorazowa podpowiedź.
+
+## Kto czego używał – logowanie
+Każdemu urządzeniu możesz przypisać **Użytkownika** (np. „Kasia”). Każda akcja (przycisk, przełącznik, suwak, zdarzenie) jest zapisywana:
+- w **Logbooku** Home Assistanta, np. „Kasia (Tablet kuchnia) toggled "Salon"” – przy encji, której dotyczy akcja,
+- w **sensorach** `sensor.haliveteo_<urządzenie>_last_action` i `sensor.haliveteo_last_action` (atrybuty: użytkownik, urządzenie,
+  encja, wartość, czas, licznik) – widać je w historii i można na nich budować automatyzacje,
+- w zakładce **Użycie** – ile razy każde urządzenie/użytkownik użył każdej encji.
+Opcje `logbook` i `sensors` w konfiguracji add-onu wyłączają Logbook lub sensory. Sensory tworzone są przez API stanów HA
+(nie mają „unique id”, więc po restarcie HA znikają, dopóki nie pojawi się nowa akcja).
+
 ## Szybki start
 1. Panel HALiveTeo → **+ Nowe urządzenie** → skopiuj **link** (token pokazuje się tylko raz).
 2. Otwórz link na telefonie/tablecie → Safari: *Udostępnij → Do ekranu początkowego* (działa jak aplikacja, pełny ekran).
