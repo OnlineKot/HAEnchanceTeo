@@ -246,6 +246,7 @@ label.chk{gap:12px}
   <div class="pane" id="p-tok">
     <div class="sec"><span data-i="tokTitle"></span><span class="sp"></span><button class="link" id="tokNew" data-i="tokNew"></button></div>
     <div class="hint" data-i="tokHint" style="margin:0 0 10px"></div>
+    <div class="prof" id="netInfo" style="margin-bottom:12px"></div>
     <div class="prof" id="tokForm" hidden>
       <label class="f" data-i="tokName"></label><input type="text" id="tkName" data-ph="tokNamePh">
       <label class="chk"><input type="checkbox" id="tkSup" checked> <span data-i="tokSup"></span></label>
@@ -278,7 +279,7 @@ label.chk{gap:12px}
 
 <script>
 const L = {
- en:{tagline:"Announcements for your speakers",tabLive:"🏝️ Live",nowPlaying:"Announcing now",nowQueued:"Queued",nowOn:"on",liveTitle:"Live Activity – Dynamic Island & Lock Screen",
+ en:{tagline:"Announcements for your speakers",netTitle:"Network",netLocal:"Local address",netExt:"External address",netChecked:"checked",netRefresh:"Refresh",netCopy:"Copy",netErr:"Could not check the external IP",netOff:"External IP check is off (option check_external_ip).",netChanged:"IP changed",netWarn:"From outside your home you need port forwarding on the router (or a VPN such as Tailscale/WireGuard). This address is plain HTTP – a token sent over the internet can be read; prefer a VPN or an HTTPS reverse proxy.",tokURLext:"URL (from outside the home)",tabLive:"🏝️ Live",nowPlaying:"Announcing now",nowQueued:"Queued",nowOn:"on",liveTitle:"Live Activity – Dynamic Island & Lock Screen",
   liveInfo:"Shows the announcement in progress (what, where, countdown) on the iPhone Dynamic Island and Lock Screen (Android: Live Update) via the Home Assistant Companion app. Needs iOS 17.2+, Home Assistant Core 2026.7+ and Live Activities enabled in the app (Settings → Live Activities). The status is also published as sensor.hannounce_status. An admin can also give a person their own live status per token (Tokens tab) or per announcement (API field live).",
   lvOn:"Show announcements as a Live Activity on the phones below",lvPhones:"Phones (Companion app)",lvOnly:"Only for announcements from (empty = all)",lvOnlyHint:"Sources: the panel/admin or a token name.",
   lvTitle:"Title",lvCrit:"Island compact text",lvMsg:"Message",lvMsgHint:"Placeholders: {text} {speakers} {source} {user}",lvHide:"Hide the spoken text (privacy – show only that something is announced)",lvCount:"Countdown timer until the announcement ends",
@@ -311,7 +312,7 @@ const L = {
   dAuto:"Let the player handle it (announce)",dManual:"Restore what was playing (media + position)",dNone:"Do nothing",dBefore:"Wait before playing (s)",dAfter:"Wait after it ends, then restore (s)",
   dPower:"Turn on if off, turn off afterwards",dUnmute:"Unmute during announcement",dQuiet:"Quiet hours",dQFrom:"from",dQTo:"to",dQVol:"Quiet volume % (empty = skip speaker)",
   dSave:"Save",dReset:"Reset",dCopy:"Copy to all speakers",dSaved:"Settings saved ✓"},
- pl:{tagline:"Ogłoszenia na Twoich głośnikach",tabLive:"🏝️ Live",nowPlaying:"Teraz ogłaszam",nowQueued:"W kolejce",nowOn:"na",liveTitle:"Live Activity – Dynamic Island i ekran blokady",
+ pl:{tagline:"Ogłoszenia na Twoich głośnikach",netTitle:"Sieć",netLocal:"Adres lokalny",netExt:"Adres zewnętrzny",netChecked:"sprawdzono",netRefresh:"Odśwież",netCopy:"Kopiuj",netErr:"Nie udało się sprawdzić zewnętrznego IP",netOff:"Sprawdzanie zewnętrznego IP jest wyłączone (opcja check_external_ip).",netChanged:"IP się zmieniło",netWarn:"Spoza domu potrzebujesz przekierowania portu na routerze (albo VPN, np. Tailscale/WireGuard). Ten adres to zwykłe HTTP – token wysłany przez internet można podsłuchać; lepiej użyć VPN lub reverse proxy z HTTPS.",tokURLext:"Adres (spoza domu)",tabLive:"🏝️ Live",nowPlaying:"Teraz ogłaszam",nowQueued:"W kolejce",nowOn:"na",liveTitle:"Live Activity – Dynamic Island i ekran blokady",
   liveInfo:"Pokazuje trwające ogłoszenie (co, gdzie, odliczanie) na Dynamic Island i ekranie blokady iPhone'a (Android: Live Update) przez aplikację Home Assistant Companion. Wymaga iOS 17.2+, Home Assistant Core 2026.7+ i włączonych Live Activities w aplikacji (Ustawienia → Live Activities). Status jest też publikowany jako sensor.hannounce_status. Admin może dać komuś własny status na żywo: per token (zakładka Tokeny) lub per ogłoszenie (pole live w API).",
   lvOn:"Pokazuj ogłoszenia jako Live Activity na poniższych telefonach",lvPhones:"Telefony (aplikacja Companion)",lvOnly:"Tylko dla ogłoszeń z (puste = wszystkie)",lvOnlyHint:"Źródła: panel/admin albo nazwa tokenu.",
   lvTitle:"Tytuł",lvCrit:"Tekst na wyspie (compact)",lvMsg:"Treść",lvMsgHint:"Symbole: {text} {speakers} {source} {user}",lvHide:"Ukryj mówiony tekst (prywatność – widać tylko, że coś jest ogłaszane)",lvCount:"Licznik odliczający do końca ogłoszenia",
@@ -667,10 +668,24 @@ const lvBody = () => ({enabled:$("lvOn").checked, phones:chipVals($("lvPhones"))
 $("lvSave").onclick = async () => { try{ await post("live", lvBody()); toast(t("lvSaved")); }catch(e){ toast(e.message, true); } };
 $("lvTest").onclick = async () => { try{ const b = lvBody(); await post("live", b); await post("live/test", {phones:b.phones}); toast(t("lvTested")); }catch(e){ toast(e.message, true); } };
 
+// ---- network: local + external IP ----
+let NET = null;
+async function renderNet(force){
+  const box = $("netInfo");
+  try{ NET = force ? await post("network/refresh", {}) : await api("network"); }catch(e){ box.textContent = e.message; return; }
+  const n = NET; box.innerHTML = `<div class="sec" style="margin-bottom:6px"><span>🌐 ${t("netTitle")}</span><span class="sp"></span><button class="link" id="netRef">${t("netRefresh")}</button></div>
+    <div class="hint" id="netL"></div><div class="hint" id="netE" style="margin-top:2px"></div><div class="hint" id="netW" style="margin-top:8px"></div>`;
+  $("netL").textContent = `${t("netLocal")}: ${n.local_base || "—"}`;
+  $("netE").textContent = n.enabled ? (n.external_base ? `${t("netExt")}: ${n.external_base}` + (n.external_host ? "" : ` · ${n.source}`) + (n.checked ? ` · ${t("netChecked")} ${new Date(n.checked*1000).toLocaleTimeString()}` : "") + (n.changed ? ` · ${t("netChanged")}: ${n.previous} → ${n.external_ip}` : "") : (n.error ? t("netErr") + ": " + n.error : "…")) : t("netOff");
+  $("netW").textContent = t("netWarn");
+  $("netRef").onclick = () => renderNet(true);
+}
+
 // ---- tokens (for shortcuts) + announcement log
 let TK = [];
 const ago = ts => ts ? new Date(ts*1000).toLocaleString() : t("tokNever");
 async function renderTokens(){
+  renderNet();
   try{ TK = await api("tokens"); }catch(e){ return toast(e.message,true); }
   const box = $("tokList"); box.innerHTML = TK.length ? "" : `<div class="empty">${t("tokNone")}</div>`;
   TK.forEach(k => {
@@ -743,6 +758,7 @@ $("tkCreate").onclick = async () => {
     card.append(copyRow("Token", r.token));
     const hint = document.createElement("div"); hint.className = "hint"; hint.style.marginTop = "10px"; hint.textContent = t("tokSteps"); card.append(hint);
     card.append(copyRow(t("tokURL"), S.base_url + "/api/announce"));
+    if(NET && NET.external_base) card.append(copyRow(t("tokURLext"), NET.external_base + "/api/announce"));
     card.append(copyRow(t("tokAuth"), "Bearer " + r.token));
     card.append(copyRow(t("tokCT"), "application/json"));
     card.append(copyRow(t("tokBody"), JSON.stringify({message:lang==="pl"?"Obiad gotowy":"Dinner is ready"})));

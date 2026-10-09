@@ -1,5 +1,5 @@
 name: HAnnounce Enhanced
-version: "1.12.0"
+version: "1.13.0"
 slug: hannounce_enhanced
 description: Announce on speakers - TTS, your own recordings, uploads, generated sounds, one-time or saved. By TeodorTeo.com
 url: https://teodorteo.com
@@ -27,10 +27,14 @@ options:
   api_key: ""
   max_upload_mb: 20
   status_sensor: true
+  check_external_ip: true
+  external_host: ""
   log_level: info
 schema:
   base_url: str?
   api_key: password?
   max_upload_mb: int(1,100)
   status_sensor: bool
+  check_external_ip: bool
+  external_host: str?
   log_level: list(debug|info|warning)

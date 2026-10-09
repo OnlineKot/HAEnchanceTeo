@@ -972,10 +972,110 @@ async def h_usage_clear(request):
     return web.json_response({"ok": True})
 
 
+async def h_network(request):
+    return web.json_response(await net_info(PUBLIC_PORT))
+
+
+async def h_network_refresh(request):
+    await check_external_ip(force=True)
+    await publish_ip_sensor("sensor.haliveteo_external_ip")
+    return web.json_response(await net_info(PUBLIC_PORT))
+
+
 async def h_feed_clear(request):
     feed.clear()
     FEED_FILE.unlink(missing_ok=True)
     return web.json_response({"ok": True})
+
+
+
+# ---------------------------------------------------------------- network: local + external (public) IP
+# The external IP is looked up on a public "what is my IP" service (api.ipify.org, icanhazip.com, ifconfig.me) at most every
+# 10 minutes - turn it off with the option check_external_ip. A DDNS/hostname can be set with external_host.
+IP_SOURCES = ("https://api.ipify.org", "https://icanhazip.com", "https://ifconfig.me/ip")
+IP_RE = re.compile(r"^(?:\d{1,3}(?:\.\d{1,3}){3}|[0-9a-fA-F:]{3,45})$")
+CHECK_EXTERNAL = bool(OPTIONS.get("check_external_ip", True))
+EXTERNAL_HOST = re.sub(r"[^A-Za-z0-9.\-:\[\]]", "", str(OPTIONS.get("external_host") or "").strip())[:120]
+net = {"external_ip": "", "previous": "", "changed": 0, "checked": 0, "error": "", "source": ""}
+_local_ip_cache = ""
+
+
+async def local_ip():
+    global _local_ip_cache
+    if _local_ip_cache:
+        return _local_ip_cache
+    try:
+        async with session.get(f"{SUPERVISOR}/network/info", headers={"Authorization": f"Bearer {TOKEN}"}) as r:
+            ifaces = (await r.json()).get("data", {}).get("interfaces", [])
+        ifaces.sort(key=lambda i: not i.get("primary"))
+        for iface in ifaces:
+            addrs = (iface.get("ipv4") or {}).get("address") or []
+            if addrs:
+                _local_ip_cache = addrs[0].split("/")[0]
+                return _local_ip_cache
+    except Exception as exc:  # noqa: BLE001
+        log.warning("Could not detect the local IP: %s", exc)
+    return ""
+
+
+async def check_external_ip(force=False):
+    if not CHECK_EXTERNAL:
+        return net
+    if not force and time.time() - net["checked"] < 600:
+        return net
+    net["checked"] = time.time()
+    for url in IP_SOURCES:
+        try:
+            async with session.get(url, timeout=ClientTimeout(total=6)) as r:
+                ip = (await r.text()).strip() if r.status == 200 else ""
+        except Exception:  # noqa: BLE001
+            continue
+        if IP_RE.match(ip):
+            if net["external_ip"] and ip != net["external_ip"]:
+                net.update(previous=net["external_ip"], changed=time.time())
+                log.info("External IP changed: %s -> %s", net["previous"], ip)
+            net.update(external_ip=ip, error="", source=url.split("//")[1].split("/")[0])
+            return net
+    net["error"] = "could not reach any IP lookup service"
+    return net
+
+
+async def net_info(port):
+    await check_external_ip()
+    host = EXTERNAL_HOST or net["external_ip"]
+    host = f"[{host}]" if ":" in host and not host.startswith("[") and EXTERNAL_HOST == "" else host
+    lip = await local_ip()
+    return {"enabled": CHECK_EXTERNAL, "local_ip": lip, "local_base": f"http://{lip}:{port}" if lip else "",
+            "external_ip": net["external_ip"], "external_host": EXTERNAL_HOST,
+            "external_base": f"http://{host}:{port}" if host else "", "previous": net["previous"],
+            "changed": net["changed"], "checked": net["checked"], "error": net["error"], "source": net["source"]}
+
+
+async def publish_ip_sensor(entity_id):
+    from datetime import datetime, timezone
+    if not net["external_ip"]:
+        return
+    attrs = {"friendly_name": "External IP", "icon": "mdi:ip-network", "previous": net["previous"], "source": net["source"],
+             "checked_at": datetime.fromtimestamp(net["checked"], timezone.utc).isoformat()}
+    if net["changed"]:
+        attrs["changed_at"] = datetime.fromtimestamp(net["changed"], timezone.utc).isoformat()
+    try:
+        async with session.post(f"{HA}/states/{entity_id}", headers=ha_headers(),
+                                json={"state": net["external_ip"], "attributes": attrs}) as r:
+            if r.status >= 400:
+                log.warning("external IP sensor failed: %s", r.status)
+    except Exception as exc:  # noqa: BLE001
+        log.warning("external IP sensor failed: %s", exc)
+
+
+async def net_loop(entity_id):
+    """Check on start and every 10 minutes; publish the sensor (state changes show up in history and automations)."""
+    while CHECK_EXTERNAL:
+        before = net["external_ip"]
+        await check_external_ip(force=True)
+        if net["external_ip"] and (net["external_ip"] != before or not before):
+            await publish_ip_sensor(entity_id)
+        await asyncio.sleep(600)
 
 
 # ---------------------------------------------------------------- pages
@@ -1048,6 +1148,8 @@ def build_apps():
         web.delete("/api/admin/activities/{id}", h_act_delete),
         web.post("/api/admin/activities/{id}/start", h_act_start),
         web.post("/api/admin/activities/{id}/end", h_act_end),
+        web.get("/api/admin/network", h_network),
+        web.post("/api/admin/network/refresh", h_network_refresh),
         web.get("/api/admin/usage", h_usage),
         web.delete("/api/admin/usage", h_usage_clear),
         web.delete("/api/admin/feed", h_feed_clear)])
@@ -1084,6 +1186,7 @@ async def main():
     log.info("HALiveTeo by %s (%s) - admin :%s, devices :%s, events %s_action/%s_event",
              CREDIT, CREDIT_URL, INGRESS_PORT, PUBLIC_PORT, PREFIX, PREFIX)
     asyncio.create_task(ha_listener())
+    asyncio.create_task(net_loop("sensor.haliveteo_external_ip"))
     await asyncio.Event().wait()
 
 

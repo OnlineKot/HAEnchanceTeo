@@ -88,6 +88,16 @@ Uwaga: adres `http://<IP>:8765` jest nieszyfrowany – token wysyłany w sieci d
   Tokeny nie mogą same ustawiać pola `live`, a pola wewnętrzne (zaczynające się od `_`) są ignorowane.
 - Kilka równoległych ogłoszeń = jedna aktywność pokazująca najnowsze; kończy się po ostatnim.
 
+## Adres zewnętrzny (IP) i dostęp spoza domu
+Add-on sprawdza **publiczny adres IP** (api.ipify.org → icanhazip.com → ifconfig.me; maks. co 10 min) i pokazuje go obok lokalnego
+w zakładce **Tokeny**. Zewnętrzny adres jest też w generowanych linkach („spoza domu”), a zmiana IP jest zapisywana w logu i w sensorze
+`sensor.hannounce_external_ip` (atrybuty: poprzedni adres, czas zmiany, źródło) – możesz na niej zbudować automatyzację (np. aktualizację DDNS).
+- Opcja **`check_external_ip`** wyłącza sprawdzanie (add-on nie łączy się wtedy z żadną z tych usług).
+- Opcja **`external_host`** – własna nazwa (DDNS, np. `mojdom.duckdns.org`) używana w linkach zamiast wykrytego IP.
+- Spoza domu potrzebujesz **przekierowania portu** `8765` na routerze albo **VPN** (Tailscale/WireGuard). Adres to zwykłe HTTP – token
+  wysłany przez internet można podsłuchać, więc woli się VPN albo reverse proxy z HTTPS. Nie wystawiaj portu bez klucza API/tokenów.
+- Informacja o sieci jest dostępna tylko dla administratora (panel / klucz API), nie dla tokenów.
+
 ## Opóźnienia, kolejka i Stop
 - **TTS jest przygotowywany z góry** (silnikiem z HA) i dopiero wtedy wysyłany na głośnik jako gotowy plik – dzięki temu nie ma
   niespodziewanego opóźnienia przy odtwarzaniu. Panel pokazuje „Przygotowuję głos…” a potem „Gra ♪”. Ta sama wiadomość

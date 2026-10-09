@@ -11,6 +11,12 @@ configuration:
   status_sensor:
     name: Publikuj sensor statusu
     description: "Tworzy sensor.hannounce_status (idle / announcing + szczegóły), żeby widzieć ogłoszenia na żywo i budować automatyzacje."
+  check_external_ip:
+    name: Sprawdzaj zewnętrzny IP
+    description: "Sprawdza publiczny adres IP w api.ipify.org / icanhazip.com / ifconfig.me (maks. co 10 min), pokazuje go obok lokalnego, używa w linkach spoza domu i publikuje jako sensor. Wyłącz, aby nigdy nie łączyć się z tymi usługami."
+  external_host:
+    name: Zewnętrzny host (DDNS)
+    description: "Opcjonalna nazwa hosta lub IP używane w linkach spoza domu (np. mojadomena.duckdns.org). Puste = wykryty zewnętrzny IP."
   log_level:
     name: Poziom logów
     description: Szczegółowość logów dodatku.

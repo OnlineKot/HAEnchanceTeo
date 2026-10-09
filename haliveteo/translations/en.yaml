@@ -8,6 +8,12 @@ configuration:
   sensors:
     name: Create last-action sensors
     description: "Creates sensor.haliveteo_<device>_last_action and sensor.haliveteo_last_action (history + automations)."
+  check_external_ip:
+    name: Check external IP
+    description: "Looks up your public IP on api.ipify.org / icanhazip.com / ifconfig.me (max every 10 min), shows it next to the local IP, uses it for links from outside and publishes it as a sensor. Turn off to never contact those services."
+  external_host:
+    name: External host (DDNS)
+    description: "Optional hostname or IP to use in links from outside the home (e.g. mydomain.duckdns.org). Leave empty to use the detected external IP."
   log_level:
     name: Log level
     description: Verbosity of the add-on log.

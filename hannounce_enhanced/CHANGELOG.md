@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.13.0
+- External (public) IP check shown next to the local IP, external URLs in token results, sensor.hannounce_external_ip with change detection; options check_external_ip, external_host.
+
 ## 1.12.0
 - "Announcing now" bar (sessions) + /api/status + sensor.hannounce_status; configurable Live Activity (Dynamic Island) for announcements, per token and per announcement.
 

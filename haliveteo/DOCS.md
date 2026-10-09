@@ -71,6 +71,16 @@ Każdemu urządzeniu możesz przypisać **Użytkownika** (np. „Kasia”). Każ
 Opcje `logbook` i `sensors` w konfiguracji add-onu wyłączają Logbook lub sensory. Sensory tworzone są przez API stanów HA
 (nie mają „unique id”, więc po restarcie HA znikają, dopóki nie pojawi się nowa akcja).
 
+## Adres zewnętrzny (IP) i dostęp spoza domu
+Add-on sprawdza **publiczny adres IP** (api.ipify.org → icanhazip.com → ifconfig.me; maks. co 10 min) i pokazuje go obok lokalnego
+na karcie **Urządzenia**. Zewnętrzny adres jest też w generowanych linkach („spoza domu”), a zmiana IP jest zapisywana w logu i w sensorze
+`sensor.haliveteo_external_ip` (atrybuty: poprzedni adres, czas zmiany, źródło) – możesz na niej zbudować automatyzację (np. aktualizację DDNS).
+- Opcja **`check_external_ip`** wyłącza sprawdzanie (add-on nie łączy się wtedy z żadną z tych usług).
+- Opcja **`external_host`** – własna nazwa (DDNS, np. `mojdom.duckdns.org`) używana w linkach zamiast wykrytego IP.
+- Spoza domu potrzebujesz **przekierowania portu** `8766` na routerze albo **VPN** (Tailscale/WireGuard). Adres to zwykłe HTTP – token
+  wysłany przez internet można podsłuchać, więc woli się VPN albo reverse proxy z HTTPS. Nie wystawiaj portu bez klucza API/tokenów.
+- Informacja o sieci jest dostępna tylko dla administratora (panel / klucz API), nie dla tokenów.
+
 ## Szybki start
 1. Panel HALiveTeo → **+ Nowe urządzenie** → skopiuj **link** (token pokazuje się tylko raz).
 2. Otwórz link na telefonie/tablecie → Safari: *Udostępnij → Do ekranu początkowego* (działa jak aplikacja, pełny ekran).
