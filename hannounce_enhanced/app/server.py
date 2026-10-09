@@ -473,6 +473,56 @@ def slugify(text):
     return text[:40] or "sound"
 
 
+async def save_script(sid, cfg):
+    """Create/update a script in Home Assistant; fall back to YAML for manual pasting."""
+    result = {"entity_id": f"script.{sid}", "created": False,
+              "yaml": f"{sid}: {json.dumps(cfg, ensure_ascii=False)}"}
+    try:
+        async with session.post(f"{HA}/config/script/config/{sid}", headers=ha_headers(),
+                                json=cfg) as r:
+            if r.status < 300:
+                await ha_service("script", "reload", {})
+                result["created"] = True
+            else:
+                log.warning("Script create refused: %s %s", r.status, (await r.text())[:200])
+    except Exception as exc:  # noqa: BLE001
+        log.warning("Script create failed: %s", exc)
+    return result
+
+
+_slug_cache = None
+
+
+async def self_slug():
+    global _slug_cache
+    if _slug_cache is None:
+        _slug_cache = os.environ.get("HAE_SLUG", "")
+        if not _slug_cache:
+            try:
+                async with session.get(f"{SUPERVISOR}/addons/self/info",
+                                       headers={"Authorization": f"Bearer {TOKEN}"}) as r:
+                    _slug_cache = (await r.json()).get("data", {}).get("slug", "")
+            except Exception as exc:  # noqa: BLE001
+                log.warning("Could not read add-on slug: %s", exc)
+    return _slug_cache
+
+
+async def launcher_info():
+    slug = await self_slug()
+    path = f"/hassio/ingress/{slug}" if slug else ""
+    notify = []
+    try:
+        for dom in await ha_get("/services"):
+            if dom["domain"] == "notify":
+                notify = sorted(n for n in dom["services"] if n.startswith("mobile_app_"))
+    except web.HTTPException:
+        pass
+    return {"slug": slug, "path": path,
+            "deeplink": f"homeassistant://navigate{path}" if path else "",
+            "standalone": f"{await base_url()}/?quick=1", "notify": notify,
+            "api_enabled": bool(OPTIONS.get("api_key"))}
+
+
 async def make_script(body):
     """Create a Home Assistant script that plays a sound/TTS on the chosen speakers."""
     targets = body.get("targets") or []
@@ -512,19 +562,7 @@ async def make_script(body):
         "description": f"Created by HAnnounce Enhanced - {CREDIT} ({CREDIT_URL})",
         "sequence": sequence,
     }
-    result = {"entity_id": f"script.{sid}", "created": False,
-              "yaml": f"{sid}: {json.dumps(cfg, ensure_ascii=False)}"}
-    try:
-        async with session.post(f"{HA}/config/script/config/{sid}", headers=ha_headers(),
-                                json=cfg) as r:
-            if r.status < 300:
-                await ha_service("script", "reload", {})
-                result["created"] = True
-            else:
-                log.warning("Script create refused: %s %s", r.status, (await r.text())[:200])
-    except Exception as exc:  # noqa: BLE001
-        log.warning("Script create failed: %s", exc)
-    return result
+    return await save_script(sid, cfg)
 
 
 # ---------------------------------------------------------------- per-device memory/profiles
@@ -963,6 +1001,32 @@ async def h_announce(request):
     return web.json_response(await announce(body))
 
 
+async def h_launcher_info(request):
+    return web.json_response(await launcher_info())
+
+
+async def h_launcher_create(request):
+    """One generic script that opens the HAnnounce interface on the phone (not tied to any sound/speaker)."""
+    body = await request.json()
+    service = str(body.get("notify") or "")
+    if not re.fullmatch(r"(notify\.)?mobile_app_[a-z0-9_]+", service):
+        raise _json_error(400, "pick a mobile_app notify service")
+    service = service.removeprefix("notify.")
+    info = await launcher_info()
+    url = info["standalone"] if body.get("target") == "standalone" else info["path"]
+    if not url:
+        raise _json_error(400, "could not determine the interface address")
+    if body.get("platform") == "android" and url.startswith("/"):
+        data = {"message": "command_webview", "data": {"command": url}}
+    else:
+        data = {"title": "HAnnounce", "message": "Tap to open announcements",
+                "data": {"url": url, "clickAction": url, "tag": "hannounce_open"}}
+    cfg = {"alias": "HAnnounce: open interface", "icon": "mdi:bullhorn", "mode": "single",
+           "description": f"Opens the HAnnounce interface on the phone - {CREDIT} ({CREDIT_URL})",
+           "sequence": [{"action": f"notify.{service}", "data": data}]}
+    return web.json_response(await save_script("hannounce_open", cfg))
+
+
 async def h_script(request):
     return web.json_response(await make_script(await request.json()))
 
@@ -1146,6 +1210,8 @@ def routes(with_index=True):
         web.post("/api/generate", h_generate),
         web.post("/api/announce", h_announce),
         web.post("/api/script", h_script),
+        web.get("/api/launcher", h_launcher_info),
+        web.post("/api/launcher", h_launcher_create),
         web.post("/api/library/dedupe", h_library_dedupe),
         web.post("/api/speaker", h_speaker_set),
         web.post("/api/speakers/dedupe", h_speakers_dedupe),

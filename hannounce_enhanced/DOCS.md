@@ -26,11 +26,9 @@ stan, czy obsługują `announce`, czy są niedostępne.
 ## Skrypt lub scena przed / po ogłoszeniu
 Nad zakładkami są dwie listy: **Uruchom przed** i **Uruchom po** – wybierasz skrypt lub scenę z Home Assistanta
 (np. przyciemnij światło przed, przywróć po). W API: `before_action`, `after_action` (np. `scene.salon`, `script.xyz`).
-Wybór działa też w skryptach tworzonych przyciskiem „Utwórz skrypt”.
 
 ## Wysyłanie z aplikacji (iPhone / Android)
-Zakładka **📱 Aplikacja** w panelu zawiera instrukcje krok po kroku: panel w aplikacji HA, osobna aplikacja na ekranie
-głównym, widżet na ekranie blokady, Siri / Skróty (z gotowym JSON-em i adresem Twojego add-onu), Stuknięcie w tył, Android.
+Zakładka **📱 Aplikacja** zawiera instrukcje: skrót otwierający interfejs, osobna aplikacja, Siri / Skróty z własnym tekstem (gotowy JSON i adres Twojego add-onu).
 
 ## Pamięć i ustawienia każdego urządzenia
 Zakładka **Urządzenia**: profil domyślny + osobne ustawienia dla każdego głośnika (przycisk „Kopiuj do wszystkich”).
@@ -40,7 +38,7 @@ Zakładka **Urządzenia**: profil domyślny + osobne ustawienia dla każdego gł
 - **Czekaj po zakończeniu** (np. 2 s) zanim wróci poprzedni stan; **czekaj przed odtworzeniem** dla głośników, które muszą się „obudzić”.
 - **Włącz jeśli wyłączony, potem wyłącz**; **wyłącz wyciszenie** na czas ogłoszenia (potem wraca).
 - **Godziny ciszy** (czas lokalny HA): w tym czasie głośnik jest pomijany albo gra ciszej.
-Profile działają dla panelu, API i automatyzacji. Skrypty tworzone przyciskiem „Utwórz skrypt” są statyczne – nie korzystają z profili.
+Profile działają dla panelu, API i automatyzacji.
 
 ## Własny interfejs (bez wchodzenia w HA)
 Ten sam panel działa samodzielnie pod adresem **`http://<IP_HA>:8765/`**. Wymaga ustawienia `api_key` w konfiguracji –
@@ -49,13 +47,16 @@ Na iPhonie: otwórz adres w Safari → *Udostępnij* → *Do ekranu początkoweg
 (pełny ekran, własna ikona). Mikrofon w przeglądarce wymaga HTTPS (np. Nabu Casa / reverse proxy); przez zwykłe HTTP
 użyj „Nagrywarka urządzenia” lub wgraj plik.
 
-## Ekran blokady iPhone'a
-W zakładce **Biblioteka** (zapisany dźwięk) lub **Mów (TTS)** zaznacz głośniki i kliknij **📱 Utwórz skrypt**.
-Add-on tworzy w HA skrypt `script.hannounce_...`, który odtwarza ogłoszenie na wybranych głośnikach.
-Potem na iPhonie (aplikacja Home Assistant Companion): przytrzymaj ekran blokady → *Dostosuj* → dodaj widżet
-Home Assistant → wybierz skrypt. Skrypt możesz też podpiąć pod Centrum sterowania (iOS 18), Skróty/Siri albo Back Tap.
-Jeśli add-on nie może sam zapisać skryptu, pokaże gotowy YAML do wklejenia w `scripts.yaml`.
-Uwaga: skrypt zapamiętuje adres dźwięku (`base_url`/IP hosta) – po zmianie IP utwórz go ponownie.
+## Otwieranie interfejsu z ekranu blokady (jeden skrypt, nie wiele)
+Nie ma już skryptów do pojedynczych dźwięków/głośników. Zamiast tego **jeden** skrypt/skrót otwiera pełnoekranowy
+interfejs, a głośniki i dźwięki wybierasz na miejscu w widoku **⚡ Szybkie** (ulubione dźwięki jako duże kafelki, pole tekstu,
+ostatnie wiadomości).
+- **Skrót iOS (bez powiadomienia):** *Skróty → Otwórz URL →* `homeassistant://navigate/hassio/ingress/<slug>`
+  (gotowy adres jest w zakładce 📱 Aplikacja). Dodaj do ekranu blokady, przycisku Action, Stuknięcia w tył lub Siri.
+- **Skrypt w HA:** w zakładce 📱 Aplikacja wybierz telefon i kliknij „Utwórz skrypt”. Powstaje jeden skrypt
+  `script.hannounce_open`, który wysyła na telefon powiadomienie „dotknij, by otworzyć” (Android otwiera od razu).
+  Skrypt niczego nie odtwarza. Uruchom go widżetem „Skrypty” aplikacji HA.
+- **Osobna aplikacja:** `http://<IP_HA>:8765/?quick=1` → Udostępnij → Do ekranu początkowego (tryb pełnoekranowy, tylko widok Szybkie).
 
 ## Konfiguracja
 | Opcja | Opis |

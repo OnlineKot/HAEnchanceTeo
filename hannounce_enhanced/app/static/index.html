@@ -72,7 +72,12 @@ footer{text-align:center;color:var(--mut);font-size:13px;margin:18px 0 6px}
 footer a{color:var(--acc);text-decoration:none;font-weight:700}
 .hint{color:var(--mut);font-size:13px;margin-top:8px}.rec{color:var(--err);font-weight:600}
 pre{background:var(--bg);padding:10px;border-radius:10px;overflow:auto;font-size:12px}
-code{background:var(--bg);padding:1px 5px;border-radius:5px}
+code{background:var(--bg);padding:1px 5px;border-radius:5px;word-break:break-all}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.tile{position:relative;min-height:74px;padding:12px;border-radius:14px;border:1.5px solid var(--bd);background:var(--bg);color:var(--fg);cursor:pointer;font:inherit;text-align:left;display:flex;flex-direction:column;justify-content:space-between;gap:4px}
+.tile:active{transform:scale(.97)}.tile:hover{border-color:var(--acc)}
+.tile b{font-size:15px;line-height:1.2}.tile small{color:var(--mut)}.tile .star{position:absolute;right:9px;top:6px;color:#f5b301;font-size:13px}
+.kiosk .tabs,.kiosk footer,.kiosk #scriptRes{display:none}
 #p-help h2{font-size:15px;margin:18px 0 4px}
 </style>
 </head>
@@ -100,6 +105,15 @@ code{background:var(--bg);padding:1px 5px;border-radius:5px}
 <div class="card">
   <div class="tabs" id="tabs"></div>
 
+  <div class="pane" id="p-quick">
+    <div class="sec" data-i="qSounds"></div>
+    <div class="tiles" id="qTiles"></div>
+    <div class="sec" style="margin-top:18px" data-i="qMsg"></div>
+    <textarea id="qMsg" style="min-height:64px"></textarea>
+    <div class="chips" id="qRecent" style="margin-top:8px"></div>
+    <div class="row"><button class="b" id="qGo" data-i="announce"></button></div>
+  </div>
+
   <div class="pane" id="p-say">
     <label class="f" data-i="ttsent"></label><select id="ttsEnt"></select>
     <label class="f" data-i="message"></label><textarea id="ttsMsg"></textarea>
@@ -111,7 +125,7 @@ code{background:var(--bg);padding:1px 5px;border-radius:5px}
     <div class="row"><button class="b" id="sayGo" data-i="announce"></button>
       <button class="b alt" id="sayPrev" data-i="preview"></button>
       <button class="b alt" id="saySave" data-i="save"></button>
-      <button class="b alt" id="sayScript" data-i="mkscript"></button></div>
+</div>
   </div>
 
   <div class="pane" id="p-rec">
@@ -174,7 +188,7 @@ code{background:var(--bg);padding:1px 5px;border-radius:5px}
 
 <script>
 const L = {
- en:{tagline:"Announcements for your speakers",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
+ en:{tagline:"Announcements for your speakers",quick:"⚡ Quick",qSounds:"Favorite sounds - tap to announce",qMsg:"Say something",qNoFav:"No favorite sounds yet. Mark sounds with ★ in the Library.",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
   setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",speakers:"Speakers",app:"📱 App",
   actBefore:"Run before (script / scene)",actAfter:"Run after (script / scene)",actNone:"— none —",
   ttsent:"TTS engine",message:"Message",lang:"Language",voice:"Voice",deflt:"(default)",ttsnone:"No TTS engine found in Home Assistant",
@@ -194,7 +208,7 @@ const L = {
   dAuto:"Let the player handle it (announce)",dManual:"Restore what was playing (media + position)",dNone:"Do nothing",dBefore:"Wait before playing (s)",dAfter:"Wait after it ends, then restore (s)",
   dPower:"Turn on if off, turn off afterwards",dUnmute:"Unmute during announcement",dQuiet:"Quiet hours",dQFrom:"from",dQTo:"to",dQVol:"Quiet volume % (empty = skip speaker)",
   dSave:"Save",dReset:"Reset",dCopy:"Copy to all speakers",dSaved:"Settings saved ✓"},
- pl:{tagline:"Ogłoszenia na Twoich głośnikach",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
+ pl:{tagline:"Ogłoszenia na Twoich głośnikach",quick:"⚡ Szybkie",qSounds:"Ulubione dźwięki - dotknij, by ogłosić",qMsg:"Powiedz coś",qNoFav:"Brak ulubionych dźwięków. Oznacz dźwięki ★ w Bibliotece.",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
   setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",speakers:"Głośniki",app:"📱 Aplikacja",
   actBefore:"Uruchom przed (skrypt / scena)",actAfter:"Uruchom po (skrypt / scena)",actNone:"— brak —",
   ttsent:"Silnik TTS",message:"Wiadomość",lang:"Język",voice:"Głos",deflt:"(domyślny)",ttsnone:"Nie znaleziono silnika TTS w Home Assistant",
@@ -240,7 +254,7 @@ document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i
 document.querySelectorAll("[data-ph]").forEach(e => e.placeholder = t(e.dataset.ph));
 
 // ---- tabs
-const TABS = [["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"],["spk","speakers"],["help","app"]];
+const TABS = [["quick","quick"],["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"],["spk","speakers"],["help","app"]];
 TABS.forEach(([id, k]) => {
   const b = document.createElement("button"); b.textContent = t(k); b.dataset.id = id;
   b.onclick = () => showTab(id); $("tabs").append(b);
@@ -248,7 +262,6 @@ TABS.forEach(([id, k]) => {
 function showTab(id){
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.id===id));
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="p-"+id));
-  store.set("tab",id);
   if(id==="lib") renderLib(); if(id==="spk") renderSpk(); if(id==="help") renderHelp();
 }
 
@@ -264,7 +277,7 @@ async function refresh(){
   $("ttsEnt").innerHTML = S.tts.length ? S.tts.map(x=>`<option value="${esc(x.entity_id)}">${esc(x.name)}</option>`).join("")
     : `<option value="">${t("ttsnone")}</option>`;
   $("gType").innerHTML = Object.entries(S.generators).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join("");
-  fillActions(); loadLangs(); renderLib(); renderSpk();
+  fillActions(); loadLangs(); renderQuick(); renderLib(); renderSpk();
 }
 function renderChips(){
   const box = $("players"); box.innerHTML = "";
@@ -334,20 +347,14 @@ $("saySave").onclick = async () => {
   const name = prompt(t("name"), b.message.slice(0,40)); if(!name) return;
   try{ await post("tts/item",{...b,save:true,name}); toast(t("saved")); refresh(); }catch(e){toast(e.message,true)}
 };
-$("sayScript").onclick = () => { const b=ttsBody(); if(b) makeScript(b); };
 
-async function makeScript(body){
-  if(!needTargets()) return;
-  try{
-    const r = await post("script",{targets:targets(),...actions_(),...body});
-    const box = $("scriptRes"); box.hidden = false; box.innerHTML = "";
-    const p = document.createElement("div");
-    p.textContent = (r.created ? t("scriptOk") + r.entity_id : t("scriptManual"));
-    box.append(p);
-    if(!r.created){ const pre=document.createElement("textarea"); pre.readOnly=true; pre.value=r.yaml; box.append(pre); }
-    const h = document.createElement("div"); h.className="hint"; h.textContent=t("scriptHow"); box.append(h);
-    box.scrollIntoView({behavior:"smooth"});
-  }catch(e){ toast(e.message,true); }
+function showScriptResult(r){
+  const box = $("scriptRes"); box.hidden = false; box.innerHTML = "";
+  const p = document.createElement("div");
+  p.textContent = (r.created ? t("scriptOk") + r.entity_id : t("scriptManual"));
+  box.append(p);
+  if(!r.created){ const pre=document.createElement("textarea"); pre.readOnly=true; pre.value=r.yaml; box.append(pre); }
+  box.scrollIntoView({behavior:"smooth"});
 }
 
 // ---- shared "sound source" actions: name box + once / save / save&announce
@@ -434,12 +441,10 @@ function renderLib(){
     d.innerHTML = `<button class="star-btn ${it.favorite?"on":""}">${it.favorite?"★":"☆"}</button>
       <div class="n"><b></b><br><small>${esc(it.kind)} · ${it.duration.toFixed(1)} s</small></div>
       <audio controls preload="none" src="media/${it.file}" style="width:190px;margin:0"></audio>
-      <button class="b sm a">${t("announce")}</button><button class="b alt sm s">${t("mkscript")}</button>
-      <button class="b alt sm r">${t("rename")}</button><button class="b red sm x">${t("del")}</button>`;
+      <button class="b sm a">${t("announce")}</button><button class="b alt sm r">${t("rename")}</button><button class="b red sm x">${t("del")}</button>`;
     d.querySelector("b").textContent = it.name;
     d.querySelector(".star-btn").onclick = async () => { try{ await post("library/"+it.id,{favorite:!it.favorite}); refresh(); }catch(e){toast(e.message,true)} };
     d.querySelector(".a").onclick = () => announce({item:it.id});
-    d.querySelector(".s").onclick = () => makeScript({item:it.id});
     d.querySelector(".r").onclick = async () => {
       const n = prompt(t("newname"), it.name); if(!n) return;
       try{ await post("library/"+it.id,{name:n}); refresh(); }catch(e){toast(e.message,true)}
@@ -451,6 +456,30 @@ function renderLib(){
     box.append(d);
   });
 }
+
+// ---- quick (full-screen friendly home): favorite sounds as big tiles + one-line message
+const recent = () => store.get("recent", []);
+function renderQuick(){
+  const favs = S.library.filter(i=>i.favorite).sort((a,b)=>b.created-a.created);
+  const box = $("qTiles"); box.innerHTML = "";
+  if(!favs.length) box.innerHTML = `<div class="empty">${t("qNoFav")}</div>`;
+  favs.forEach(it => {
+    const b = document.createElement("button"); b.className = "tile";
+    b.innerHTML = `<span class="star">★</span><b></b><small>${it.duration.toFixed(1)} s</small>`;
+    b.querySelector("b").textContent = it.name;
+    b.onclick = () => announce({item:it.id});
+    box.append(b);
+  });
+  const rc = $("qRecent"); rc.innerHTML = "";
+  recent().forEach(m => { const c = document.createElement("button"); c.className = "chip"; c.textContent = m;
+    c.onclick = () => { $("qMsg").value = m; }; rc.append(c); });
+}
+$("qGo").onclick = async () => {
+  const m = $("qMsg").value.trim(); if(!m) return toast(t("nomsg"),true);
+  if(!$("ttsEnt").value) return toast(t("ttsnone"),true);
+  const ok = await announce({message:m,tts_entity:$("ttsEnt").value,language:$("ttsLang").value||undefined,voice:$("ttsVoice").value||undefined});
+  if(ok){ store.set("recent",[m,...recent().filter(x=>x!==m)].slice(0,6)); renderQuick(); }
+};
 
 // ---- speakers: detection, favorites, hide/remove, duplicates, calibration, per-speaker profile
 let D = {default:{},profiles:{}};
@@ -536,53 +565,63 @@ $("spkDup").onclick = async () => {
     toast(r.hidden.length ? t("hiddenDups") + r.hidden.length : t("noDup")); await refresh(); }catch(e){toast(e.message,true)}
 };
 
-function renderHelp(){
-  const base = esc(S.base_url || "http://IP_HA:8765"), pl = lang==="pl";
+async function renderHelp(){
+  const pl = lang==="pl";
+  let info = {slug:"",path:"",deeplink:"",standalone:S.base_url+"/?quick=1",notify:[],api_enabled:S.api_enabled};
+  try{ info = await api("launcher"); }catch{}
+  const base = esc(S.base_url || "http://IP_HA:8765");
+  const key = info.api_enabled ? "" : `<p class="rec">${pl?"⚠ Najpierw ustaw „Klucz API” w konfiguracji dodatku.":"⚠ First set the “API key” in the add-on configuration."}</p>`;
   const sample = esc(JSON.stringify({targets:["media_player.kuchnia"],message:pl?"Obiad gotowy":"Dinner is ready",tts_entity:(S.tts[0]||{}).entity_id||"tts.piper"},null,1));
-  const sample2 = esc(JSON.stringify({targets:["media_player.kuchnia"],sound:pl?"Gong1":"Gong",before_action:"scene.salon_przyciemnij",after_action:"scene.salon_normalnie"},null,1));
-  const key = S.api_enabled ? "" : `<p class="rec">${pl?"⚠ Najpierw ustaw „Klucz API” w konfiguracji dodatku (Ustawienia → Dodatki → HAnnounce Enhanced → Konfiguracja).":"⚠ First set the “API key” in the add-on configuration."}</p>`;
+  const dl = esc(info.deeplink || "homeassistant://navigate/hassio/ingress/<slug>");
+  const opts = info.notify.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("") || `<option value="">—</option>`;
   $("helpBox").innerHTML = pl ? `
-  <h2>1. W aplikacji Home Assistant</h2>
-  <p>Włącz w dodatku „Pokaż w pasku bocznym”. W aplikacji Home Assistant (iPhone/Android) otwórz menu → <b>HAnnounce</b>. Działa tak samo jak tutaj. Do nagrywania użyj <b>Nagrywarka urządzenia</b> (mikrofon w przeglądarce wymaga HTTPS).</p>
-  <h2>2. Osobna aplikacja na ekranie głównym</h2>${key}
-  <p>Safari → <code>${base}/</code> → <b>Udostępnij → Do ekranu początkowego</b>. Przy pierwszym uruchomieniu wpisz Klucz API.</p>
-  <h2>3. Ekran blokady, Centrum sterowania, przycisk Action</h2>
-  <p>Wybierz głośniki (opcjonalnie skrypt/scenę przed i po), w <b>Bibliotece</b> lub <b>Mów</b> kliknij <b>📱 Utwórz skrypt</b>. Potem na iPhonie: przytrzymaj ekran blokady → Dostosuj → widżet <b>Home Assistant</b> → wybierz skrypt. Skrypt możesz też dodać do Centrum sterowania (iOS 18) lub przypiąć pod przycisk Action.</p>
-  <h2>4. Siri i Skróty (dowolny tekst z telefonu)</h2>${key}
-  <p>Aplikacja <b>Skróty</b> → nowy skrót → akcja <b>Pobierz zawartość URL</b>:</p>
-  <ul><li>URL: <code>${base}/api/announce</code></li><li>Metoda: <b>POST</b></li>
-  <li>Nagłówki: <code>Authorization</code> = <code>Bearer TWÓJ_KLUCZ</code>, <code>Content-Type</code> = <code>application/json</code></li>
-  <li>Treść żądania: <b>JSON</b> (lub Plik), np. (dla „message” wstaw akcję <b>Zapytaj o dane</b> / <b>Dyktuj tekst</b>):</li></ul>
+  <h2>⚡ Jeden skrypt, który otwiera cały interfejs</h2>
+  <p>Zamiast skryptów do pojedynczych dźwięków: jeden skrypt/skrót otwiera pełnoekranowy interfejs ogłaszania, a wybór głośników i dźwięków robisz już na miejscu (zakładka ⚡ Szybkie: ulubione dźwięki jako duże kafelki + pole tekstu).</p>
+  <div class="prof" id="lnch">
+    <label class="f">Telefon (usługa powiadomień HA)</label><select id="lnPhone">${opts}</select>
+    <div class="row"><div class="grow"><label class="f">System</label><select id="lnOs"><option value="ios">iPhone</option><option value="android">Android</option></select></div>
+    <div class="grow"><label class="f">Co otworzyć</label><select id="lnTarget"><option value="ingress">Panel w aplikacji Home Assistant</option><option value="standalone">Osobny interfejs (port 8765)</option></select></div></div>
+    <div class="row"><button class="b" id="lnGo">Utwórz skrypt „HAnnounce: open interface”</button></div>
+    <div class="hint">Skrypt wysyła na telefon powiadomienie „dotknij, by otworzyć” (Android: otwiera od razu). Nic nie jest odtwarzane. Uruchom go widżetem „Skrypty” aplikacji HA na ekranie blokady.</div>
+  </div>
+  <h2>📲 Bez powiadomienia: skrót iOS otwierający interfejs od razu</h2>
+  <p>Aplikacja <b>Skróty</b> → nowy skrót → akcja <b>Otwórz URL</b> → <code>${dl}</code>. Dodaj go do ekranu blokady (widżet Skrótów), przycisku Action, Stuknięcia w tył albo powiedz „Hej Siri, ogłoś”.</p>
+  <h2>🖥 Osobna aplikacja</h2>${key}
+  <p>Safari → <code>${base}/?quick=1</code> → <b>Udostępnij → Do ekranu początkowego</b>. Otwiera się na pełnym ekranie, tylko widok ⚡ Szybkie. Przy pierwszym uruchomieniu wpisz Klucz API.</p>
+  <h2>🗣 Siri i Skróty z własnym tekstem (API)</h2>${key}
+  <p>Akcja <b>Pobierz zawartość URL</b>: URL <code>${base}/api/announce</code>, metoda <b>POST</b>, nagłówki <code>Authorization: Bearer TWÓJ_KLUCZ</code> i <code>Content-Type: application/json</code>, treść JSON:</p>
   <pre>${sample}</pre>
-  <p>Nazwij skrót np. „Ogłoś” i mów: <i>„Hej Siri, Ogłoś”</i>. Możesz go też dodać do ekranu głównego, widżetu na ekranie blokady albo Stuknięcia w tył (Ustawienia → Dostępność → Dotyk → Stuknięcie w tył).</p>
-  <h2>5. Skrypt lub scena razem z ogłoszeniem</h2>
-  <p>W polach „Uruchom przed/po” wybierz skrypt lub scenę (np. przyciemnij światło przed, przywróć po). W API: <code>before_action</code>, <code>after_action</code>:</p>
-  <pre>${sample2}</pre>
-  <h2>6. Android</h2>
-  <p>Aplikacja Home Assistant: długie przytrzymanie ikony → skróty, lub widżet <i>Przycisk</i>/<i>Skrypt</i> wskazujący skrypt utworzony w punkcie 3. Dla własnego tekstu użyj np. aplikacji HTTP Shortcuts z danymi jak w punkcie 4.</p>`
+  <h2>🎬 Skrypt lub scena razem z ogłoszeniem</h2>
+  <p>Pola „Uruchom przed/po” w Opcjach (np. przyciemnij światło przed, przywróć po). W API: <code>before_action</code>, <code>after_action</code>.</p>`
   : `
-  <h2>1. Inside the Home Assistant app</h2>
-  <p>Enable “Show in sidebar” on the add-on. In the Home Assistant app (iPhone/Android) open the menu → <b>HAnnounce</b>. Use <b>Use device recorder</b> for recording (browser mic needs HTTPS).</p>
-  <h2>2. Standalone app on the home screen</h2>${key}
-  <p>Safari → <code>${base}/</code> → <b>Share → Add to Home Screen</b>. Enter the API key on first launch.</p>
-  <h2>3. Lock screen, Control Center, Action button</h2>
-  <p>Select speakers (optionally a script/scene before and after), then in <b>Library</b> or <b>Say</b> tap <b>📱 Create script</b>. On iPhone: long-press the lock screen → Customize → <b>Home Assistant</b> widget → pick the script. You can also add it to Control Center (iOS 18) or bind it to the Action button.</p>
-  <h2>4. Siri & Shortcuts (any text from the phone)</h2>${key}
-  <p><b>Shortcuts</b> app → new shortcut → action <b>Get Contents of URL</b>:</p>
-  <ul><li>URL: <code>${base}/api/announce</code></li><li>Method: <b>POST</b></li>
-  <li>Headers: <code>Authorization</code> = <code>Bearer YOUR_KEY</code>, <code>Content-Type</code> = <code>application/json</code></li>
-  <li>Request body: <b>JSON</b>, e.g. (put <b>Ask for Input</b> / <b>Dictate Text</b> into “message”):</li></ul>
+  <h2>⚡ One script that opens the whole interface</h2>
+  <p>Instead of scripts for single sounds: one script/shortcut opens the full-screen announcement interface and you pick speakers and sounds there (⚡ Quick tab: favorite sounds as big tiles + a text box).</p>
+  <div class="prof" id="lnch">
+    <label class="f">Phone (HA notify service)</label><select id="lnPhone">${opts}</select>
+    <div class="row"><div class="grow"><label class="f">System</label><select id="lnOs"><option value="ios">iPhone</option><option value="android">Android</option></select></div>
+    <div class="grow"><label class="f">Open</label><select id="lnTarget"><option value="ingress">Panel inside the Home Assistant app</option><option value="standalone">Standalone interface (port 8765)</option></select></div></div>
+    <div class="row"><button class="b" id="lnGo">Create script “HAnnounce: open interface”</button></div>
+    <div class="hint">The script sends a “tap to open” notification to the phone (Android opens it directly). Nothing is played. Run it from the HA app “Scripts” widget on the lock screen.</div>
+  </div>
+  <h2>📲 No notification: iOS shortcut that opens it instantly</h2>
+  <p><b>Shortcuts</b> app → new shortcut → <b>Open URL</b> → <code>${dl}</code>. Add it to the lock screen (Shortcuts widget), Action button, Back Tap, or say “Hey Siri, Announce”.</p>
+  <h2>🖥 Standalone app</h2>${key}
+  <p>Safari → <code>${base}/?quick=1</code> → <b>Share → Add to Home Screen</b>. Opens full screen with the ⚡ Quick view only. Enter the API key on first launch.</p>
+  <h2>🗣 Siri & Shortcuts with your own text (API)</h2>${key}
+  <p><b>Get Contents of URL</b>: URL <code>${base}/api/announce</code>, method <b>POST</b>, headers <code>Authorization: Bearer YOUR_KEY</code> and <code>Content-Type: application/json</code>, JSON body:</p>
   <pre>${sample}</pre>
-  <p>Name it “Announce” and say <i>“Hey Siri, Announce”</i>. Also works from a lock screen widget, home screen or Back Tap (Settings → Accessibility → Touch → Back Tap).</p>
-  <h2>5. Script or scene together with the announcement</h2>
-  <p>Pick a script or scene in “Run before/after” (e.g. dim lights before, restore after). In the API use <code>before_action</code> / <code>after_action</code>:</p>
-  <pre>${sample2}</pre>
-  <h2>6. Android</h2>
-  <p>Home Assistant app: long-press the icon for shortcuts, or add a <i>Button</i>/<i>Script</i> widget for the script from step 3. For custom text use e.g. the HTTP Shortcuts app with the data from step 4.</p>`;
+  <h2>🎬 Script or scene together with the announcement</h2>
+  <p>“Run before/after” in Options (e.g. dim lights before, restore after). In the API: <code>before_action</code>, <code>after_action</code>.</p>`;
+  $("lnGo").onclick = async () => {
+    if(!$("lnPhone").value) return toast(pl?"Nie znaleziono telefonu z aplikacją HA (mobile_app_*).":"No phone with the HA app found (mobile_app_*).",true);
+    try{ showScriptResult(await post("launcher",{notify:$("lnPhone").value,platform:$("lnOs").value,target:$("lnTarget").value})); }
+    catch(e){ toast(e.message,true); }
+  };
 }
 
 
-showTab(store.get("tab","say"));
+if(new URLSearchParams(location.search).has("quick")) document.body.classList.add("kiosk");
+showTab((location.hash||"").slice(1) || "quick");
 refresh().catch(e => toast(e.message,true));
 </script>
 </body>

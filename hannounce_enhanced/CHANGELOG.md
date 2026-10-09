@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.7.0
+- One generic launcher script/shortcut that opens the interface full screen (replaces per-sound scripts); new ⚡ Quick view with favorite sounds as tiles, recent messages; ?quick=1 kiosk mode.
+
 ## 1.6.0
 - New interface; speaker detection (platform, model, announce support), calibration, duplicate detection/hiding, manual remove/restore, favorites for speakers and sounds, library search and duplicate removal.
 
