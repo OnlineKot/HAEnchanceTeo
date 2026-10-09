@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.6.0
+- New interface; speaker detection (platform, model, announce support), calibration, duplicate detection/hiding, manual remove/restore, favorites for speakers and sounds, library search and duplicate removal.
+
 ## 1.5.0
 - Run a script or scene before/after an announcement (pickers, API, generated scripts); in-app "App" tab with phone instructions.
 

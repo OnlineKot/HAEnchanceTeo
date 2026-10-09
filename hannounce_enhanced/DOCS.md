@@ -10,6 +10,19 @@ Panel **HAnnounce** pojawia się w bocznym menu Home Assistanta (ingress).
 - **Jednorazowo** – dźwięk jest odtworzony i automatycznie usuwany, albo **zapisz w bibliotece** i używaj wielokrotnie.
 - Opcjonalna **zmiana głośności** na czas ogłoszenia (potem przywracana).
 
+## Głośniki: wykrywanie, kalibracja, duplikaty, ulubione
+Zakładka **Głośniki** skanuje wszystkie odtwarzacze z HA i pokazuje: integrację (np. sonos, cast), producenta/model,
+stan, czy obsługują `announce`, czy są niedostępne.
+- **★ Ulubione** – ulubione głośniki są pierwsze na liście, przycisk „★ Ulubione” zaznacza je jednym kliknięciem.
+  Ulubione mają też dźwięki w Bibliotece (są na górze).
+- **Kalibruj** – odtwarza cicho krótki dźwięk testowy na głośniku, mierzy opóźnienie startu i „zawyżony” czas
+  odtwarzania, wykrywa obsługę `announce` i na tej podstawie sam ustawia profil (tryb wznawiania, opóźnienie po,
+  ewentualnie włączanie/wyłączanie zasilania). Wynik możesz poprawić w *Ustawienia* głośnika.
+- **Duplikaty głośników** – ten sam fizyczny głośnik widoczny jako kilka encji (to samo urządzenie, ta sama nazwa albo
+  `_2`). „Ukryj duplikaty” zostawia najlepszą encję (dostępną, z `announce`).
+- **Usuń / Przywróć** – ręczne ukrycie głośnika na listach (nie usuwa encji z Home Assistanta; „Pokaż ukryte” przywraca).
+- **Duplikaty w Bibliotece** – „Usuń duplikaty” kasuje identyczne dźwięki, zostawiając ulubiony lub najstarszy.
+
 ## Skrypt lub scena przed / po ogłoszeniu
 Nad zakładkami są dwie listy: **Uruchom przed** i **Uruchom po** – wybierasz skrypt lub scenę z Home Assistanta
 (np. przyciemnij światło przed, przywróć po). W API: `before_action`, `after_action` (np. `scene.salon`, `script.xyz`).

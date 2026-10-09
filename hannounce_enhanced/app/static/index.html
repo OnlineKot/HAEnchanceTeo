@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>HAnnounce Enhanced</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -11,58 +11,90 @@
 <meta name="apple-mobile-web-app-title" content="HAnnounce">
 <meta name="theme-color" content="#03a9f4">
 <style>
-:root{--bg:#f4f5f7;--card:#fff;--fg:#1c1e21;--mut:#6b7280;--acc:#03a9f4;--acc2:#0288d1;--bd:#e2e5ea;--ok:#2e7d32;--err:#c62828}
-@media (prefers-color-scheme:dark){:root{--bg:#111318;--card:#1c1f26;--fg:#e8eaed;--mut:#9aa0aa;--bd:#2c303a}}
+:root{--bg:#eef1f5;--card:#fff;--fg:#1b1f27;--mut:#667085;--acc:#0b9ee8;--acc2:#0786c7;--accbg:#e4f4fd;--bd:#e3e7ee;--ok:#2e9e55;--warn:#d98a00;--err:#d1383d;--sh:0 1px 2px rgba(16,24,40,.06),0 4px 14px rgba(16,24,40,.05)}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1116;--card:#171b22;--fg:#e8ebf0;--mut:#9aa3b2;--accbg:#10303f;--bd:#262c37;--sh:0 1px 2px rgba(0,0,0,.4)}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,sans-serif}
-main{max-width:760px;margin:0 auto;padding:16px}
-h1{font-size:20px;margin:4px 0 14px;display:flex;align-items:center;gap:8px}
-h2{font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:0 0 10px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
-.players{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
-.players label{display:flex;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--bd);border-radius:8px;cursor:pointer}
-.players label small{color:var(--mut);margin-left:auto}
-.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.tabs button{background:none;border:1px solid var(--bd);color:var(--fg);padding:7px 14px;border-radius:20px;cursor:pointer;font:inherit}
-.tabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding-bottom:env(safe-area-inset-bottom)}
+main{max-width:820px;margin:0 auto;padding:14px 14px 30px}
+header{display:flex;align-items:center;gap:10px;margin:2px 0 14px}
+header .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#29b6f6,#0277bd);display:grid;place-items:center;font-size:20px;box-shadow:var(--sh)}
+header h1{font-size:19px;margin:0;line-height:1.1}header small{color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px;margin-bottom:14px;box-shadow:var(--sh)}
+.card>h2,.sec{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:0 0 10px;display:flex;align-items:center;gap:8px;font-weight:700}
+.sec .sp{flex:1}
+.link{background:none;border:0;color:var(--acc);cursor:pointer;font:inherit;font-size:13px;padding:2px 4px;text-transform:none;letter-spacing:0;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:22px;border:1.5px solid var(--bd);background:var(--card);color:var(--fg);cursor:pointer;font:inherit;transition:.12s;-webkit-tap-highlight-color:transparent}
+.chip:hover{border-color:var(--acc)}
+.chip.on{background:var(--accbg);border-color:var(--acc);font-weight:600}
+.chip .star{color:#f5b301;font-size:13px}
+.dot{width:9px;height:9px;border-radius:50%;background:#9aa3b2;flex:none}
+.dot.playing,.dot.buffering{background:var(--ok)}.dot.idle,.dot.on,.dot.paused{background:var(--acc)}.dot.unavailable,.dot.unknown{background:var(--err)}
+.empty{color:var(--mut);font-size:14px;padding:6px 2px}
+.opts{margin-top:12px;border-top:1px solid var(--bd);padding-top:10px}
+.opts summary{cursor:pointer;color:var(--mut);font-size:13px;font-weight:600}
+.tabs{display:flex;gap:4px;overflow-x:auto;margin:0 -14px 12px;padding:0 14px 2px;scrollbar-width:none;border-bottom:1px solid var(--bd)}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;background:none;border:0;border-bottom:3px solid transparent;color:var(--mut);padding:9px 12px;cursor:pointer;font:inherit;font-weight:600;white-space:nowrap}
+.tabs button.on{color:var(--acc);border-bottom-color:var(--acc)}
 .pane{display:none}.pane.on{display:block}
-label.f{display:block;margin:8px 0 3px;color:var(--mut);font-size:13px}
-input[type=text],input[type=number],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit}
-textarea{min-height:80px;resize:vertical}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
-.row>.grow{flex:1;min-width:110px}
-button.b{background:var(--acc);color:#fff;border:0;padding:9px 16px;border-radius:8px;cursor:pointer;font:inherit}
+label.f{display:block;margin:10px 0 4px;color:var(--mut);font-size:13px}
+label.chk{display:flex;gap:8px;align-items:center;margin:9px 0;font-size:14px}
+input[type=text],input[type=number],input[type=time],input[type=search],select,textarea{width:100%;padding:9px 11px;border:1.5px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--fg);font:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
+textarea{min-height:84px;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:10px}
+.row>.grow{flex:1;min-width:120px}
+button.b{background:var(--acc);color:#fff;border:0;padding:10px 16px;border-radius:10px;cursor:pointer;font:inherit;font-weight:600}
 button.b:hover{background:var(--acc2)}
-button.b.alt{background:none;color:var(--acc);border:1px solid var(--acc)}
-button.b.red{background:var(--err)}
+button.b.alt{background:none;color:var(--acc);border:1.5px solid var(--acc)}
+button.b.red{background:var(--err)}button.b.sm{padding:6px 11px;font-size:13px}
 button:disabled{opacity:.5;cursor:default}
 audio{width:100%;margin-top:10px}
-.item{display:flex;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--bd);flex-wrap:wrap}
+.item{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--bd);flex-wrap:wrap}
 .item:first-child{border-top:0}
-.item .n{flex:1;min-width:140px}.item small{color:var(--mut)}
-#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:10px;opacity:0;transition:.25s;pointer-events:none;max-width:90%}
+.item .n{flex:1;min-width:150px}.item small{color:var(--mut)}
+.star-btn{background:none;border:0;font-size:21px;cursor:pointer;color:var(--mut);padding:0 4px;line-height:1}
+.star-btn.on{color:#f5b301}
+.badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+.badge{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--bg);border:1px solid var(--bd);color:var(--mut)}
+.badge.ok{color:var(--ok);border-color:var(--ok)}.badge.warn{color:var(--warn);border-color:var(--warn)}.badge.err{color:var(--err);border-color:var(--err)}
+.spk{border-top:1px solid var(--bd);padding:10px 0}.spk:first-child{border-top:0}
+.spk.dup{opacity:.75}
+.spk .head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.spk .head .n{flex:1;min-width:150px}
+.prof{background:var(--bg);border-radius:12px;padding:6px 12px 12px;margin-top:10px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.tools input[type=search]{flex:1;min-width:150px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;max-width:90%;z-index:9;box-shadow:var(--sh)}
 #toast.on{opacity:1}
-footer{text-align:center;color:var(--mut);font-size:13px;margin:20px 0 8px}
-footer a{color:var(--acc);text-decoration:none;font-weight:600}
-.hint{color:var(--mut);font-size:13px;margin-top:8px}
-.rec{color:var(--err);font-weight:600}
+footer{text-align:center;color:var(--mut);font-size:13px;margin:18px 0 6px}
+footer a{color:var(--acc);text-decoration:none;font-weight:700}
+.hint{color:var(--mut);font-size:13px;margin-top:8px}.rec{color:var(--err);font-weight:600}
+pre{background:var(--bg);padding:10px;border-radius:10px;overflow:auto;font-size:12px}
+code{background:var(--bg);padding:1px 5px;border-radius:5px}
+#p-help h2{font-size:15px;margin:18px 0 4px}
 </style>
 </head>
 <body>
 <main>
-<h1>📣 HAnnounce Enhanced</h1>
+<header><div class="logo">📣</div><div><h1>HAnnounce Enhanced</h1><small data-i="tagline"></small></div></header>
 
 <div class="card">
-  <h2 data-i="targets"></h2>
-  <div class="players" id="players"></div>
-  <div class="row">
-    <div class="grow"><label class="f" data-i="actBefore"></label><select id="actBefore"></select></div>
-    <div class="grow"><label class="f" data-i="actAfter"></label><select id="actAfter"></select></div>
-  </div>
-  <div class="row">
-    <label class="grow"><input type="checkbox" id="volOn"> <span data-i="setvol"></span>: <b id="volVal">50</b>%
-      <input type="range" id="vol" min="0" max="100" value="50" style="width:100%"></label>
-  </div>
+  <h2><span data-i="targets"></span><span class="sp"></span>
+    <button class="link" id="selFav">★ <span data-i="favs"></span></button>
+    <button class="link" id="selAll" data-i="all"></button>
+    <button class="link" id="selNone" data-i="none"></button></h2>
+  <div class="chips" id="players"></div>
+  <details class="opts">
+    <summary data-i="options"></summary>
+    <div class="row">
+      <div class="grow"><label class="f" data-i="actBefore"></label><select id="actBefore"></select></div>
+      <div class="grow"><label class="f" data-i="actAfter"></label><select id="actAfter"></select></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="volOn"> <span><span data-i="setvol"></span>: <b id="volVal">50</b>%</span></label>
+    <input type="range" id="vol" min="0" max="100" value="50" style="width:100%">
+  </details>
 </div>
 
 <div class="card">
@@ -77,9 +109,9 @@ footer a{color:var(--acc);text-decoration:none;font-weight:600}
     </div>
     <audio id="sayAudio" controls hidden></audio>
     <div class="row"><button class="b" id="sayGo" data-i="announce"></button>
-    <button class="b alt" id="sayPrev" data-i="preview"></button>
-    <button class="b alt" id="saySave" data-i="save"></button>
-    <button class="b alt" id="sayScript" data-i="mkscript"></button></div>
+      <button class="b alt" id="sayPrev" data-i="preview"></button>
+      <button class="b alt" id="saySave" data-i="save"></button>
+      <button class="b alt" id="sayScript" data-i="mkscript"></button></div>
   </div>
 
   <div class="pane" id="p-rec">
@@ -112,102 +144,150 @@ footer a{color:var(--acc);text-decoration:none;font-weight:600}
     <div class="out" id="gOut"></div>
   </div>
 
+  <div class="pane" id="p-lib">
+    <div class="tools">
+      <input type="search" id="libQ" data-ph="search">
+      <button class="b alt sm" id="libFav">★</button>
+      <button class="b alt sm" id="libDup" data-i="dedupe"></button>
+    </div>
+    <div id="libList"></div>
+  </div>
+
+  <div class="pane" id="p-spk">
+    <div class="tools">
+      <button class="b alt sm" id="spkScan" data-i="rescan"></button>
+      <button class="b alt sm" id="spkDup" data-i="dedupeSpk"></button>
+      <label class="chk" style="margin:0"><input type="checkbox" id="spkHidden"> <span data-i="showHidden"></span></label>
+    </div>
+    <div class="hint" data-i="spkHint" style="margin:0 0 8px"></div>
+    <div id="spkList"></div>
+  </div>
+
   <div class="pane" id="p-help"><div id="helpBox"></div></div>
-
-  <div class="pane" id="p-dev"><div id="devList"></div></div>
-
-  <div class="pane" id="p-lib"><div id="libList"></div></div>
 </div>
 
 <div class="card" id="scriptRes" hidden></div>
 
-<footer>
-  <span data-i="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a>
-</footer>
+<footer><span data-i="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
 </main>
 <div id="toast"></div>
 
 <script>
 const L = {
- en:{targets:"Speakers",setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",devices:"Devices",app:"📱 App",actBefore:"Run before (script / scene)",actAfter:"Run after (script / scene)",actNone:"— none —",
-  ttsent:"TTS engine",message:"Message",lang:"Language",voice:"Voice",deflt:"(default)",ttsnone:"No TTS engine found in Home Assistant",announce:"Announce",rec:"● Record",stop:"■ Stop",devrec:"Use device recorder",
+ en:{tagline:"Announcements for your speakers",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
+  setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",speakers:"Speakers",app:"📱 App",
+  actBefore:"Run before (script / scene)",actAfter:"Run after (script / scene)",actNone:"— none —",
+  ttsent:"TTS engine",message:"Message",lang:"Language",voice:"Voice",deflt:"(default)",ttsnone:"No TTS engine found in Home Assistant",
+  announce:"Announce",rec:"● Record",stop:"■ Stop",devrec:"Use device recorder",
   nomic:"Browser microphone needs HTTPS - use \"Use device recorder\" or open HA over HTTPS.",file:"Audio file",type:"Sound",freq:"Frequency Hz",dur:"Duration s",rep:"Repeat",
-  preview:"▶ Preview",name:"Name",once:"Announce once",save:"Save to library",saveAnn:"Save & announce",empty:"Library is empty.",del:"Delete",rename:"Rename",
-  mkscript:"📱 Create script (iPhone)",scriptOk:"Script created: ",scriptManual:"Could not create it automatically. Paste into scripts.yaml, then reload scripts:",scriptHow:"iPhone: long-press the lock screen → Customize → add the Home Assistant widget → choose this script. (Companion app must be installed.)",dDefault:"Default for all speakers",dVol:"Announce volume % (empty = unchanged)",dRestVol:"Restore volume afterwards",dResume:"After announcement",
+  preview:"▶ Preview",name:"Name",once:"Announce once",save:"Save to library",saveAnn:"Save & announce",empty:"Nothing here yet.",del:"Delete",rename:"Rename",
+  sel:"Select at least one speaker.",sent:"Announced ✓",saved:"Saved ✓",confirmDel:"Delete this sound?",by:"Created by",nomsg:"Type a message.",nofile:"Choose or record a sound first.",newname:"New name",
+  mkscript:"📱 Create script",scriptOk:"Script created: ",scriptManual:"Could not create it automatically. Paste into scripts.yaml, then reload scripts:",
+  scriptHow:"iPhone: long-press the lock screen → Customize → add the Home Assistant widget → choose this script.",
+  askkey:"API key (from add-on configuration)",search:"Search sounds…",dedupe:"Remove duplicates",removed:"Removed duplicates: ",noDup:"No duplicates found.",
+  rescan:"🔍 Scan speakers",dedupeSpk:"Hide duplicates",showHidden:"Show hidden",spkHint:"Detected media players. ★ favorite · Calibrate measures how the speaker behaves · Remove hides it from the lists (restore any time).",
+  calibrate:"Calibrate",calConfirm:"Calibration plays a short test sound on this speaker (quietly) and measures its timing. Continue?",calRunning:"Calibrating…",calDone:"Calibrated ✓",
+  calNoMeasure:"Could not measure timing (the player handles announcements itself) - defaults applied.",
+  remove:"Remove",restore:"Restore",settings:"Settings",dupOf:"duplicate of",hiddenB:"hidden",announceOk:"announce ✓",announceNo:"no announce",
+  hiddenDups:"Hidden duplicates: ",calAt:"calibrated",unavail:"unavailable",
+  dDefault:"Default for all speakers",dVol:"Announce volume % (empty = unchanged)",dRestVol:"Restore volume afterwards",dResume:"After announcement",
   dAuto:"Let the player handle it (announce)",dManual:"Restore what was playing (media + position)",dNone:"Do nothing",dBefore:"Wait before playing (s)",dAfter:"Wait after it ends, then restore (s)",
   dPower:"Turn on if off, turn off afterwards",dUnmute:"Unmute during announcement",dQuiet:"Quiet hours",dQFrom:"from",dQTo:"to",dQVol:"Quiet volume % (empty = skip speaker)",
-  dSave:"Save",dReset:"Reset",dCopy:"Copy to all speakers",dSaved:"Settings saved ✓",dInherit:"uses default",dEdit:"Edit",askkey:"API key (from add-on configuration)",sel:"Select at least one speaker.",sent:"Announced ✓",saved:"Saved ✓",confirmDel:"Delete this sound?",by:"Created by",nomsg:"Type a message.",nofile:"Choose or record a sound first.",newname:"New name"},
- pl:{targets:"Głośniki",setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",devices:"Urządzenia",app:"📱 Aplikacja",actBefore:"Uruchom przed (skrypt / scena)",actAfter:"Uruchom po (skrypt / scena)",actNone:"— brak —",
-  ttsent:"Silnik TTS",message:"Wiadomość",lang:"Język",voice:"Głos",deflt:"(domyślny)",ttsnone:"Nie znaleziono silnika TTS w Home Assistant",announce:"Ogłoś",rec:"● Nagrywaj",stop:"■ Stop",devrec:"Nagrywarka urządzenia",
+  dSave:"Save",dReset:"Reset",dCopy:"Copy to all speakers",dSaved:"Settings saved ✓"},
+ pl:{tagline:"Ogłoszenia na Twoich głośnikach",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
+  setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",speakers:"Głośniki",app:"📱 Aplikacja",
+  actBefore:"Uruchom przed (skrypt / scena)",actAfter:"Uruchom po (skrypt / scena)",actNone:"— brak —",
+  ttsent:"Silnik TTS",message:"Wiadomość",lang:"Język",voice:"Głos",deflt:"(domyślny)",ttsnone:"Nie znaleziono silnika TTS w Home Assistant",
+  announce:"Ogłoś",rec:"● Nagrywaj",stop:"■ Stop",devrec:"Nagrywarka urządzenia",
   nomic:"Mikrofon w przeglądarce wymaga HTTPS - użyj „Nagrywarka urządzenia” albo otwórz HA przez HTTPS.",file:"Plik audio",type:"Dźwięk",freq:"Częstotliwość Hz",dur:"Czas s",rep:"Powtórzenia",
-  preview:"▶ Podgląd",name:"Nazwa",once:"Ogłoś jednorazowo",save:"Zapisz w bibliotece",saveAnn:"Zapisz i ogłoś",empty:"Biblioteka jest pusta.",del:"Usuń",rename:"Zmień nazwę",
-  mkscript:"📱 Utwórz skrypt (iPhone)",scriptOk:"Utworzono skrypt: ",scriptManual:"Nie udało się automatycznie. Wklej do scripts.yaml i przeładuj skrypty:",scriptHow:"iPhone: przytrzymaj ekran blokady → Dostosuj → dodaj widżet Home Assistant → wybierz ten skrypt. (Wymaga aplikacji Companion.)",dDefault:"Domyślne dla wszystkich głośników",dVol:"Głośność ogłoszenia % (puste = bez zmian)",dRestVol:"Przywróć głośność po ogłoszeniu",dResume:"Po ogłoszeniu",
+  preview:"▶ Podgląd",name:"Nazwa",once:"Ogłoś jednorazowo",save:"Zapisz w bibliotece",saveAnn:"Zapisz i ogłoś",empty:"Na razie pusto.",del:"Usuń",rename:"Zmień nazwę",
+  sel:"Wybierz co najmniej jeden głośnik.",sent:"Ogłoszono ✓",saved:"Zapisano ✓",confirmDel:"Usunąć ten dźwięk?",by:"Stworzone przez",nomsg:"Wpisz wiadomość.",nofile:"Najpierw wybierz lub nagraj dźwięk.",newname:"Nowa nazwa",
+  mkscript:"📱 Utwórz skrypt",scriptOk:"Utworzono skrypt: ",scriptManual:"Nie udało się automatycznie. Wklej do scripts.yaml i przeładuj skrypty:",
+  scriptHow:"iPhone: przytrzymaj ekran blokady → Dostosuj → dodaj widżet Home Assistant → wybierz ten skrypt.",
+  askkey:"Klucz API (z konfiguracji dodatku)",search:"Szukaj dźwięków…",dedupe:"Usuń duplikaty",removed:"Usunięto duplikaty: ",noDup:"Nie znaleziono duplikatów.",
+  rescan:"🔍 Skanuj głośniki",dedupeSpk:"Ukryj duplikaty",showHidden:"Pokaż ukryte",spkHint:"Wykryte odtwarzacze. ★ ulubiony · Kalibruj mierzy, jak zachowuje się głośnik · Usuń ukrywa go na listach (można przywrócić).",
+  calibrate:"Kalibruj",calConfirm:"Kalibracja odtworzy krótki dźwięk testowy na tym głośniku (cicho) i zmierzy jego czasy. Kontynuować?",calRunning:"Kalibrowanie…",calDone:"Skalibrowano ✓",
+  calNoMeasure:"Nie udało się zmierzyć czasów (odtwarzacz sam obsługuje ogłoszenia) - ustawiono domyślne.",
+  remove:"Usuń",restore:"Przywróć",settings:"Ustawienia",dupOf:"duplikat",hiddenB:"ukryty",announceOk:"announce ✓",announceNo:"brak announce",
+  hiddenDups:"Ukryto duplikaty: ",calAt:"skalibrowany",unavail:"niedostępny",
+  dDefault:"Domyślne dla wszystkich głośników",dVol:"Głośność ogłoszenia % (puste = bez zmian)",dRestVol:"Przywróć głośność po ogłoszeniu",dResume:"Po ogłoszeniu",
   dAuto:"Zostaw odtwarzaczowi (announce)",dManual:"Przywróć to, co grało (utwór + pozycja)",dNone:"Nic nie rób",dBefore:"Czekaj przed odtworzeniem (s)",dAfter:"Czekaj po zakończeniu i przywróć (s)",
   dPower:"Włącz jeśli wyłączony, po wszystkim wyłącz",dUnmute:"Wyłącz wyciszenie na czas ogłoszenia",dQuiet:"Godziny ciszy",dQFrom:"od",dQTo:"do",dQVol:"Głośność w ciszy % (puste = pomiń głośnik)",
-  dSave:"Zapisz",dReset:"Resetuj",dCopy:"Kopiuj do wszystkich głośników",dSaved:"Zapisano ustawienia ✓",dInherit:"używa domyślnych",dEdit:"Edytuj",askkey:"Klucz API (z konfiguracji dodatku)",sel:"Wybierz co najmniej jeden głośnik.",sent:"Ogłoszono ✓",saved:"Zapisano ✓",confirmDel:"Usunąć ten dźwięk?",by:"Stworzone przez",nomsg:"Wpisz wiadomość.",nofile:"Najpierw wybierz lub nagraj dźwięk.",newname:"Nowa nazwa"}
+  dSave:"Zapisz",dReset:"Resetuj",dCopy:"Kopiuj do wszystkich głośników",dSaved:"Zapisano ustawienia ✓"}
 };
 const lang = (navigator.language||"en").toLowerCase().startsWith("pl") ? "pl" : "en";
 const t = k => L[lang][k] || L.en[k] || k;
 const $ = id => document.getElementById(id);
+const esc = x => String(x).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const key = {get:()=>{try{return localStorage.getItem("hae_key")||""}catch{return ""}}, set:v=>{try{localStorage.setItem("hae_key",v)}catch{}}};
+const store = {get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}}, set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 async function api(p, o = {}, retry = true){
   const h = new Headers(o.headers || {});
   if(key.get()) h.set("Authorization", "Bearer " + key.get());
   const r = await fetch("api/" + p, {...o, headers:h});
   const j = await r.json().catch(() => ({}));
-  if(r.status === 401 && retry){            // standalone interface: ask for the API key
+  if(r.status === 401 && retry){
     const k = prompt(t("askkey"));
     if(k){ key.set(k.trim()); return api(p, o, false); }
   }
   if(!r.ok) throw new Error(j.error || r.statusText);
   return j;
 }
+const post = (p, body) => api(p, {method:"POST", body:JSON.stringify(body)});
 let toastT;
-function toast(m, bad){const e=$("toast");e.textContent=m;e.style.background=bad?"var(--err)":"";e.style.color=bad?"#fff":"";e.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),3200);}
+function toast(m, bad){const e=$("toast");e.textContent=m;e.style.background=bad?"var(--err)":"";e.style.color=bad?"#fff":"";e.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),3600);}
 document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i));
-
-const store = {get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}}, set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+document.querySelectorAll("[data-ph]").forEach(e => e.placeholder = t(e.dataset.ph));
 
 // ---- tabs
-const TABS = [["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"],["dev","devices"],["help","app"]];
-TABS.forEach(([id, key]) => {
-  const b = document.createElement("button"); b.textContent = t(key); b.dataset.id = id;
+const TABS = [["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"],["spk","speakers"],["help","app"]];
+TABS.forEach(([id, k]) => {
+  const b = document.createElement("button"); b.textContent = t(k); b.dataset.id = id;
   b.onclick = () => showTab(id); $("tabs").append(b);
 });
 function showTab(id){
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.id===id));
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="p-"+id));
-  store.set("tab",id); if(id==="lib") renderLib(); if(id==="dev") renderDevs(); if(id==="help") renderHelp();
+  store.set("tab",id);
+  if(id==="lib") renderLib(); if(id==="spk") renderSpk(); if(id==="help") renderHelp();
 }
 
 // ---- state
-let S = {players:[],tts:[],library:[],generators:{}};
+let S = {players:[],tts:[],library:[],generators:{},actions:[]};
+let selected = new Set(store.get("targets", []));
+const visible = () => S.players.filter(p=>!p.hidden);
 async function refresh(){
   S = await api("state");
-  const sel = new Set(store.get("targets", []));
-  $("players").innerHTML = "";
-  S.players.forEach(p => {
-    const l = document.createElement("label");
-    l.innerHTML = `<input type="checkbox" value="${p.entity_id}"><span></span><small>${p.state}</small>`;
-    l.querySelector("span").textContent = p.name;
-    const c = l.querySelector("input"); c.checked = sel.has(p.entity_id);
-    c.onchange = () => store.set("targets", targets());
-    $("players").append(l);
-  });
-  $("ttsEnt").innerHTML = S.tts.length ? S.tts.map(x=>`<option value="${x.entity_id}">${x.name}</option>`).join("")
+  const ids = new Set(S.players.map(p=>p.entity_id));
+  selected = new Set([...selected].filter(x=>ids.has(x) && !S.players.find(p=>p.entity_id===x).hidden));
+  renderChips();
+  $("ttsEnt").innerHTML = S.tts.length ? S.tts.map(x=>`<option value="${esc(x.entity_id)}">${esc(x.name)}</option>`).join("")
     : `<option value="">${t("ttsnone")}</option>`;
-  fillActions();
-  loadLangs();
-  $("gType").innerHTML = Object.entries(S.generators).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
-  renderLib();
+  $("gType").innerHTML = Object.entries(S.generators).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join("");
+  fillActions(); loadLangs(); renderLib(); renderSpk();
 }
-const targets = () => [...document.querySelectorAll("#players input:checked")].map(c=>c.value);
+function renderChips(){
+  const box = $("players"); box.innerHTML = "";
+  const vis = visible();
+  if(!vis.length) box.innerHTML = `<div class="empty">${t("empty")}</div>`;
+  vis.forEach(p => {
+    const c = document.createElement("button"); c.className = "chip" + (selected.has(p.entity_id) ? " on" : "");
+    c.innerHTML = `<span class="dot ${esc(p.state)}"></span><span></span>${p.favorite?'<span class="star">★</span>':""}`;
+    c.children[1].textContent = p.name; c.title = p.entity_id + " · " + p.state;
+    c.onclick = () => { selected.has(p.entity_id) ? selected.delete(p.entity_id) : selected.add(p.entity_id); store.set("targets",[...selected]); renderChips(); };
+    box.append(c);
+  });
+}
+$("selAll").onclick = () => { selected = new Set(visible().map(p=>p.entity_id)); store.set("targets",[...selected]); renderChips(); };
+$("selNone").onclick = () => { selected.clear(); store.set("targets",[]); renderChips(); };
+$("selFav").onclick = () => { selected = new Set(visible().filter(p=>p.favorite).map(p=>p.entity_id)); store.set("targets",[...selected]); renderChips(); };
+const targets = () => [...selected];
 $("vol").oninput = () => $("volVal").textContent = $("vol").value;
 function fillActions(){
   const grp = {script:[],scene:[]};
   (S.actions||[]).forEach(a => grp[a.entity_id.split(".")[0]].push(a));
   const html = `<option value="">${t("actNone")}</option>` + ["script","scene"].map(g =>
-    grp[g].length ? `<optgroup label="${g}">` + grp[g].map(a=>`<option value="${a.entity_id}">${a.name.replace(/</g,"&lt;")}</option>`).join("") + "</optgroup>" : "").join("");
+    grp[g].length ? `<optgroup label="${g}">` + grp[g].map(a=>`<option value="${esc(a.entity_id)}">${esc(a.name)}</option>`).join("") + "</optgroup>" : "").join("");
   [["actBefore","before"],["actAfter","after"]].forEach(([id,k]) => {
     $(id).innerHTML = html; $(id).value = store.get("act_"+k,""); if($(id).value!==store.get("act_"+k,"")) $(id).value = "";
     $(id).onchange = () => store.set("act_"+k, $(id).value);
@@ -218,7 +298,7 @@ function extra(){ const x={targets:targets(),...actions_()}; if($("volOn").check
 function needTargets(){ if(!targets().length){toast(t("sel"),true);return false} return true; }
 async function announce(body){
   if(!needTargets()) return false;
-  try{ await api("announce",{method:"POST",body:JSON.stringify({...extra(),...body})}); toast(t("sent")); return true; }
+  try{ const r = await post("announce",{...extra(),...body}); toast(t("sent") + (r.skipped?.length ? " (" + r.skipped.length + " skipped)" : "")); return true; }
   catch(e){ toast(e.message,true); return false; }
 }
 
@@ -226,7 +306,7 @@ async function announce(body){
 function loadLangs(){
   const eng = S.tts.find(x=>x.entity_id===$("ttsEnt").value);
   const prev = $("ttsLang").value;
-  $("ttsLang").innerHTML = `<option value="">${t("deflt")}</option>` + (eng?.languages||[]).map(l=>`<option>${l}</option>`).join("");
+  $("ttsLang").innerHTML = `<option value="">${t("deflt")}</option>` + (eng?.languages||[]).map(l=>`<option>${esc(l)}</option>`).join("");
   if(prev) $("ttsLang").value = prev;
   loadVoices();
 }
@@ -235,8 +315,7 @@ async function loadVoices(){
   if(!$("ttsEnt").value) return;
   try{
     const v = await api(`tts/voices?engine=${encodeURIComponent($("ttsEnt").value)}&language=${encodeURIComponent($("ttsLang").value)}`);
-    $("ttsVoice").innerHTML += v.map(x=>`<option value="${x.id}"></option>`).join("");
-    [...$("ttsVoice").options].slice(1).forEach((o,i)=>o.textContent=v[i].name);
+    v.forEach(x => { const o=document.createElement("option"); o.value=x.id; o.textContent=x.name; $("ttsVoice").append(o); });
   }catch{}
 }
 $("ttsEnt").onchange = loadLangs; $("ttsLang").onchange = loadVoices;
@@ -247,32 +326,29 @@ function ttsBody(){
 $("sayGo").onclick = () => { const b=ttsBody(); if(b) announce(b); };
 $("sayPrev").onclick = async () => {
   const b=ttsBody(); if(!b) return;
-  try{ const it = await api("tts/item",{method:"POST",body:JSON.stringify({...b,save:false})});
+  try{ const it = await post("tts/item",{...b,save:false});
     $("sayAudio").src="media/"+it.file; $("sayAudio").hidden=false; $("sayAudio").play(); }catch(e){toast(e.message,true)}
 };
 $("saySave").onclick = async () => {
   const b=ttsBody(); if(!b) return;
   const name = prompt(t("name"), b.message.slice(0,40)); if(!name) return;
-  try{ await api("tts/item",{method:"POST",body:JSON.stringify({...b,save:true,name})}); toast(t("saved")); refresh(); }catch(e){toast(e.message,true)}
+  try{ await post("tts/item",{...b,save:true,name}); toast(t("saved")); refresh(); }catch(e){toast(e.message,true)}
 };
+$("sayScript").onclick = () => { const b=ttsBody(); if(b) makeScript(b); };
 
 async function makeScript(body){
   if(!needTargets()) return;
   try{
-    const r = await api("script",{method:"POST",body:JSON.stringify({targets:targets(),...actions_(),...body})});
+    const r = await post("script",{targets:targets(),...actions_(),...body});
     const box = $("scriptRes"); box.hidden = false; box.innerHTML = "";
     const p = document.createElement("div");
-    p.textContent = (r.created ? t("scriptOk") + r.entity_id : t("scriptManual")) ;
+    p.textContent = (r.created ? t("scriptOk") + r.entity_id : t("scriptManual"));
     box.append(p);
     if(!r.created){ const pre=document.createElement("textarea"); pre.readOnly=true; pre.value=r.yaml; box.append(pre); }
     const h = document.createElement("div"); h.className="hint"; h.textContent=t("scriptHow"); box.append(h);
     box.scrollIntoView({behavior:"smooth"});
   }catch(e){ toast(e.message,true); }
 }
-$("sayScript").onclick = () => {
-  const m = $("ttsMsg").value.trim(); if(!m) return toast(t("nomsg"),true);
-  makeScript({message:m,tts_entity:$("ttsEnt").value,language:$("ttsLang").value||undefined,voice:$("ttsVoice").value||undefined});
-};
 
 // ---- shared "sound source" actions: name box + once / save / save&announce
 function actions(box, getItem){
@@ -303,9 +379,7 @@ async function sendBlob(blob, fname, kind, save, name){
 // ---- record
 let blobRec = null, mr = null, chunks = [], tick;
 actions($("recOut"), (save,name)=>blobRec ? sendBlob(blobRec,"rec","record",save,name) : (toast(t("nofile"),true),null));
-function setRec(blob){
-  blobRec = blob; $("recAudio").src = URL.createObjectURL(blob); $("recAudio").hidden = false; $("recOut").hidden = false;
-}
+function setRec(blob){ blobRec = blob; $("recAudio").src = URL.createObjectURL(blob); $("recAudio").hidden = false; $("recOut").hidden = false; }
 if(!navigator.mediaDevices?.getUserMedia){ $("recBtn").disabled = true; $("recHint").textContent = t("nomic"); }
 $("recBtn").onclick = async () => {
   if(mr && mr.state==="recording"){ mr.stop(); return; }
@@ -334,18 +408,134 @@ $("upFile").onchange = e => {
 };
 
 // ---- generate
-function genBody(save,name){
-  return {type:$("gType").value,freq:+$("gFreq").value||null,duration:+$("gDur").value||null,repeat:+$("gRep").value||1,save,name};
-}
-const genItem = (save,name) => api("generate",{method:"POST",body:JSON.stringify(genBody(save,name))});
+const genBody = (save,name) => ({type:$("gType").value,freq:+$("gFreq").value||null,duration:+$("gDur").value||null,repeat:+$("gRep").value||1,save,name});
+const genItem = (save,name) => post("generate",genBody(save,name));
 actions($("gOut"), genItem);
 $("gPrev").onclick = async () => {
   try{ const it = await genItem(false,""); $("gAudio").src = "media/"+it.file; $("gAudio").hidden=false; $("gAudio").play(); }
   catch(e){ toast(e.message,true); }
 };
 
-// ---- help: how to send from the phone app
-const esc = x => String(x).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// ---- library (favorites first, search, duplicate removal)
+let favOnly = false;
+$("libQ").oninput = renderLib;
+$("libFav").onclick = () => { favOnly = !favOnly; $("libFav").classList.toggle("alt", !favOnly); renderLib(); };
+$("libDup").onclick = async () => {
+  try{ const r = await post("library/dedupe",{});
+    toast(r.removed.length ? t("removed") + r.removed.length : t("noDup")); refresh(); }catch(e){toast(e.message,true)}
+};
+function renderLib(){
+  const box = $("libList"), q = $("libQ").value.trim().toLowerCase();
+  let items = S.library.filter(i => (!favOnly || i.favorite) && (!q || i.name.toLowerCase().includes(q)));
+  items.sort((a,b) => (b.favorite - a.favorite) || (b.created - a.created));
+  box.innerHTML = items.length ? "" : `<div class="empty">${t("empty")}</div>`;
+  items.forEach(it => {
+    const d = document.createElement("div"); d.className = "item";
+    d.innerHTML = `<button class="star-btn ${it.favorite?"on":""}">${it.favorite?"★":"☆"}</button>
+      <div class="n"><b></b><br><small>${esc(it.kind)} · ${it.duration.toFixed(1)} s</small></div>
+      <audio controls preload="none" src="media/${it.file}" style="width:190px;margin:0"></audio>
+      <button class="b sm a">${t("announce")}</button><button class="b alt sm s">${t("mkscript")}</button>
+      <button class="b alt sm r">${t("rename")}</button><button class="b red sm x">${t("del")}</button>`;
+    d.querySelector("b").textContent = it.name;
+    d.querySelector(".star-btn").onclick = async () => { try{ await post("library/"+it.id,{favorite:!it.favorite}); refresh(); }catch(e){toast(e.message,true)} };
+    d.querySelector(".a").onclick = () => announce({item:it.id});
+    d.querySelector(".s").onclick = () => makeScript({item:it.id});
+    d.querySelector(".r").onclick = async () => {
+      const n = prompt(t("newname"), it.name); if(!n) return;
+      try{ await post("library/"+it.id,{name:n}); refresh(); }catch(e){toast(e.message,true)}
+    };
+    d.querySelector(".x").onclick = async () => {
+      if(!confirm(t("confirmDel"))) return;
+      try{ await api("library/"+it.id,{method:"DELETE"}); refresh(); }catch(e){toast(e.message,true)}
+    };
+    box.append(d);
+  });
+}
+
+// ---- speakers: detection, favorites, hide/remove, duplicates, calibration, per-speaker profile
+let D = {default:{},profiles:{}};
+const pct = v => v==null ? "" : Math.round(v*100);
+function profileForm(eid){
+  const p = D.profiles[eid] || D.default;
+  const f = document.createElement("div"); f.className = "prof";
+  f.innerHTML = `
+   <label class="f">${t("dVol")}</label><input type="number" min="0" max="100" class="vol" value="${pct(p.volume)}">
+   <label class="chk"><input type="checkbox" class="rv" ${p.restore_volume?"checked":""}> ${t("dRestVol")}</label>
+   <label class="f">${t("dResume")}</label><select class="rm">
+     <option value="auto">${t("dAuto")}</option><option value="manual">${t("dManual")}</option><option value="none">${t("dNone")}</option></select>
+   <div class="row"><div class="grow"><label class="f">${t("dBefore")}</label><input type="number" min="0" max="15" step="0.5" class="bd" value="${p.before_delay}"></div>
+   <div class="grow"><label class="f">${t("dAfter")}</label><input type="number" min="0" max="60" step="0.5" class="ad" value="${p.after_delay}"></div></div>
+   <label class="chk"><input type="checkbox" class="pw" ${p.power_cycle?"checked":""}> ${t("dPower")}</label>
+   <label class="chk"><input type="checkbox" class="um" ${p.unmute?"checked":""}> ${t("dUnmute")}</label>
+   <label class="f">${t("dQuiet")}</label>
+   <div class="row"><div class="grow">${t("dQFrom")} <input type="time" class="qf" value="${p.quiet_from}"></div>
+   <div class="grow">${t("dQTo")} <input type="time" class="qt" value="${p.quiet_to}"></div></div>
+   <label class="f">${t("dQVol")}</label><input type="number" min="0" max="100" class="qv" value="${pct(p.quiet_volume)}">
+   <div class="row"><button class="b sv">${t("dSave")}</button><button class="b alt rs">${t("dReset")}</button>
+   ${eid==="_default" ? `<button class="b alt cp">${t("dCopy")}</button>` : ""}</div>`;
+  f.querySelector(".rm").value = p.resume_mode;
+  const read = () => { const q=c=>f.querySelector(c); const n=c=>q(c).value===""?null:+q(c).value;
+    return {volume:n(".vol")==null?null:n(".vol")/100, restore_volume:q(".rv").checked, resume_mode:q(".rm").value,
+      before_delay:+q(".bd").value||0, after_delay:+q(".ad").value||0, power_cycle:q(".pw").checked, unmute:q(".um").checked,
+      quiet_from:q(".qf").value, quiet_to:q(".qt").value, quiet_volume:n(".qv")==null?null:n(".qv")/100}; };
+  const save = async (extra={}) => { try{ D = await post("devices",{entity_id:eid,profile:read(),...extra}); toast(t("dSaved")); renderSpk(); }catch(e){toast(e.message,true)} };
+  f.querySelector(".sv").onclick = () => save();
+  f.querySelector(".rs").onclick = async () => { try{ D = await post("devices",{entity_id:eid,reset:true}); renderSpk(); }catch(e){toast(e.message,true)} };
+  const cp = f.querySelector(".cp"); if(cp) cp.onclick = () => save({copy_to:S.players.map(x=>x.entity_id)});
+  return f;
+}
+const openProfiles = new Set();
+async function renderSpk(){
+  try{ D = await api("devices"); }catch(e){ return toast(e.message,true); }
+  const box = $("spkList"); box.innerHTML = "";
+  const def = document.createElement("div"); def.className = "spk";
+  def.innerHTML = `<div class="head"><div class="n"><b>⚙ ${t("dDefault")}</b></div><button class="b alt sm">${t("settings")}</button></div>`;
+  const defForm = profileForm("_default"); defForm.hidden = !openProfiles.has("_default");
+  def.querySelector("button").onclick = () => { defForm.hidden = !defForm.hidden; defForm.hidden ? openProfiles.delete("_default") : openProfiles.add("_default"); };
+  def.append(defForm); box.append(def);
+  const showHidden = $("spkHidden").checked;
+  const list = S.players.filter(p => showHidden || !p.hidden);
+  if(!list.length) box.insertAdjacentHTML("beforeend", `<div class="empty">${t("empty")}</div>`);
+  list.forEach(p => {
+    const row = document.createElement("div"); row.className = "spk" + (p.duplicate_of ? " dup" : "");
+    const model = [p.manufacturer, p.model].filter(Boolean).join(" ");
+    const cal = p.calibration ? `<span class="badge ok">${t("calAt")} ${new Date(p.calibration.at*1000).toLocaleDateString()}${p.calibration.start_latency!=null?` · ${p.calibration.start_latency}s`:""}</span>` : "";
+    row.innerHTML = `<div class="head">
+      <button class="star-btn ${p.favorite?"on":""}">${p.favorite?"★":"☆"}</button>
+      <div class="n"><span class="dot ${esc(p.state)}"></span> <b></b>
+        <div class="badges">
+          ${p.platform?`<span class="badge">${esc(p.platform)}</span>`:""}
+          ${model?`<span class="badge">${esc(model)}</span>`:""}
+          <span class="badge ${p.announce?"ok":"warn"}">${p.announce?t("announceOk"):t("announceNo")}</span>
+          ${p.state==="unavailable"?`<span class="badge err">${t("unavail")}</span>`:""}
+          ${p.duplicate_of?`<span class="badge warn">${t("dupOf")} ${esc(p.duplicate_of)}</span>`:""}
+          ${p.hidden?`<span class="badge">${t("hiddenB")}</span>`:""}${cal}
+        </div><small class="hint">${esc(p.entity_id)}</small></div>
+      <button class="b alt sm cal">${t("calibrate")}</button>
+      <button class="b alt sm set">${t("settings")}</button>
+      <button class="b ${p.hidden?"alt":"red"} sm hid">${p.hidden?t("restore"):t("remove")}</button></div>`;
+    row.querySelector("b").textContent = p.name;
+    row.querySelector(".star-btn").onclick = async () => { try{ await post("speaker",{entity_id:p.entity_id,favorite:!p.favorite}); await refresh(); }catch(e){toast(e.message,true)} };
+    row.querySelector(".hid").onclick = async () => { try{ await post("speaker",{entity_id:p.entity_id,hidden:!p.hidden}); await refresh(); }catch(e){toast(e.message,true)} };
+    row.querySelector(".cal").onclick = async ev => {
+      if(!confirm(t("calConfirm"))) return;
+      const btn = ev.target; btn.disabled = true; btn.textContent = t("calRunning");
+      try{ const r = await post("speaker/calibrate",{entity_id:p.entity_id});
+        toast(r.measured ? t("calDone") + ` (${r.start_latency}s)` : t("calNoMeasure")); await refresh(); }
+      catch(e){ toast(e.message,true); btn.disabled = false; btn.textContent = t("calibrate"); }
+    };
+    const form = profileForm(p.entity_id); form.hidden = !openProfiles.has(p.entity_id);
+    row.querySelector(".set").onclick = () => { form.hidden = !form.hidden; form.hidden ? openProfiles.delete(p.entity_id) : openProfiles.add(p.entity_id); };
+    row.append(form); box.append(row);
+  });
+}
+$("spkHidden").onchange = renderSpk;
+$("spkScan").onclick = async () => { try{ await refresh(); toast(S.players.length + " ✓"); }catch(e){toast(e.message,true)} };
+$("spkDup").onclick = async () => {
+  try{ const r = await post("speakers/dedupe",{});
+    toast(r.hidden.length ? t("hiddenDups") + r.hidden.length : t("noDup")); await refresh(); }catch(e){toast(e.message,true)}
+};
+
 function renderHelp(){
   const base = esc(S.base_url || "http://IP_HA:8765"), pl = lang==="pl";
   const sample = esc(JSON.stringify({targets:["media_player.kuchnia"],message:pl?"Obiad gotowy":"Dinner is ready",tts_entity:(S.tts[0]||{}).entity_id||"tts.piper"},null,1));
@@ -391,73 +581,6 @@ function renderHelp(){
   <p>Home Assistant app: long-press the icon for shortcuts, or add a <i>Button</i>/<i>Script</i> widget for the script from step 3. For custom text use e.g. the HTTP Shortcuts app with the data from step 4.</p>`;
 }
 
-// ---- devices (per-speaker memory / behaviour)
-let D = {default:{},profiles:{}};
-const pct = v => v==null ? "" : Math.round(v*100);
-function devForm(eid, name){
-  const p = D.profiles[eid] || D.default;
-  const box = document.createElement("details"); box.className = "item"; box.style.display = "block";
-  const sum = document.createElement("summary"); sum.style.cursor="pointer";
-  sum.innerHTML = `<b></b> <small>${eid==="_default"||D.profiles[eid] ? "" : t("dInherit")}</small>`;
-  sum.querySelector("b").textContent = name; box.append(sum);
-  const f = document.createElement("div");
-  f.innerHTML = `
-   <label class="f">${t("dVol")}</label><input type="number" min="0" max="100" class="vol" value="${pct(p.volume)}">
-   <label class="f"><input type="checkbox" class="rv" ${p.restore_volume?"checked":""}> ${t("dRestVol")}</label>
-   <label class="f">${t("dResume")}</label><select class="rm">
-     <option value="auto">${t("dAuto")}</option><option value="manual">${t("dManual")}</option><option value="none">${t("dNone")}</option></select>
-   <div class="row"><div class="grow"><label class="f">${t("dBefore")}</label><input type="number" min="0" max="15" step="0.5" class="bd" value="${p.before_delay}"></div>
-   <div class="grow"><label class="f">${t("dAfter")}</label><input type="number" min="0" max="60" step="0.5" class="ad" value="${p.after_delay}"></div></div>
-   <label class="f"><input type="checkbox" class="pw" ${p.power_cycle?"checked":""}> ${t("dPower")}</label>
-   <label class="f"><input type="checkbox" class="um" ${p.unmute?"checked":""}> ${t("dUnmute")}</label>
-   <label class="f">${t("dQuiet")}</label>
-   <div class="row"><div class="grow">${t("dQFrom")} <input type="time" class="qf" value="${p.quiet_from}"></div>
-   <div class="grow">${t("dQTo")} <input type="time" class="qt" value="${p.quiet_to}"></div></div>
-   <label class="f">${t("dQVol")}</label><input type="number" min="0" max="100" class="qv" value="${pct(p.quiet_volume)}">
-   <div class="row"><button class="b sv">${t("dSave")}</button><button class="b alt rs">${t("dReset")}</button>
-   ${eid==="_default" ? `<button class="b alt cp">${t("dCopy")}</button>` : ""}</div>`;
-  f.querySelector(".rm").value = p.resume_mode;
-  const read = () => { const q=c=>f.querySelector(c); const n=c=>q(c).value===""?null:+q(c).value;
-    return {volume:n(".vol")==null?null:n(".vol")/100, restore_volume:q(".rv").checked, resume_mode:q(".rm").value,
-      before_delay:+q(".bd").value||0, after_delay:+q(".ad").value||0, power_cycle:q(".pw").checked, unmute:q(".um").checked,
-      quiet_from:q(".qf").value, quiet_to:q(".qt").value, quiet_volume:n(".qv")==null?null:n(".qv")/100}; };
-  const save = async (extra={}) => { try{ D = await api("devices",{method:"POST",body:JSON.stringify({entity_id:eid,profile:read(),...extra})}); toast(t("dSaved")); renderDevs(); }catch(e){toast(e.message,true)} };
-  f.querySelector(".sv").onclick = () => save();
-  f.querySelector(".rs").onclick = async () => { try{ D = await api("devices",{method:"POST",body:JSON.stringify({entity_id:eid,reset:true})}); renderDevs(); }catch(e){toast(e.message,true)} };
-  const cp = f.querySelector(".cp"); if(cp) cp.onclick = () => save({copy_to:S.players.map(x=>x.entity_id)});
-  box.append(f); return box;
-}
-async function renderDevs(){
-  try{ D = await api("devices"); }catch(e){ return toast(e.message,true); }
-  const box = $("devList"); box.innerHTML = "";
-  box.append(devForm("_default", t("dDefault")));
-  S.players.forEach(p => box.append(devForm(p.entity_id, p.name)));
-}
-
-// ---- library
-function renderLib(){
-  const box = $("libList");
-  if(!S.library.length){ box.innerHTML = `<div class="hint">${t("empty")}</div>`; return; }
-  box.innerHTML = "";
-  S.library.slice().reverse().forEach(it => {
-    const d = document.createElement("div"); d.className = "item";
-    d.innerHTML = `<div class="n"><b></b><br><small>${it.kind} · ${it.duration.toFixed(1)} s</small></div>
-      <audio controls preload="none" src="media/${it.file}" style="width:200px;margin:0"></audio>
-      <button class="b a">${t("announce")}</button><button class="b alt s">${t("mkscript")}</button><button class="b alt r">${t("rename")}</button><button class="b red x">${t("del")}</button>`;
-    d.querySelector("b").textContent = it.name;
-    d.querySelector(".a").onclick = () => announce({item:it.id});
-    d.querySelector(".s").onclick = () => makeScript({item:it.id});
-    d.querySelector(".r").onclick = async () => {
-      const n = prompt(t("newname"), it.name); if(!n) return;
-      try{ await api("library/"+it.id,{method:"POST",body:JSON.stringify({name:n})}); refresh(); }catch(e){toast(e.message,true)}
-    };
-    d.querySelector(".x").onclick = async () => {
-      if(!confirm(t("confirmDel"))) return;
-      try{ await api("library/"+it.id,{method:"DELETE"}); refresh(); }catch(e){toast(e.message,true)}
-    };
-    box.append(d);
-  });
-}
 
 showTab(store.get("tab","say"));
 refresh().catch(e => toast(e.message,true));

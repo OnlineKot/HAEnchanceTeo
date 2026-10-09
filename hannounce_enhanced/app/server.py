@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """HAnnounce Enhanced - Home Assistant add-on by TeodorTeo.com (https://teodorteo.com)."""
 import asyncio
+import hashlib
 import hmac
 import json
 import logging
@@ -85,8 +86,19 @@ def load_meta():
     library = [i for i in library if (LIB / i["file"]).exists()]
 
 
+def file_hash(item):
+    if not item.get("hash"):
+        try:
+            item["hash"] = hashlib.sha1(item_path(item).read_bytes()).hexdigest()
+        except OSError:
+            item["hash"] = ""
+    return item["hash"]
+
+
 def public(item):
-    return {k: item[k] for k in ("id", "name", "kind", "file", "duration", "created", "saved")}
+    out = {k: item[k] for k in ("id", "name", "kind", "file", "duration", "created", "saved")}
+    out["favorite"] = bool(item.get("favorite"))
+    return out
 
 
 def find_item(ref):
@@ -120,6 +132,7 @@ def register(name, kind, ext, saved, duration):
 
 def commit(item):
     if item["saved"]:
+        file_hash(item)
         library.append(item)
         save_meta()
     else:
@@ -351,13 +364,108 @@ async def base_url():
     return f"http://homeassistant.local:{MEDIA_PORT}"
 
 
-def players_list(states):
+SPEAKERS_FILE = DATA / "speakers.json"
+speakers: dict = {}
+FEATURES = {1: "pause", 2: "seek", 4: "volume_set", 8: "volume_mute", 128: "turn_on", 256: "turn_off",
+            512: "play_media", 2048: "select_source", 16384: "play", 131072: "browse", 1048576: "announce"}
+_registry = (0.0, {}, {})
+
+
+def load_speakers():
+    global speakers
+    try:
+        speakers = json.loads(SPEAKERS_FILE.read_text())
+    except (OSError, ValueError):
+        speakers = {}
+
+
+def save_speakers():
+    tmp = SPEAKERS_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(speakers, indent=1))
+    tmp.replace(SPEAKERS_FILE)
+
+
+def decode_features(mask):
+    return [name for bit, name in FEATURES.items() if int(mask or 0) & bit]
+
+
+async def registry():
+    """Entity + device registry (platform, manufacturer, model). Cached, best effort."""
+    global _registry
+    if time.time() - _registry[0] < 60:
+        return _registry[1], _registry[2]
+    ents, devs = {}, {}
+    try:
+        for e in await ws_call({"type": "config/entity_registry/list"}) or []:
+            ents[e["entity_id"]] = e
+        for d in await ws_call({"type": "config/device_registry/list"}) or []:
+            devs[d["id"]] = d
+    except Exception as exc:  # noqa: BLE001
+        log.info("Registry not available (%s) - detection is limited to states", exc)
+    _registry = (time.time(), ents, devs)
+    return ents, devs
+
+
+def mark_duplicates(players):
+    """Flag speakers that are the same physical device exposed more than once."""
+    parent = {p["entity_id"]: p["entity_id"] for p in players}
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        parent[find(a)] = find(b)
+    by_dev, by_name = {}, {}
+    ids = set(parent)
+    for p in players:
+        if p["device_id"]:
+            by_dev.setdefault(p["device_id"], []).append(p["entity_id"])
+        by_name.setdefault(p["name"].strip().lower(), []).append(p["entity_id"])
+        m = re.fullmatch(r"(media_player\..+?)_\d+", p["entity_id"])
+        if m and m.group(1) in ids:
+            union(p["entity_id"], m.group(1))
+    for group in list(by_dev.values()) + list(by_name.values()):
+        for other in group[1:]:
+            union(group[0], other)
+    groups = {}
+    for p in players:
+        groups.setdefault(find(p["entity_id"]), []).append(p)
+    for members in groups.values():
+        if len(members) < 2:
+            continue
+        best = max(members, key=lambda p: ((p["state"] != "unavailable") * 10 + p["announce"] * 5
+                                           + (not re.search(r"_\d+$", p["entity_id"])) * 2
+                                           - len(p["entity_id"]) * 0.01))
+        for p in members:
+            if p is not best:
+                p["duplicate_of"] = best["entity_id"]
+
+
+async def build_players(states):
+    ents, devs = await registry()
     out = []
     for s in states:
-        if s["entity_id"].startswith("media_player."):
-            out.append({"entity_id": s["entity_id"], "state": s["state"],
-                        "name": s["attributes"].get("friendly_name", s["entity_id"])})
-    return sorted(out, key=lambda p: p["name"].lower())
+        eid = s["entity_id"]
+        if not eid.startswith("media_player."):
+            continue
+        a = s["attributes"]
+        reg = ents.get(eid, {})
+        dev = devs.get(reg.get("device_id"), {})
+        feats = decode_features(a.get("supported_features", 0))
+        meta = speakers.get(eid, {})
+        out.append({
+            "entity_id": eid, "state": s["state"], "name": a.get("friendly_name", eid),
+            "platform": reg.get("platform", ""), "device_id": reg.get("device_id") or "",
+            "manufacturer": dev.get("manufacturer") or "", "model": dev.get("model") or "",
+            "device_class": a.get("device_class", ""), "features": feats, "announce": "announce" in feats,
+            "favorite": bool(meta.get("favorite")), "hidden": bool(meta.get("hidden")),
+            "calibration": meta.get("calibration"), "duplicate_of": None,
+        })
+    mark_duplicates(out)
+    return sorted(out, key=lambda p: (not p["favorite"], p["name"].lower()))
 
 
 def slugify(text):
@@ -733,7 +841,7 @@ async def h_media(request):
 async def h_state(request):
     states = await ha_get("/states")
     return web.json_response({
-        "players": players_list(states),
+        "players": await build_players(states),
         "tts": await tts_engines(states),
         "library": [public(i) for i in library],
         "actions": sorted(({"entity_id": x["entity_id"], "name": x["attributes"].get("friendly_name", x["entity_id"])}
@@ -884,12 +992,118 @@ async def h_rename(request):
     item = next((i for i in library if i["id"] == request.match_info["id"]), None)
     if not item:
         raise _json_error(404, "not found")
-    name = ((await request.json()).get("name") or "").strip()
-    if not name:
-        raise _json_error(400, "name required")
-    item["name"] = name
+    body = await request.json()
+    if "name" in body:
+        name = (body.get("name") or "").strip()
+        if not name:
+            raise _json_error(400, "name required")
+        item["name"] = name
+    if "favorite" in body:
+        item["favorite"] = bool(body["favorite"])
     save_meta()
     return web.json_response(public(item))
+
+
+async def h_library_dedupe(request):
+    """Remove library sounds with identical audio, keeping the favorite (else the oldest)."""
+    groups = {}
+    for item in library:
+        groups.setdefault(file_hash(item), []).append(item)
+    removed = []
+    for h, items in groups.items():
+        if not h or len(items) < 2:
+            continue
+        keep = sorted(items, key=lambda i: (not i.get("favorite"), i["created"]))[0]
+        for item in items:
+            if item is not keep:
+                removed.append(item["name"])
+                if item.get("favorite"):
+                    keep["favorite"] = True
+                drop(item)
+    return web.json_response({"removed": removed, "library": [public(i) for i in library]})
+
+
+async def h_speaker_set(request):
+    body = await request.json()
+    entity = body.get("entity_id", "")
+    if not entity.startswith("media_player."):
+        raise _json_error(400, "entity_id must be a media_player")
+    meta = speakers.setdefault(entity, {})
+    for key in ("favorite", "hidden"):
+        if key in body:
+            meta[key] = bool(body[key])
+    save_speakers()
+    return web.json_response({"ok": True})
+
+
+async def h_speakers_dedupe(request):
+    """Hide speakers that duplicate another entity of the same physical device."""
+    players = await build_players(await ha_get("/states"))
+    hidden = []
+    for p in players:
+        if p["duplicate_of"] and not p["hidden"]:
+            speakers.setdefault(p["entity_id"], {})["hidden"] = True
+            hidden.append(p["entity_id"])
+    save_speakers()
+    return web.json_response({"hidden": hidden})
+
+
+async def h_speaker_calibrate(request):
+    """Play a short test sound, measure how the speaker behaves, store a recommended profile."""
+    entity = (await request.json()).get("entity_id", "")
+    if not entity.startswith("media_player."):
+        raise _json_error(400, "entity_id must be a media_player")
+    snap = await snapshot(entity)
+    if snap["state"] in ("unavailable", "unknown"):
+        raise _json_error(400, "speaker is unavailable")
+    state = await ha_get(f"/states/{entity}")
+    feats = decode_features(state["attributes"].get("supported_features", 0))
+    if "play_media" not in feats:
+        raise _json_error(400, "this speaker cannot play media")
+    announce_ok = "announce" in feats
+    cfg = profile_for(entity)
+    cfg["resume_mode"] = "auto" if announce_ok else "manual"
+
+    samples = await asyncio.to_thread(synth, "chime", None, 0.9, 1)
+    item = register("calibration", "generated", "wav", False, len(samples) / RATE)
+    await asyncio.to_thread(write_wav, item_path(item), samples)
+    commit(item)
+    url = f"{await base_url()}/media/{item['file']}"
+    media = {"media_content_id": url}
+    volume = cfg["volume"] if cfg["volume"] is not None else 0.3
+    t0 = time.time()
+    await announce_on(entity, cfg, snap, media, volume, item["duration"])
+
+    started = ended = None
+    while time.time() - t0 < item["duration"] + 20:
+        st = await ha_get(f"/states/{entity}")
+        playing_ours = st["attributes"].get("media_content_id") == url
+        active = st["state"] in ("playing", "buffering")
+        if started is None and active and (playing_ours or snap["state"] not in ("playing", "buffering")):
+            started = time.time() - t0
+        elif started is not None and (not active or not playing_ours):
+            ended = time.time() - t0
+            break
+        await asyncio.sleep(0.25)
+    drop_task = asyncio.create_task(drop_later(item, 30))  # noqa: F841
+
+    result = {"announce_supported": announce_ok, "features": feats, "measured": ended is not None,
+              "start_latency": round(started, 2) if started is not None else None,
+              "end_overshoot": None, "recommended": {"resume_mode": cfg["resume_mode"]}}
+    if ended is not None:
+        overshoot = max(0.0, (ended - started) - item["duration"])
+        result["end_overshoot"] = round(overshoot, 2)
+        result["recommended"]["after_delay"] = round(min(8.0, max(1.0, overshoot + 1.0)), 1)
+    if snap["state"] in ("off", "standby") and "turn_on" in feats and "turn_off" in feats:
+        result["recommended"]["power_cycle"] = True
+    devices[entity] = clean_profile({**profile_for(entity), **result["recommended"]})
+    save_devices()
+    result["profile"] = devices[entity]
+    result["at"] = int(time.time())
+    speakers.setdefault(entity, {})["calibration"] = {k: result[k] for k in (
+        "announce_supported", "measured", "start_latency", "end_overshoot", "at")}
+    save_speakers()
+    return web.json_response(result)
 
 
 async def h_delete(request):
@@ -932,6 +1146,10 @@ def routes(with_index=True):
         web.post("/api/generate", h_generate),
         web.post("/api/announce", h_announce),
         web.post("/api/script", h_script),
+        web.post("/api/library/dedupe", h_library_dedupe),
+        web.post("/api/speaker", h_speaker_set),
+        web.post("/api/speakers/dedupe", h_speakers_dedupe),
+        web.post("/api/speaker/calibrate", h_speaker_calibrate),
         web.get("/api/devices", h_devices),
         web.post("/api/devices", h_device_set),
         web.post("/api/library/{id}", h_rename),
@@ -958,6 +1176,7 @@ async def main():
     ONCE.mkdir(parents=True, exist_ok=True)
     load_meta()
     load_devices()
+    load_speakers()
     session = ClientSession(timeout=ClientTimeout(total=30))
     ui, ext = build_apps()
     for app, port in ((ui, INGRESS_PORT), (ext, MEDIA_PORT)):
