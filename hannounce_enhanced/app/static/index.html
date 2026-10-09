@@ -56,6 +56,10 @@ footer a{color:var(--acc);text-decoration:none;font-weight:600}
   <h2 data-i="targets"></h2>
   <div class="players" id="players"></div>
   <div class="row">
+    <div class="grow"><label class="f" data-i="actBefore"></label><select id="actBefore"></select></div>
+    <div class="grow"><label class="f" data-i="actAfter"></label><select id="actAfter"></select></div>
+  </div>
+  <div class="row">
     <label class="grow"><input type="checkbox" id="volOn"> <span data-i="setvol"></span>: <b id="volVal">50</b>%
       <input type="range" id="vol" min="0" max="100" value="50" style="width:100%"></label>
   </div>
@@ -108,6 +112,8 @@ footer a{color:var(--acc);text-decoration:none;font-weight:600}
     <div class="out" id="gOut"></div>
   </div>
 
+  <div class="pane" id="p-help"><div id="helpBox"></div></div>
+
   <div class="pane" id="p-dev"><div id="devList"></div></div>
 
   <div class="pane" id="p-lib"><div id="libList"></div></div>
@@ -123,7 +129,7 @@ footer a{color:var(--acc);text-decoration:none;font-weight:600}
 
 <script>
 const L = {
- en:{targets:"Speakers",setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",devices:"Devices",
+ en:{targets:"Speakers",setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",devices:"Devices",app:"📱 App",actBefore:"Run before (script / scene)",actAfter:"Run after (script / scene)",actNone:"— none —",
   ttsent:"TTS engine",message:"Message",lang:"Language",voice:"Voice",deflt:"(default)",ttsnone:"No TTS engine found in Home Assistant",announce:"Announce",rec:"● Record",stop:"■ Stop",devrec:"Use device recorder",
   nomic:"Browser microphone needs HTTPS - use \"Use device recorder\" or open HA over HTTPS.",file:"Audio file",type:"Sound",freq:"Frequency Hz",dur:"Duration s",rep:"Repeat",
   preview:"▶ Preview",name:"Name",once:"Announce once",save:"Save to library",saveAnn:"Save & announce",empty:"Library is empty.",del:"Delete",rename:"Rename",
@@ -131,7 +137,7 @@ const L = {
   dAuto:"Let the player handle it (announce)",dManual:"Restore what was playing (media + position)",dNone:"Do nothing",dBefore:"Wait before playing (s)",dAfter:"Wait after it ends, then restore (s)",
   dPower:"Turn on if off, turn off afterwards",dUnmute:"Unmute during announcement",dQuiet:"Quiet hours",dQFrom:"from",dQTo:"to",dQVol:"Quiet volume % (empty = skip speaker)",
   dSave:"Save",dReset:"Reset",dCopy:"Copy to all speakers",dSaved:"Settings saved ✓",dInherit:"uses default",dEdit:"Edit",askkey:"API key (from add-on configuration)",sel:"Select at least one speaker.",sent:"Announced ✓",saved:"Saved ✓",confirmDel:"Delete this sound?",by:"Created by",nomsg:"Type a message.",nofile:"Choose or record a sound first.",newname:"New name"},
- pl:{targets:"Głośniki",setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",devices:"Urządzenia",
+ pl:{targets:"Głośniki",setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",devices:"Urządzenia",app:"📱 Aplikacja",actBefore:"Uruchom przed (skrypt / scena)",actAfter:"Uruchom po (skrypt / scena)",actNone:"— brak —",
   ttsent:"Silnik TTS",message:"Wiadomość",lang:"Język",voice:"Głos",deflt:"(domyślny)",ttsnone:"Nie znaleziono silnika TTS w Home Assistant",announce:"Ogłoś",rec:"● Nagrywaj",stop:"■ Stop",devrec:"Nagrywarka urządzenia",
   nomic:"Mikrofon w przeglądarce wymaga HTTPS - użyj „Nagrywarka urządzenia” albo otwórz HA przez HTTPS.",file:"Plik audio",type:"Dźwięk",freq:"Częstotliwość Hz",dur:"Czas s",rep:"Powtórzenia",
   preview:"▶ Podgląd",name:"Nazwa",once:"Ogłoś jednorazowo",save:"Zapisz w bibliotece",saveAnn:"Zapisz i ogłoś",empty:"Biblioteka jest pusta.",del:"Usuń",rename:"Zmień nazwę",
@@ -163,7 +169,7 @@ document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i
 const store = {get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}}, set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 
 // ---- tabs
-const TABS = [["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"],["dev","devices"]];
+const TABS = [["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"],["dev","devices"],["help","app"]];
 TABS.forEach(([id, key]) => {
   const b = document.createElement("button"); b.textContent = t(key); b.dataset.id = id;
   b.onclick = () => showTab(id); $("tabs").append(b);
@@ -171,7 +177,7 @@ TABS.forEach(([id, key]) => {
 function showTab(id){
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.id===id));
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="p-"+id));
-  store.set("tab",id); if(id==="lib") renderLib(); if(id==="dev") renderDevs();
+  store.set("tab",id); if(id==="lib") renderLib(); if(id==="dev") renderDevs(); if(id==="help") renderHelp();
 }
 
 // ---- state
@@ -190,13 +196,25 @@ async function refresh(){
   });
   $("ttsEnt").innerHTML = S.tts.length ? S.tts.map(x=>`<option value="${x.entity_id}">${x.name}</option>`).join("")
     : `<option value="">${t("ttsnone")}</option>`;
+  fillActions();
   loadLangs();
   $("gType").innerHTML = Object.entries(S.generators).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
   renderLib();
 }
 const targets = () => [...document.querySelectorAll("#players input:checked")].map(c=>c.value);
 $("vol").oninput = () => $("volVal").textContent = $("vol").value;
-function extra(){ const x={targets:targets()}; if($("volOn").checked) x.volume=$("vol").value/100; return x; }
+function fillActions(){
+  const grp = {script:[],scene:[]};
+  (S.actions||[]).forEach(a => grp[a.entity_id.split(".")[0]].push(a));
+  const html = `<option value="">${t("actNone")}</option>` + ["script","scene"].map(g =>
+    grp[g].length ? `<optgroup label="${g}">` + grp[g].map(a=>`<option value="${a.entity_id}">${a.name.replace(/</g,"&lt;")}</option>`).join("") + "</optgroup>" : "").join("");
+  [["actBefore","before"],["actAfter","after"]].forEach(([id,k]) => {
+    $(id).innerHTML = html; $(id).value = store.get("act_"+k,""); if($(id).value!==store.get("act_"+k,"")) $(id).value = "";
+    $(id).onchange = () => store.set("act_"+k, $(id).value);
+  });
+}
+const actions_ = () => ({before_action:$("actBefore").value||undefined, after_action:$("actAfter").value||undefined});
+function extra(){ const x={targets:targets(),...actions_()}; if($("volOn").checked) x.volume=$("vol").value/100; return x; }
 function needTargets(){ if(!targets().length){toast(t("sel"),true);return false} return true; }
 async function announce(body){
   if(!needTargets()) return false;
@@ -241,7 +259,7 @@ $("saySave").onclick = async () => {
 async function makeScript(body){
   if(!needTargets()) return;
   try{
-    const r = await api("script",{method:"POST",body:JSON.stringify({targets:targets(),...body})});
+    const r = await api("script",{method:"POST",body:JSON.stringify({targets:targets(),...actions_(),...body})});
     const box = $("scriptRes"); box.hidden = false; box.innerHTML = "";
     const p = document.createElement("div");
     p.textContent = (r.created ? t("scriptOk") + r.entity_id : t("scriptManual")) ;
@@ -325,6 +343,53 @@ $("gPrev").onclick = async () => {
   try{ const it = await genItem(false,""); $("gAudio").src = "media/"+it.file; $("gAudio").hidden=false; $("gAudio").play(); }
   catch(e){ toast(e.message,true); }
 };
+
+// ---- help: how to send from the phone app
+const esc = x => String(x).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function renderHelp(){
+  const base = esc(S.base_url || "http://IP_HA:8765"), pl = lang==="pl";
+  const sample = esc(JSON.stringify({targets:["media_player.kuchnia"],message:pl?"Obiad gotowy":"Dinner is ready",tts_entity:(S.tts[0]||{}).entity_id||"tts.piper"},null,1));
+  const sample2 = esc(JSON.stringify({targets:["media_player.kuchnia"],sound:pl?"Gong1":"Gong",before_action:"scene.salon_przyciemnij",after_action:"scene.salon_normalnie"},null,1));
+  const key = S.api_enabled ? "" : `<p class="rec">${pl?"⚠ Najpierw ustaw „Klucz API” w konfiguracji dodatku (Ustawienia → Dodatki → HAnnounce Enhanced → Konfiguracja).":"⚠ First set the “API key” in the add-on configuration."}</p>`;
+  $("helpBox").innerHTML = pl ? `
+  <h2>1. W aplikacji Home Assistant</h2>
+  <p>Włącz w dodatku „Pokaż w pasku bocznym”. W aplikacji Home Assistant (iPhone/Android) otwórz menu → <b>HAnnounce</b>. Działa tak samo jak tutaj. Do nagrywania użyj <b>Nagrywarka urządzenia</b> (mikrofon w przeglądarce wymaga HTTPS).</p>
+  <h2>2. Osobna aplikacja na ekranie głównym</h2>${key}
+  <p>Safari → <code>${base}/</code> → <b>Udostępnij → Do ekranu początkowego</b>. Przy pierwszym uruchomieniu wpisz Klucz API.</p>
+  <h2>3. Ekran blokady, Centrum sterowania, przycisk Action</h2>
+  <p>Wybierz głośniki (opcjonalnie skrypt/scenę przed i po), w <b>Bibliotece</b> lub <b>Mów</b> kliknij <b>📱 Utwórz skrypt</b>. Potem na iPhonie: przytrzymaj ekran blokady → Dostosuj → widżet <b>Home Assistant</b> → wybierz skrypt. Skrypt możesz też dodać do Centrum sterowania (iOS 18) lub przypiąć pod przycisk Action.</p>
+  <h2>4. Siri i Skróty (dowolny tekst z telefonu)</h2>${key}
+  <p>Aplikacja <b>Skróty</b> → nowy skrót → akcja <b>Pobierz zawartość URL</b>:</p>
+  <ul><li>URL: <code>${base}/api/announce</code></li><li>Metoda: <b>POST</b></li>
+  <li>Nagłówki: <code>Authorization</code> = <code>Bearer TWÓJ_KLUCZ</code>, <code>Content-Type</code> = <code>application/json</code></li>
+  <li>Treść żądania: <b>JSON</b> (lub Plik), np. (dla „message” wstaw akcję <b>Zapytaj o dane</b> / <b>Dyktuj tekst</b>):</li></ul>
+  <pre>${sample}</pre>
+  <p>Nazwij skrót np. „Ogłoś” i mów: <i>„Hej Siri, Ogłoś”</i>. Możesz go też dodać do ekranu głównego, widżetu na ekranie blokady albo Stuknięcia w tył (Ustawienia → Dostępność → Dotyk → Stuknięcie w tył).</p>
+  <h2>5. Skrypt lub scena razem z ogłoszeniem</h2>
+  <p>W polach „Uruchom przed/po” wybierz skrypt lub scenę (np. przyciemnij światło przed, przywróć po). W API: <code>before_action</code>, <code>after_action</code>:</p>
+  <pre>${sample2}</pre>
+  <h2>6. Android</h2>
+  <p>Aplikacja Home Assistant: długie przytrzymanie ikony → skróty, lub widżet <i>Przycisk</i>/<i>Skrypt</i> wskazujący skrypt utworzony w punkcie 3. Dla własnego tekstu użyj np. aplikacji HTTP Shortcuts z danymi jak w punkcie 4.</p>`
+  : `
+  <h2>1. Inside the Home Assistant app</h2>
+  <p>Enable “Show in sidebar” on the add-on. In the Home Assistant app (iPhone/Android) open the menu → <b>HAnnounce</b>. Use <b>Use device recorder</b> for recording (browser mic needs HTTPS).</p>
+  <h2>2. Standalone app on the home screen</h2>${key}
+  <p>Safari → <code>${base}/</code> → <b>Share → Add to Home Screen</b>. Enter the API key on first launch.</p>
+  <h2>3. Lock screen, Control Center, Action button</h2>
+  <p>Select speakers (optionally a script/scene before and after), then in <b>Library</b> or <b>Say</b> tap <b>📱 Create script</b>. On iPhone: long-press the lock screen → Customize → <b>Home Assistant</b> widget → pick the script. You can also add it to Control Center (iOS 18) or bind it to the Action button.</p>
+  <h2>4. Siri & Shortcuts (any text from the phone)</h2>${key}
+  <p><b>Shortcuts</b> app → new shortcut → action <b>Get Contents of URL</b>:</p>
+  <ul><li>URL: <code>${base}/api/announce</code></li><li>Method: <b>POST</b></li>
+  <li>Headers: <code>Authorization</code> = <code>Bearer YOUR_KEY</code>, <code>Content-Type</code> = <code>application/json</code></li>
+  <li>Request body: <b>JSON</b>, e.g. (put <b>Ask for Input</b> / <b>Dictate Text</b> into “message”):</li></ul>
+  <pre>${sample}</pre>
+  <p>Name it “Announce” and say <i>“Hey Siri, Announce”</i>. Also works from a lock screen widget, home screen or Back Tap (Settings → Accessibility → Touch → Back Tap).</p>
+  <h2>5. Script or scene together with the announcement</h2>
+  <p>Pick a script or scene in “Run before/after” (e.g. dim lights before, restore after). In the API use <code>before_action</code> / <code>after_action</code>:</p>
+  <pre>${sample2}</pre>
+  <h2>6. Android</h2>
+  <p>Home Assistant app: long-press the icon for shortcuts, or add a <i>Button</i>/<i>Script</i> widget for the script from step 3. For custom text use e.g. the HTTP Shortcuts app with the data from step 4.</p>`;
+}
 
 // ---- devices (per-speaker memory / behaviour)
 let D = {default:{},profiles:{}};

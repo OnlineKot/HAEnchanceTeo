@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.0
+- Run a script or scene before/after an announcement (pickers, API, generated scripts); in-app "App" tab with phone instructions.
+
 ## 1.4.0
 - Per-speaker profiles: volume memory, resume playback (media + position), before/after delays, power cycle, unmute, quiet hours.
 

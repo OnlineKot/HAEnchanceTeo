@@ -10,6 +10,15 @@ Panel **HAnnounce** pojawia się w bocznym menu Home Assistanta (ingress).
 - **Jednorazowo** – dźwięk jest odtworzony i automatycznie usuwany, albo **zapisz w bibliotece** i używaj wielokrotnie.
 - Opcjonalna **zmiana głośności** na czas ogłoszenia (potem przywracana).
 
+## Skrypt lub scena przed / po ogłoszeniu
+Nad zakładkami są dwie listy: **Uruchom przed** i **Uruchom po** – wybierasz skrypt lub scenę z Home Assistanta
+(np. przyciemnij światło przed, przywróć po). W API: `before_action`, `after_action` (np. `scene.salon`, `script.xyz`).
+Wybór działa też w skryptach tworzonych przyciskiem „Utwórz skrypt”.
+
+## Wysyłanie z aplikacji (iPhone / Android)
+Zakładka **📱 Aplikacja** w panelu zawiera instrukcje krok po kroku: panel w aplikacji HA, osobna aplikacja na ekranie
+głównym, widżet na ekranie blokady, Siri / Skróty (z gotowym JSON-em i adresem Twojego add-onu), Stuknięcie w tył, Android.
+
 ## Pamięć i ustawienia każdego urządzenia
 Zakładka **Urządzenia**: profil domyślny + osobne ustawienia dla każdego głośnika (przycisk „Kopiuj do wszystkich”).
 - **Głośność ogłoszenia** i **przywrócenie głośności** po ogłoszeniu.

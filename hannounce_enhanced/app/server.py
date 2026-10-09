@@ -377,6 +377,7 @@ async def make_script(body):
             raise _json_error(404, "save the sound to the library first")
         data["media_content_id"] = f"{await base_url()}/media/{item['file']}"
         name = item["name"]
+        duration = item["duration"]
     elif body.get("message"):
         tts = body.get("tts_entity")
         if not tts:
@@ -384,14 +385,24 @@ async def make_script(body):
         msg = str(body["message"])
         data["media_content_id"] = tts_media_id(tts, msg, body.get("language"), body.get("voice"))
         name = msg[:30]
+        duration = 2 + len(msg) * 0.075
     else:
         raise _json_error(400, "give 'item' or 'message'")
+    before, after = body.get("before_action") or "", body.get("after_action") or ""
+    if not valid_action(before) or not valid_action(after):
+        raise _json_error(400, "actions must be script.* or scene.* entities")
     sid = "hannounce_" + slugify(name)
+    sequence = []
+    if before:
+        sequence += [{"action": f"{before.split('.')[0]}.turn_on", "target": {"entity_id": before}}, {"delay": 1}]
+    sequence.append({"action": "media_player.play_media", "target": {"entity_id": targets}, "data": data})
+    if after:
+        sequence += [{"delay": round(duration + 2.5, 1)},
+                     {"action": f"{after.split('.')[0]}.turn_on", "target": {"entity_id": after}}]
     cfg = {
         "alias": f"Announce: {name}", "icon": "mdi:bullhorn", "mode": "single",
         "description": f"Created by HAnnounce Enhanced - {CREDIT} ({CREDIT_URL})",
-        "sequence": [{"action": "media_player.play_media",
-                      "target": {"entity_id": targets}, "data": data}],
+        "sequence": sequence,
     }
     result = {"entity_id": f"script.{sid}", "created": False,
               "yaml": f"{sid}: {json.dumps(cfg, ensure_ascii=False)}"}
@@ -559,6 +570,22 @@ async def after_announcement(entity, snap, cfg, changed, estimate, poll):
         await safe_service("media_player", "turn_off", {"entity_id": entity})
 
 
+async def run_action(entity):
+    """Run a Home Assistant script or scene."""
+    domain = str(entity).split(".")[0]
+    if domain in ("script", "scene"):
+        await safe_service(domain, "turn_on", {"entity_id": entity})
+
+
+def valid_action(entity):
+    return not entity or str(entity).startswith(("script.", "scene."))
+
+
+async def run_after(entity, delay):
+    await asyncio.sleep(delay)
+    await run_action(entity)
+
+
 async def announce_on(entity, cfg, snap, media, volume, estimate):
     changed = set()
     if cfg["power_cycle"] and snap["state"] in ("off", "standby"):
@@ -611,6 +638,9 @@ async def announce(body):
     else:
         raise _json_error(400, "give 'item'/'sound' or 'message'")
 
+    before, after = body.get("before_action") or "", body.get("after_action") or ""
+    if not valid_action(before) or not valid_action(after):
+        raise _json_error(400, "actions must be script.* or scene.* entities")
     override = body.get("volume")
     override = None if override in (None, "") else max(0.0, min(1.0, float(override)))
     now_min = await local_minutes()
@@ -625,8 +655,14 @@ async def announce(body):
             volume = cfg["quiet_volume"] if override is None else min(override, cfg["quiet_volume"])
         snap = await snapshot(entity)
         jobs.append(announce_on(entity, cfg, snap, media, volume, duration))
+    if before and jobs:
+        await run_action(before)
+        await asyncio.sleep(max(0.0, min(30.0, float(body.get("before_wait", 1)))))
     if jobs:
         await asyncio.gather(*jobs)
+    if after and jobs:
+        extra = max(profile_for(t)["after_delay"] for t in targets if t not in skipped)
+        asyncio.create_task(run_after(after, duration + 2.5 + extra))
     log.info("Announced %s on %s (skipped: %s)", item["name"] if item else "TTS",
              [t for t in targets if t not in skipped], skipped)
     if item and not item["saved"]:
@@ -700,6 +736,9 @@ async def h_state(request):
         "players": players_list(states),
         "tts": await tts_engines(states),
         "library": [public(i) for i in library],
+        "actions": sorted(({"entity_id": x["entity_id"], "name": x["attributes"].get("friendly_name", x["entity_id"])}
+                           for x in states if x["entity_id"].startswith(("script.", "scene."))),
+                          key=lambda a: (a["entity_id"].split(".")[0], a["name"].lower())),
         "generators": GENERATORS,
         "base_url": await base_url(),
         "api_enabled": bool(OPTIONS.get("api_key")),
