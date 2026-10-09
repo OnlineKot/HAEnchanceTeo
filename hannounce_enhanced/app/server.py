@@ -9,6 +9,7 @@ import os
 import re
 import shutil
 import struct
+import zlib
 import time
 import uuid
 import wave
@@ -442,6 +443,50 @@ async def h_index(request):
     return web.Response(text=(STATIC / "index.html").read_text(), content_type="text/html")
 
 
+def make_icon(size):
+    """Simple megaphone icon as PNG (no image libraries needed)."""
+    def inside(x, y):
+        x, y = x / size, y / size
+        if 0.18 <= x <= 0.34 and 0.40 <= y <= 0.60:  # body
+            return True
+        if 0.34 < x <= 0.74:  # cone
+            half = 0.10 + (x - 0.34) * 0.55
+            if abs(y - 0.5) <= half:
+                return True
+        return 0.80 <= x <= 0.86 and 0.35 <= y <= 0.65  # sound bar
+    rows = []
+    for y in range(size):
+        row = bytearray([0])
+        for x in range(size):
+            row += b"\xff\xff\xff" if inside(x, y) else bytes((3, 169, 244))
+        rows.append(bytes(row))
+    raw = b"".join(rows)
+
+    def chunk(tag, data):
+        c = struct.pack(">I", len(data)) + tag + data
+        return c + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 2, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
+
+
+ICONS = {}
+
+
+async def h_icon(request):
+    size = 512 if "512" in request.match_info["name"] else 192
+    if size not in ICONS:
+        ICONS[size] = await asyncio.to_thread(make_icon, size)
+    return web.Response(body=ICONS[size], content_type="image/png")
+
+
+async def h_manifest(request):
+    return web.json_response({
+        "name": "HAnnounce Enhanced", "short_name": "HAnnounce", "start_url": ".", "scope": ".",
+        "display": "standalone", "background_color": "#111318", "theme_color": "#03a9f4",
+        "icons": [{"src": f"icon-{n}.png", "sizes": f"{n}x{n}", "type": "image/png"} for n in (192, 512)],
+    }, content_type="application/manifest+json")
+
+
 async def h_media(request):
     name = request.match_info["file"]
     if not FILE_RE.match(name):
@@ -573,10 +618,11 @@ async def key_guard(request, handler):
     return await handler(request)
 
 
-def build_apps():
-    ui = web.Application(middlewares=[ingress_guard], client_max_size=2 * 1024 * 1024)
-    ui.add_routes([
+def routes(with_index=True):
+    return [
         web.get("/", h_index),
+        web.get("/manifest.webmanifest", h_manifest),
+        web.get("/icon-{name}.png", h_icon),
         web.get("/media/{file}", h_media),
         web.get("/api/state", h_state),
         web.get("/api/sounds", h_sounds),
@@ -586,13 +632,16 @@ def build_apps():
         web.post("/api/script", h_script),
         web.post("/api/library/{id}", h_rename),
         web.delete("/api/library/{id}", h_delete),
-    ])
-    ext = web.Application(middlewares=[key_guard], client_max_size=64 * 1024)
-    ext.add_routes([
-        web.get("/media/{file}", h_media),
-        web.get("/api/sounds", h_sounds),
-        web.post("/api/announce", h_announce),
-    ])
+    ]
+
+
+def build_apps():
+    # Home Assistant sidebar panel (ingress, only reachable through HA)
+    ui = web.Application(middlewares=[ingress_guard], client_max_size=2 * 1024 * 1024)
+    ui.add_routes(routes())
+    # Standalone interface on the public port: same UI, API protected by api_key
+    ext = web.Application(middlewares=[key_guard], client_max_size=2 * 1024 * 1024)
+    ext.add_routes(routes())
     return ui, ext
 
 

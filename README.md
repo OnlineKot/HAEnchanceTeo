@@ -21,6 +21,7 @@ Details & API: [hannounce_enhanced/DOCS.md](hannounce_enhanced/DOCS.md)
 - 🔔 Generator: tone, beeps, chime, gong, notification, siren, alarm
 - ⚡ One-time or saved library (rename, preview, delete)
 - 🔊 Optional volume override with restore
+- 🖥 Standalone web interface (port 8765, installable as iPhone app)
 - 🔌 External API with key for automations
 
 MIT License © TeodorTeo.com

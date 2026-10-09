@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.0
+- Standalone interface on port 8765 (API-key protected), installable on iPhone home screen (PWA).
+
 ## 1.1.0
 - "Create script" button: makes an HA script for iPhone lock screen widget / Shortcuts.
 

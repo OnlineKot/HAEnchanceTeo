@@ -10,6 +10,13 @@ Panel **HAnnounce** pojawia się w bocznym menu Home Assistanta (ingress).
 - **Jednorazowo** – dźwięk jest odtworzony i automatycznie usuwany, albo **zapisz w bibliotece** i używaj wielokrotnie.
 - Opcjonalna **zmiana głośności** na czas ogłoszenia (potem przywracana).
 
+## Własny interfejs (bez wchodzenia w HA)
+Ten sam panel działa samodzielnie pod adresem **`http://<IP_HA>:8765/`**. Wymaga ustawienia `api_key` w konfiguracji –
+przy pierwszym wejściu poprosi o klucz i go zapamięta.
+Na iPhonie: otwórz adres w Safari → *Udostępnij* → *Do ekranu początkowego* – dostaniesz osobną aplikację „HAnnounce”
+(pełny ekran, własna ikona). Mikrofon w przeglądarce wymaga HTTPS (np. Nabu Casa / reverse proxy); przez zwykłe HTTP
+użyj „Nagrywarka urządzenia” lub wgraj plik.
+
 ## Ekran blokady iPhone'a
 W zakładce **Biblioteka** (zapisany dźwięk) lub **Mów (TTS)** zaznacz głośniki i kliknij **📱 Utwórz skrypt**.
 Add-on tworzy w HA skrypt `script.hannounce_...`, który odtwarza ogłoszenie na wybranych głośnikach.
