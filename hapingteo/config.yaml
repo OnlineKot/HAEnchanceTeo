@@ -1,0 +1,21 @@
+name: HAPingTeo
+version: "1.0.0"
+slug: hapingteo
+description: Uptime and latency monitor - ping, TCP, HTTP and DNS checks for internet, router and home devices, with history, alerts and Home Assistant sensors. By TeodorTeo.com
+url: https://teodorteo.com
+arch:
+  - amd64
+  - aarch64
+init: false
+startup: application
+boot: auto
+homeassistant_api: true
+hassio_api: true
+ingress: true
+ingress_port: 8099
+panel_icon: mdi:lan-connect
+panel_title: HAPing
+options:
+  log_level: info
+schema:
+  log_level: list(debug|info|warning)

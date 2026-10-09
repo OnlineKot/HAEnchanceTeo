@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HAWatchTeo</title>
+<link rel="stylesheet" href="static/common.css">
+</head>
+<body>
+<div class="bar"><span class="ibtn" id="barIcon"></span><h1>HAWatchTeo</h1><small class="hint" id="tag" style="margin-right:12px"></small></div>
+<main>
+<div class="tabs" id="tabs"></div>
+
+<div class="view" id="v-dash">
+  <div class="tiles" id="tiles"></div>
+  <div class="card">
+    <div class="sec"><span id="tList"></span><span class="sp"></span><button class="b alt sm" id="scanBtn"></button></div>
+    <input type="text" id="q" style="margin-bottom:8px">
+    <div id="list"></div>
+  </div>
+</div>
+
+<div class="view" id="v-set">
+  <div class="card">
+    <div class="sec" id="sUnav"></div>
+    <div class="row"><div class="grow"><label class="f" id="lUnavMin"></label><input type="number" id="unavMin" min="1"></div></div>
+    <label class="chk"><input type="checkbox" id="chkUnknown"> <span id="tUnknown"></span></label>
+  </div>
+  <div class="card">
+    <div class="sec" id="sBat"></div>
+    <label class="chk"><input type="checkbox" id="batOn"> <span id="tBatOn"></span></label>
+    <div class="row"><div class="grow"><label class="f" id="lBatTh"></label><input type="number" id="batTh" min="1" max="100"></div></div>
+  </div>
+  <div class="card">
+    <div class="sec" id="sStale"></div>
+    <label class="chk"><input type="checkbox" id="staleOn"> <span id="tStaleOn"></span></label>
+    <div class="row"><div class="grow"><label class="f" id="lStaleH"></label><input type="number" id="staleH" min="1"></div>
+      <div class="grow"><label class="f" id="lStaleD"></label><input type="text" id="staleD" placeholder="sensor, binary_sensor"></div></div>
+  </div>
+  <div class="card">
+    <div class="sec" id="sIgn"></div>
+    <label class="f" id="lIgn"></label><textarea id="ign" style="min-height:90px" placeholder="sensor.*_rssi&#10;light.test_*"></textarea>
+    <label class="f" id="lExc"></label><textarea id="exc" style="min-height:60px"></textarea>
+  </div>
+  <div class="card">
+    <div class="sec" id="sNot"></div>
+    <label class="chk"><input type="checkbox" id="notOn"> <span id="tNotOn"></span></label>
+    <label class="f" id="lPhones"></label><div class="chips" id="phones"></div>
+    <label class="chk"><input type="checkbox" id="notRec"> <span id="tNotRec"></span></label>
+    <div class="row"><div class="grow"><label class="f" id="lRenot"></label><input type="number" id="renot" min="1"></div></div>
+    <label class="chk"><input type="checkbox" id="senOn"> <span id="tSenOn"></span></label>
+    <div class="hint" id="senHint"></div>
+  </div>
+  <div class="row" style="margin-top:0"><button class="b" id="saveBtn"></button><button class="b alt" id="testBtn"></button></div>
+</div>
+
+<div class="view" id="v-log">
+  <div class="card"><div class="sec"><span id="tLog"></span><span class="sp"></span><button class="b alt sm" id="logClear"></button></div><div id="logList"></div></div>
+</div>
+
+<footer><span id="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
+</main>
+<script src="static/common.js"></script>
+<script src="static/icons.js"></script>
+<script>
+const tr = HL.tr, esc = HL.esc, $ = id => document.getElementById(id);
+const TYPE = {unavailable:{c:"var(--error-color)", i:"mdi:alert-circle", l:tr("Niedostępne","Unavailable")},
+              stale:{c:"var(--warning-color)", i:"mdi:clock-outline", l:tr("Nieaktualne","Stale")},
+              battery:{c:"#ff9800", i:"mdi:battery", l:tr("Słaba bateria","Low battery")}};
+let S = null, filter = "", phonesAll = [];
+$("barIcon").innerHTML = HL.icon("mdi:shield-search"); $("tag").textContent = tr("Strażnik encji","Entity watchdog");
+$("by").textContent = tr("Stworzone przez","Created by");
+[["dash",tr("Przegląd","Overview")],["set",tr("Ustawienia","Settings")],["log",tr("Dziennik","Log")]].forEach(([id, l]) => {
+  const b = document.createElement("button"); b.textContent = l; b.dataset.id = id; b.onclick = () => show(id); $("tabs").append(b); });
+function show(id){ document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.id === id));
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + id)); if(id === "set") fillSettings(); if(id === "log") renderLog(); }
+
+const T = {tList:tr("Problemy","Problems"), scan:tr("Skanuj teraz","Scan now"), q:tr("Szukaj (nazwa, id, urządzenie, obszar)…","Search (name, id, device, area)…"),
+  sUnav:tr("Niedostępne encje","Unavailable entities"), lUnavMin:tr("Zgłoś, gdy niedostępna dłużej niż (minuty)","Report when unavailable longer than (minutes)"), tUnknown:tr("Traktuj też stan „unknown” jako problem","Treat state “unknown” as a problem too"),
+  sBat:tr("Bateria","Battery"), tBatOn:tr("Wykrywaj słabe baterie","Detect low batteries"), lBatTh:tr("Próg (%)","Threshold (%)"),
+  sStale:tr("Nieaktualne encje (brak aktualizacji)","Stale entities (no updates)"), tStaleOn:tr("Wykrywaj encje bez aktualizacji","Detect entities that stopped updating"), lStaleH:tr("Nieaktualna po (godziny)","Stale after (hours)"), lStaleD:tr("Domeny (po przecinku)","Domains (comma list)"),
+  sIgn:tr("Ignorowanie","Ignoring"), lIgn:tr("Ignoruj encje (id lub wzorzec z *, jedna w linii)","Ignore entities (id or pattern with *, one per line)"), lExc:tr("Pomijaj całe domeny (po przecinku)","Skip whole domains (comma list)"),
+  sNot:tr("Powiadomienia i sensory","Notifications and sensors"), tNotOn:tr("Wysyłaj powiadomienia o nowych problemach","Send notifications about new problems"), lPhones:tr("Telefony (aplikacja Companion)","Phones (Companion app)"),
+  tNotRec:tr("Powiadom też, gdy problem zniknie","Also notify when a problem is resolved"), lRenot:tr("Przypominaj o nierozwiązanych co (godziny)","Remind about unresolved every (hours)"),
+  tSenOn:tr("Publikuj sensory w Home Assistant","Publish sensors in Home Assistant"), senHint:tr("sensor.hawatchteo_problems (liczba) i binary_sensor.hawatchteo_problem – do automatyzacji i dashboardów.","sensor.hawatchteo_problems (count) and binary_sensor.hawatchteo_problem – for automations and dashboards."),
+  save:tr("Zapisz","Save"), test:tr("Wyślij test","Send test"), tLog:tr("Zdarzenia","Events"), clear:tr("Wyczyść","Clear")};
+$("tList").textContent = T.tList; $("scanBtn").textContent = T.scan; $("q").placeholder = T.q;
+for(const k of ["sUnav","lUnavMin","tUnknown","sBat","tBatOn","lBatTh","sStale","tStaleOn","lStaleH","lStaleD","sIgn","lIgn","lExc","sNot","tNotOn","lPhones","tNotRec","lRenot","tSenOn","senHint","tLog"]) $(k).textContent = T[k];
+$("saveBtn").textContent = T.save; $("testBtn").textContent = T.test; $("logClear").textContent = T.clear;
+
+async function load(fresh){
+  try{ S = await HL.api("status" + (fresh ? "?fresh=1" : "")); }catch(e){ return HL.toast(e.message, true); }
+  renderDash();
+}
+function renderDash(){
+  const c = S.counts, total = S.problems.length;
+  const defs = [["", total, tr("Wszystkie problemy","All problems"), total ? "mdi:alert" : "mdi:check-circle", total ? "var(--error-color)" : "var(--success-color)"],
+    ["unavailable", c.unavailable, TYPE.unavailable.l, TYPE.unavailable.i, TYPE.unavailable.c], ["battery", c.battery, TYPE.battery.l, TYPE.battery.i, TYPE.battery.c], ["stale", c.stale, TYPE.stale.l, TYPE.stale.i, TYPE.stale.c]];
+  $("tiles").innerHTML = ""; defs.forEach(([k, n, l, ic, col]) => { const t = document.createElement("div"); t.className = "tile" + (filter === k ? " sel" : "");
+    t.innerHTML = `<div class="tshape" style="--c:${col};width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:${col};background:color-mix(in srgb,${col} 20%,transparent)">${HL.icon(ic)}</div><div><div class="big">${n}</div><div class="hint">${esc(l)}</div></div>`;
+    t.onclick = () => { filter = k; renderDash(); }; $("tiles").append(t); });
+  const q = $("q").value.trim().toLowerCase();
+  const rows = S.problems.filter(p => (!filter || p.type === filter) && (!q || [p.name, p.entity_id, p.device, p.area, p.platform].join(" ").toLowerCase().includes(q)));
+  const box = $("list"); box.innerHTML = "";
+  if(!rows.length) box.innerHTML = `<div class="hint" style="padding:12px 0">${total ? tr("Brak wyników.","No results.") : "✅ " + tr(`Wszystko w porządku – sprawdzono ${S.total_entities} encji.`, `All good – checked ${S.total_entities} entities.`)}</div>`;
+  rows.forEach(p => { const ty = TYPE[p.type], el = document.createElement("div"); el.className = "item";
+    el.innerHTML = `<div class="shape" style="color:${ty.c};background:color-mix(in srgb,${ty.c} 20%,transparent)">${HL.icon(ty.i)}</div>
+      <div class="n"><b></b><div class="hint"></div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px"></div></div>
+      <button class="b alt sm op">${tr("Otwórz w HA","Open in HA")}</button><button class="b alt sm ig">${tr("Ignoruj","Ignore")}</button>`;
+    el.querySelector("b").textContent = p.name; el.querySelector(".hint").textContent = p.entity_id;
+    const badges = el.querySelector("div[style*=flex]"); const add = (txt, cls) => { if(txt){ const b = document.createElement("span"); b.className = "badge " + (cls || ""); b.textContent = txt; badges.append(b); } };
+    add(ty.l + (p.detail && p.type === "battery" ? " " + p.detail : ""), p.type === "unavailable" ? "err" : "warn"); add(tr("od","for") + " " + HL.ago(p.since)); add(p.area); add(p.device); add(p.platform);
+    el.querySelector(".op").onclick = () => window.open("/config/entities?search=" + encodeURIComponent(p.entity_id), "_top");
+    el.querySelector(".ig").onclick = async () => { try{ await HL.post("ignore", {pattern:p.entity_id}); HL.toast(tr("Dodano do ignorowanych","Added to ignored")); load(); }catch(e){ HL.toast(e.message, true); } };
+    box.append(el); });
+}
+$("q").oninput = renderDash; $("scanBtn").onclick = () => { HL.toast(tr("Skanowanie…","Scanning…")); load(true); };
+
+async function fillSettings(){
+  if(!S) await load(); const c = S.settings;
+  $("unavMin").value = c.unavailable_minutes; $("chkUnknown").checked = c.check_unknown; $("batOn").checked = c.battery_enabled; $("batTh").value = c.battery_threshold;
+  $("staleOn").checked = c.stale_enabled; $("staleH").value = c.stale_hours; $("staleD").value = c.stale_domains.join(", "); $("ign").value = c.ignore.join("\n"); $("exc").value = c.exclude_domains.join(", ");
+  $("notOn").checked = c.notify; $("notRec").checked = c.notify_recovered; $("renot").value = c.renotify_hours; $("senOn").checked = c.sensors;
+  try{ phonesAll = await HL.api("phones"); }catch{}
+  const box = $("phones"); box.innerHTML = ""; const all = [...new Set([...phonesAll, ...c.phones])];
+  if(!all.length) box.innerHTML = `<span class="hint">${tr("Nie znaleziono telefonu (notify.mobile_app_*).","No phone found (notify.mobile_app_*).")}</span>`;
+  all.forEach(n => { const l = document.createElement("label"); l.innerHTML = `<input type="checkbox" value="${esc(n)}" ${c.phones.includes(n) ? "checked" : ""}> ${esc(n)}`; box.append(l); });
+}
+const body = () => ({unavailable_minutes:$("unavMin").value, check_unknown:$("chkUnknown").checked, battery_enabled:$("batOn").checked, battery_threshold:$("batTh").value,
+  stale_enabled:$("staleOn").checked, stale_hours:$("staleH").value, stale_domains:$("staleD").value, ignore:$("ign").value, exclude_domains:$("exc").value,
+  notify:$("notOn").checked, phones:[...document.querySelectorAll("#phones input:checked")].map(i => i.value), notify_recovered:$("notRec").checked, renotify_hours:$("renot").value, sensors:$("senOn").checked});
+$("saveBtn").onclick = async () => { try{ await HL.post("settings", body()); HL.toast(tr("Zapisano ✓","Saved ✓")); load(true); }catch(e){ HL.toast(e.message, true); } };
+$("testBtn").onclick = async () => { try{ await HL.post("settings", body()); await HL.post("test"); HL.toast(tr("Test wysłany","Test sent")); }catch(e){ HL.toast(e.message, true); } };
+
+async function renderLog(){
+  let rows; try{ rows = await HL.api("events"); }catch(e){ return HL.toast(e.message, true); }
+  const box = $("logList"); box.innerHTML = rows.length ? "" : `<div class="hint">${tr("Brak zdarzeń.","No events yet.")}</div>`;
+  rows.forEach(e => { const ok = e.kind === "recovered", ty = TYPE[e.kind] || {c:"var(--success-color)", i:"mdi:check-circle", l:tr("Naprawione","Recovered")};
+    const el = document.createElement("div"); el.className = "item";
+    el.innerHTML = `<div class="shape" style="color:${ty.c};background:color-mix(in srgb,${ty.c} 20%,transparent)">${HL.icon(ty.i)}</div><div class="n"><b></b><div class="hint"></div></div><span class="badge">${new Date(e.ts*1000).toLocaleString()}</span>`;
+    el.querySelector("b").textContent = e.name || e.entity_id; el.querySelector(".hint").textContent = `${ty.l} · ${e.entity_id}${e.detail ? " · " + e.detail : ""}`; box.append(el); });
+}
+$("logClear").onclick = async () => { if(!confirm(tr("Wyczyścić dziennik?","Clear the log?"))) return; try{ await HL.api("events", {method:"DELETE"}); renderLog(); }catch(e){ HL.toast(e.message, true); } };
+
+show("dash"); load(); setInterval(() => { if(!document.hidden && $("v-dash").classList.contains("on")) load(); }, 15000);
+</script>
+</body>
+</html>
