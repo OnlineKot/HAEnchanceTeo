@@ -1,0 +1,13 @@
+configuration:
+  base_url:
+    name: Base URL for speakers
+    description: "URL speakers use to fetch audio, including port, e.g. http://192.168.1.10:8765. Leave empty to auto-detect the host IP."
+  api_key:
+    name: API key
+    description: "Enables the external API (port 8765) for automations. Leave empty to disable it."
+  max_upload_mb:
+    name: Max upload size (MB)
+    description: Maximum size of an uploaded or recorded file.
+  log_level:
+    name: Log level
+    description: Verbosity of the add-on log.

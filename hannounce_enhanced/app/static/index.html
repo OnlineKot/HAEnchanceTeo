@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HAnnounce Enhanced</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--fg:#1c1e21;--mut:#6b7280;--acc:#03a9f4;--acc2:#0288d1;--bd:#e2e5ea;--ok:#2e7d32;--err:#c62828}
+@media (prefers-color-scheme:dark){:root{--bg:#111318;--card:#1c1f26;--fg:#e8eaed;--mut:#9aa0aa;--bd:#2c303a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:4px 0 14px;display:flex;align-items:center;gap:8px}
+h2{font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+.players{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+.players label{display:flex;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--bd);border-radius:8px;cursor:pointer}
+.players label small{color:var(--mut);margin-left:auto}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button{background:none;border:1px solid var(--bd);color:var(--fg);padding:7px 14px;border-radius:20px;cursor:pointer;font:inherit}
+.tabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.pane{display:none}.pane.on{display:block}
+label.f{display:block;margin:8px 0 3px;color:var(--mut);font-size:13px}
+input[type=text],input[type=number],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit}
+textarea{min-height:80px;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.row>.grow{flex:1;min-width:110px}
+button.b{background:var(--acc);color:#fff;border:0;padding:9px 16px;border-radius:8px;cursor:pointer;font:inherit}
+button.b:hover{background:var(--acc2)}
+button.b.alt{background:none;color:var(--acc);border:1px solid var(--acc)}
+button.b.red{background:var(--err)}
+button:disabled{opacity:.5;cursor:default}
+audio{width:100%;margin-top:10px}
+.item{display:flex;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--bd);flex-wrap:wrap}
+.item:first-child{border-top:0}
+.item .n{flex:1;min-width:140px}.item small{color:var(--mut)}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:10px;opacity:0;transition:.25s;pointer-events:none;max-width:90%}
+#toast.on{opacity:1}
+footer{text-align:center;color:var(--mut);font-size:13px;margin:20px 0 8px}
+footer a{color:var(--acc);text-decoration:none;font-weight:600}
+.hint{color:var(--mut);font-size:13px;margin-top:8px}
+.rec{color:var(--err);font-weight:600}
+</style>
+</head>
+<body>
+<main>
+<h1>📣 HAnnounce Enhanced</h1>
+
+<div class="card">
+  <h2 data-i="targets"></h2>
+  <div class="players" id="players"></div>
+  <div class="row">
+    <label class="grow"><input type="checkbox" id="volOn"> <span data-i="setvol"></span>: <b id="volVal">50</b>%
+      <input type="range" id="vol" min="0" max="100" value="50" style="width:100%"></label>
+  </div>
+</div>
+
+<div class="card">
+  <div class="tabs" id="tabs"></div>
+
+  <div class="pane" id="p-say">
+    <label class="f" data-i="ttsent"></label><select id="ttsEnt"></select>
+    <label class="f" data-i="message"></label><textarea id="ttsMsg"></textarea>
+    <label class="f" data-i="lang"></label><input type="text" id="ttsLang" placeholder="pl, en, de ...">
+    <div class="row"><button class="b" id="sayGo" data-i="announce"></button></div>
+  </div>
+
+  <div class="pane" id="p-rec">
+    <div class="row">
+      <button class="b" id="recBtn" data-i="rec"></button>
+      <span class="rec" id="recTime"></span>
+      <label class="b alt" style="margin:0"><span data-i="devrec"></span>
+        <input type="file" id="recFile" accept="audio/*" capture style="display:none"></label>
+    </div>
+    <div class="hint" id="recHint"></div>
+    <audio id="recAudio" controls hidden></audio>
+    <div class="out" id="recOut" hidden></div>
+  </div>
+
+  <div class="pane" id="p-up">
+    <label class="f" data-i="file"></label><input type="file" id="upFile" accept="audio/*,video/mp4">
+    <audio id="upAudio" controls hidden></audio>
+    <div class="out" id="upOut"></div>
+  </div>
+
+  <div class="pane" id="p-gen">
+    <div class="row">
+      <div class="grow"><label class="f" data-i="type"></label><select id="gType"></select></div>
+      <div class="grow"><label class="f" data-i="freq"></label><input type="number" id="gFreq" min="50" max="8000" placeholder="auto"></div>
+      <div class="grow"><label class="f" data-i="dur"></label><input type="number" id="gDur" min="0.1" max="20" step="0.1" placeholder="auto"></div>
+      <div class="grow"><label class="f" data-i="rep"></label><input type="number" id="gRep" min="1" max="10" value="1"></div>
+    </div>
+    <div class="row"><button class="b alt" id="gPrev" data-i="preview"></button></div>
+    <audio id="gAudio" controls hidden></audio>
+    <div class="out" id="gOut"></div>
+  </div>
+
+  <div class="pane" id="p-lib"><div id="libList"></div></div>
+</div>
+
+<footer>
+  <span data-i="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a>
+</footer>
+</main>
+<div id="toast"></div>
+
+<script>
+const L = {
+ en:{targets:"Speakers",setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",
+  ttsent:"TTS engine",message:"Message",lang:"Language (optional)",announce:"Announce",rec:"● Record",stop:"■ Stop",devrec:"Use device recorder",
+  nomic:"Browser microphone needs HTTPS - use \"Use device recorder\" or open HA over HTTPS.",file:"Audio file",type:"Sound",freq:"Frequency Hz",dur:"Duration s",rep:"Repeat",
+  preview:"▶ Preview",name:"Name",once:"Announce once",save:"Save to library",saveAnn:"Save & announce",empty:"Library is empty.",del:"Delete",rename:"Rename",
+  sel:"Select at least one speaker.",sent:"Announced ✓",saved:"Saved ✓",confirmDel:"Delete this sound?",by:"Created by",nomsg:"Type a message.",nofile:"Choose or record a sound first.",newname:"New name"},
+ pl:{targets:"Głośniki",setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",
+  ttsent:"Silnik TTS",message:"Wiadomość",lang:"Język (opcjonalnie)",announce:"Ogłoś",rec:"● Nagrywaj",stop:"■ Stop",devrec:"Nagrywarka urządzenia",
+  nomic:"Mikrofon w przeglądarce wymaga HTTPS - użyj „Nagrywarka urządzenia” albo otwórz HA przez HTTPS.",file:"Plik audio",type:"Dźwięk",freq:"Częstotliwość Hz",dur:"Czas s",rep:"Powtórzenia",
+  preview:"▶ Podgląd",name:"Nazwa",once:"Ogłoś jednorazowo",save:"Zapisz w bibliotece",saveAnn:"Zapisz i ogłoś",empty:"Biblioteka jest pusta.",del:"Usuń",rename:"Zmień nazwę",
+  sel:"Wybierz co najmniej jeden głośnik.",sent:"Ogłoszono ✓",saved:"Zapisano ✓",confirmDel:"Usunąć ten dźwięk?",by:"Stworzone przez",nomsg:"Wpisz wiadomość.",nofile:"Najpierw wybierz lub nagraj dźwięk.",newname:"Nowa nazwa"}
+};
+const lang = (navigator.language||"en").toLowerCase().startsWith("pl") ? "pl" : "en";
+const t = k => L[lang][k] || L.en[k] || k;
+const $ = id => document.getElementById(id);
+const api = (p, o) => fetch("api/" + p, o).then(async r => {
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+});
+let toastT;
+function toast(m, bad){const e=$("toast");e.textContent=m;e.style.background=bad?"var(--err)":"";e.style.color=bad?"#fff":"";e.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),3200);}
+document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i));
+
+const store = {get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}}, set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+
+// ---- tabs
+const TABS = [["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"]];
+TABS.forEach(([id, key]) => {
+  const b = document.createElement("button"); b.textContent = t(key); b.dataset.id = id;
+  b.onclick = () => showTab(id); $("tabs").append(b);
+});
+function showTab(id){
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.id===id));
+  document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="p-"+id));
+  store.set("tab",id); if(id==="lib") renderLib();
+}
+
+// ---- state
+let S = {players:[],tts:[],library:[],generators:{}};
+async function refresh(){
+  S = await api("state");
+  const sel = new Set(store.get("targets", []));
+  $("players").innerHTML = "";
+  S.players.forEach(p => {
+    const l = document.createElement("label");
+    l.innerHTML = `<input type="checkbox" value="${p.entity_id}"><span></span><small>${p.state}</small>`;
+    l.querySelector("span").textContent = p.name;
+    const c = l.querySelector("input"); c.checked = sel.has(p.entity_id);
+    c.onchange = () => store.set("targets", targets());
+    $("players").append(l);
+  });
+  $("ttsEnt").innerHTML = S.tts.map(x=>`<option value="${x.entity_id}">${x.name}</option>`).join("");
+  $("gType").innerHTML = Object.entries(S.generators).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
+  renderLib();
+}
+const targets = () => [...document.querySelectorAll("#players input:checked")].map(c=>c.value);
+$("vol").oninput = () => $("volVal").textContent = $("vol").value;
+function extra(){ const x={targets:targets()}; if($("volOn").checked) x.volume=$("vol").value/100; return x; }
+function needTargets(){ if(!targets().length){toast(t("sel"),true);return false} return true; }
+async function announce(body){
+  if(!needTargets()) return false;
+  try{ await api("announce",{method:"POST",body:JSON.stringify({...extra(),...body})}); toast(t("sent")); return true; }
+  catch(e){ toast(e.message,true); return false; }
+}
+
+// ---- say
+$("sayGo").onclick = () => {
+  const m = $("ttsMsg").value.trim(); if(!m) return toast(t("nomsg"),true);
+  announce({message:m,tts_entity:$("ttsEnt").value,language:$("ttsLang").value.trim()||undefined});
+};
+
+// ---- shared "sound source" actions: name box + once / save / save&announce
+function actions(box, getItem){
+  box.innerHTML = `<label class="f">${t("name")}</label><input type="text" class="nm">
+    <div class="row"><button class="b once">${t("once")}</button>
+    <button class="b alt sv">${t("save")}</button><button class="b alt sa">${t("saveAnn")}</button></div>`;
+  const nm = box.querySelector(".nm");
+  const go = async (save, ann) => {
+    if(ann && !needTargets()) return;
+    try{
+      const item = await getItem(save, nm.value.trim());
+      if(!item) return;
+      if(save) toast(t("saved")), refresh();
+      if(ann) await announce({item:item.id});
+    }catch(e){ toast(e.message,true); }
+  };
+  box.querySelector(".once").onclick = () => go(false,true);
+  box.querySelector(".sv").onclick = () => go(true,false);
+  box.querySelector(".sa").onclick = () => go(true,true);
+}
+async function sendBlob(blob, fname, kind, save, name){
+  const f = new FormData();
+  f.append("kind",kind); f.append("save",save?"1":"0"); if(name) f.append("name",name);
+  f.append("file",blob,fname);
+  return api("upload",{method:"POST",body:f});
+}
+
+// ---- record
+let blobRec = null, mr = null, chunks = [], tick;
+actions($("recOut"), (save,name)=>blobRec ? sendBlob(blobRec,"rec","record",save,name) : (toast(t("nofile"),true),null));
+function setRec(blob){
+  blobRec = blob; $("recAudio").src = URL.createObjectURL(blob); $("recAudio").hidden = false; $("recOut").hidden = false;
+}
+if(!navigator.mediaDevices?.getUserMedia){ $("recBtn").disabled = true; $("recHint").textContent = t("nomic"); }
+$("recBtn").onclick = async () => {
+  if(mr && mr.state==="recording"){ mr.stop(); return; }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    mr = new MediaRecorder(stream); chunks = [];
+    mr.ondataavailable = e => chunks.push(e.data);
+    mr.onstop = () => {
+      stream.getTracks().forEach(x=>x.stop()); clearInterval(tick);
+      $("recBtn").textContent = t("rec"); $("recTime").textContent = "";
+      setRec(new Blob(chunks,{type:mr.mimeType}));
+    };
+    mr.start(); const t0 = Date.now();
+    $("recBtn").textContent = t("stop");
+    tick = setInterval(()=>{ $("recTime").textContent = ((Date.now()-t0)/1000).toFixed(0)+" s"; },250);
+  }catch(e){ toast(e.message,true); }
+};
+$("recFile").onchange = e => { if(e.target.files[0]) setRec(e.target.files[0]); };
+
+// ---- upload
+let fileUp = null;
+actions($("upOut"), (save,name)=>fileUp ? sendBlob(fileUp,fileUp.name,"upload",save,name||fileUp.name.replace(/\.[^.]+$/,"")) : (toast(t("nofile"),true),null));
+$("upFile").onchange = e => {
+  fileUp = e.target.files[0]||null;
+  if(fileUp){ $("upAudio").src = URL.createObjectURL(fileUp); $("upAudio").hidden = false; }
+};
+
+// ---- generate
+function genBody(save,name){
+  return {type:$("gType").value,freq:+$("gFreq").value||null,duration:+$("gDur").value||null,repeat:+$("gRep").value||1,save,name};
+}
+const genItem = (save,name) => api("generate",{method:"POST",body:JSON.stringify(genBody(save,name))});
+actions($("gOut"), genItem);
+$("gPrev").onclick = async () => {
+  try{ const it = await genItem(false,""); $("gAudio").src = "media/"+it.file; $("gAudio").hidden=false; $("gAudio").play(); }
+  catch(e){ toast(e.message,true); }
+};
+
+// ---- library
+function renderLib(){
+  const box = $("libList");
+  if(!S.library.length){ box.innerHTML = `<div class="hint">${t("empty")}</div>`; return; }
+  box.innerHTML = "";
+  S.library.slice().reverse().forEach(it => {
+    const d = document.createElement("div"); d.className = "item";
+    d.innerHTML = `<div class="n"><b></b><br><small>${it.kind} · ${it.duration.toFixed(1)} s</small></div>
+      <audio controls preload="none" src="media/${it.file}" style="width:200px;margin:0"></audio>
+      <button class="b a">${t("announce")}</button><button class="b alt r">${t("rename")}</button><button class="b red x">${t("del")}</button>`;
+    d.querySelector("b").textContent = it.name;
+    d.querySelector(".a").onclick = () => announce({item:it.id});
+    d.querySelector(".r").onclick = async () => {
+      const n = prompt(t("newname"), it.name); if(!n) return;
+      try{ await api("library/"+it.id,{method:"POST",body:JSON.stringify({name:n})}); refresh(); }catch(e){toast(e.message,true)}
+    };
+    d.querySelector(".x").onclick = async () => {
+      if(!confirm(t("confirmDel"))) return;
+      try{ await api("library/"+it.id,{method:"DELETE"}); refresh(); }catch(e){toast(e.message,true)}
+    };
+    box.append(d);
+  });
+}
+
+showTab(store.get("tab","say"));
+refresh().catch(e => toast(e.message,true));
+</script>
+</body>
+</html>

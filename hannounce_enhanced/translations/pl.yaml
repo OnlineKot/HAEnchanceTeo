@@ -1,0 +1,13 @@
+configuration:
+  base_url:
+    name: Adres bazowy dla głośników
+    description: "Adres, z którego głośniki pobierają dźwięk, razem z portem, np. http://192.168.1.10:8765. Puste = automatyczne wykrycie IP hosta."
+  api_key:
+    name: Klucz API
+    description: "Włącza zewnętrzne API (port 8765) dla automatyzacji. Puste = API wyłączone."
+  max_upload_mb:
+    name: Maks. rozmiar pliku (MB)
+    description: Maksymalny rozmiar wgrywanego lub nagranego pliku.
+  log_level:
+    name: Poziom logów
+    description: Szczegółowość logów dodatku.
