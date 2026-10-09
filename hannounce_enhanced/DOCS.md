@@ -59,6 +59,18 @@ ostatnie wiadomości).
 - **Wszystkie trzy naraz:** po kliknięciu „Utwórz skrypt” dostajesz skrypt oraz gotowe do skopiowania adresy skrótu iOS i osobnej aplikacji.
 - **Osobna aplikacja:** `http://<IP_HA>:8765/?quick=1` → Udostępnij → Do ekranu początkowego (tryb pełnoekranowy, tylko widok Szybkie).
 
+## Tokeny dla skrótów i dziennik (nadzór)
+Zakładka **🔑 Tokeny**: dla każdego skrótu / osoby tworzysz osobny token – nie musisz podawać klucza administratora.
+- Token pokazuje się **tylko raz** – skopiuj go. Zapisywany jest wyłącznie jego skrót (hash); można go w każdej chwili **odwołać**.
+- Ograniczenia tokenu: wybrane głośniki, zgoda na TTS / dźwięki / skrypty i sceny, **maksymalna głośność**, limit 30 ogłoszeń na minutę.
+- Domyślne ustawienia: głośniki oraz silnik TTS / język / głos (z zakładki Mów) – skrót wysyła tylko `{"message": "Obiad gotowy"}`.
+- Token działa tylko na `/api/announce`, `/api/sounds` i `/api/stop` – nie ma dostępu do ustawień ani tokenów.
+- **👁 Token nadzorowany:** w dzienniku zapisywane jest wszystko, co mówi (pełny tekst, kto, kiedy, na jakich głośnikach, także odrzucone próby).
+  Token nienadzorowany zostawia w dzienniku tylko ślad (kto/kiedy/gdzie), bez treści. Ogłoszenia z panelu są zapisywane z treścią.
+- **Dziennik ogłoszeń** (na dole zakładki): filtr po tokenie, „Wyczyść dziennik”. Przechowywane jest do 1000 ostatnich wpisów (`/data/log.jsonl`).
+- Po utworzeniu dostajesz gotowe pola do skopiowania do aplikacji **Skróty**: adres, nagłówki i treść JSON.
+Uwaga: adres `http://<IP>:8765` jest nieszyfrowany – token wysyłany w sieci domowej jest widoczny dla urządzeń w tej sieci. Do dostępu spoza domu użyj HTTPS (Nabu Casa / reverse proxy).
+
 ## Opóźnienia, kolejka i Stop
 - **TTS jest przygotowywany z góry** (silnikiem z HA) i dopiero wtedy wysyłany na głośnik jako gotowy plik – dzięki temu nie ma
   niespodziewanego opóźnienia przy odtwarzaniu. Panel pokazuje „Przygotowuję głos…” a potem „Gra ♪”. Ta sama wiadomość

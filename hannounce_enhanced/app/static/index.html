@@ -180,6 +180,29 @@ code{background:var(--bg);padding:1px 5px;border-radius:5px;word-break:break-all
     <div id="spkList"></div>
   </div>
 
+  <div class="pane" id="p-tok">
+    <div class="sec"><span data-i="tokTitle"></span><span class="sp"></span><button class="link" id="tokNew" data-i="tokNew"></button></div>
+    <div class="hint" data-i="tokHint" style="margin:0 0 10px"></div>
+    <div class="prof" id="tokForm" hidden>
+      <label class="f" data-i="tokName"></label><input type="text" id="tkName" data-ph="tokNamePh">
+      <label class="chk"><input type="checkbox" id="tkSup" checked> <span data-i="tokSup"></span></label>
+      <label class="f" data-i="tokSpk"></label><div class="chips" id="tkSpk"></div>
+      <label class="chk"><input type="checkbox" id="tkAll"> <span data-i="tokAll"></span></label>
+      <label class="chk"><input type="checkbox" id="tkTts" checked> <span data-i="tokTts"></span></label>
+      <label class="chk"><input type="checkbox" id="tkSnd" checked> <span data-i="tokSnd"></span></label>
+      <label class="chk"><input type="checkbox" id="tkAct"> <span data-i="tokAct"></span></label>
+      <label class="f" data-i="tokMax"></label><input type="number" id="tkMax" min="0" max="100" placeholder="—">
+      <div class="hint" data-i="tokTtsHint"></div>
+      <div class="row"><button class="b" id="tkCreate" data-i="tokCreate"></button><button class="b alt" id="tkCancel" data-i="cancel"></button></div>
+    </div>
+    <div id="tokResult"></div>
+    <div id="tokList"></div>
+    <div class="sec" style="margin-top:20px"><span data-i="logTitle"></span><span class="sp"></span>
+      <button class="link" id="logRefresh" data-i="refresh"></button><button class="link" id="logClear" style="color:var(--err)" data-i="logClear"></button></div>
+    <select id="logFilter" style="margin-bottom:8px"></select>
+    <div id="logList"></div>
+  </div>
+
   <div class="pane" id="p-help"><div id="helpBox"></div></div>
 </div>
 
@@ -191,7 +214,15 @@ code{background:var(--bg);padding:1px 5px;border-radius:5px;word-break:break-all
 
 <script>
 const L = {
- en:{tagline:"Announcements for your speakers",stop2:"■ Stop",stopped:"Stopped ■",preparing:"Preparing voice…",playing:"Playing ♪",queued:"Queued - plays in {s} s",updNew:"New version available",updHave:"you have",updHow:"Open the add-on page and tap Update.",updOpen:"Open add-on page",updAuto:"auto-update on",updManual:"auto-update off (enable it on the add-on page)",copy:"Copy",copied:"Copied ✓",allThree:"All three ways to open it:",w1:"① Script in HA",w2:"② iOS shortcut (Open URL)",w3:"③ Standalone app (Add to Home Screen)",quick:"⚡ Quick",qSounds:"Favorite sounds - tap to announce",qMsg:"Say something",qNoFav:"No favorite sounds yet. Mark sounds with ★ in the Library.",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
+ en:{tagline:"Announcements for your speakers",tokens:"🔑 Tokens",tokTitle:"Tokens for shortcuts",tokNew:"+ New token",cancel:"Cancel",refresh:"Refresh",
+  tokHint:"A token lets one shortcut (or app) announce without your admin key. It can be limited to chosen speakers and revoked any time.",
+  tokName:"Name (e.g. the shortcut or person)",tokNamePh:"iPhone shortcut",tokSup:"Supervised: save everything this token says in the log",
+  tokSpk:"Speakers (default targets)",tokAll:"Allow it to announce on other speakers too",tokTts:"May use text-to-speech",tokSnd:"May play library sounds",tokAct:"May run scripts / scenes",
+  tokMax:"Max volume % (empty = no limit)",tokTtsHint:"The TTS engine, language and voice currently chosen in the Say tab become this token's defaults, so the shortcut only needs to send the message.",
+  tokCreate:"Create token",tokShown:"Copy the token now - it is shown only once!",tokSteps:"Shortcuts app → + → “Get Contents of URL”: paste the URL, Show More → Method POST → add the two headers → Request Body: JSON with a “message” text field (use “Ask for Input” or “Dictate Text” as its value). Name it and add it to the lock screen / Siri.",
+  tokURL:"URL",tokAuth:"Header Authorization",tokCT:"Header Content-Type",tokBody:"JSON body (text)",tokBody2:"JSON body (library sound)",tokRevoke:"Revoke",tokConfirm:"Revoke this token? Shortcuts using it will stop working.",
+  tokNone:"No tokens yet.",tokUsed:"last used",tokNever:"never used",tokUses:"uses",tokSupB:"👁 supervised",tokLimited:"limited speakers",tokNeed:"Enter a name and select at least one speaker.",
+  logTitle:"Announcement log",logClear:"Clear log",logAll:"All sources",logConfirm:"Clear the whole log?",logNoText:"(text not recorded)",logEmpty:"Nothing logged yet.",logViewTok:"Log",stop2:"■ Stop",stopped:"Stopped ■",preparing:"Preparing voice…",playing:"Playing ♪",queued:"Queued - plays in {s} s",updNew:"New version available",updHave:"you have",updHow:"Open the add-on page and tap Update.",updOpen:"Open add-on page",updAuto:"auto-update on",updManual:"auto-update off (enable it on the add-on page)",copy:"Copy",copied:"Copied ✓",allThree:"All three ways to open it:",w1:"① Script in HA",w2:"② iOS shortcut (Open URL)",w3:"③ Standalone app (Add to Home Screen)",quick:"⚡ Quick",qSounds:"Favorite sounds - tap to announce",qMsg:"Say something",qNoFav:"No favorite sounds yet. Mark sounds with ★ in the Library.",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
   setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",speakers:"Speakers",app:"📱 App",
   actBefore:"Run before (script / scene)",actAfter:"Run after (script / scene)",actNone:"— none —",
   ttsent:"TTS engine",message:"Message",lang:"Language",voice:"Voice",deflt:"(default)",ttsnone:"No TTS engine found in Home Assistant",
@@ -211,7 +242,15 @@ const L = {
   dAuto:"Let the player handle it (announce)",dManual:"Restore what was playing (media + position)",dNone:"Do nothing",dBefore:"Wait before playing (s)",dAfter:"Wait after it ends, then restore (s)",
   dPower:"Turn on if off, turn off afterwards",dUnmute:"Unmute during announcement",dQuiet:"Quiet hours",dQFrom:"from",dQTo:"to",dQVol:"Quiet volume % (empty = skip speaker)",
   dSave:"Save",dReset:"Reset",dCopy:"Copy to all speakers",dSaved:"Settings saved ✓"},
- pl:{tagline:"Ogłoszenia na Twoich głośnikach",stop2:"■ Stop",stopped:"Zatrzymano ■",preparing:"Przygotowuję głos…",playing:"Gra ♪",queued:"W kolejce - zagra za {s} s",updNew:"Dostępna nowa wersja",updHave:"masz",updHow:"Otwórz stronę dodatku i kliknij Aktualizuj.",updOpen:"Otwórz stronę dodatku",updAuto:"automatyczna aktualizacja włączona",updManual:"automatyczna aktualizacja wyłączona (włącz na stronie dodatku)",copy:"Kopiuj",copied:"Skopiowano ✓",allThree:"Wszystkie trzy sposoby otwierania:",w1:"① Skrypt w HA",w2:"② Skrót iOS (Otwórz URL)",w3:"③ Osobna aplikacja (Do ekranu początkowego)",quick:"⚡ Szybkie",qSounds:"Ulubione dźwięki - dotknij, by ogłosić",qMsg:"Powiedz coś",qNoFav:"Brak ulubionych dźwięków. Oznacz dźwięki ★ w Bibliotece.",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
+ pl:{tagline:"Ogłoszenia na Twoich głośnikach",tokens:"🔑 Tokeny",tokTitle:"Tokeny dla skrótów",tokNew:"+ Nowy token",cancel:"Anuluj",refresh:"Odśwież",
+  tokHint:"Token pozwala jednemu skrótowi (lub aplikacji) ogłaszać bez Twojego klucza administratora. Można go ograniczyć do wybranych głośników i w każdej chwili odwołać.",
+  tokName:"Nazwa (np. skrót lub osoba)",tokNamePh:"Skrót na iPhone",tokSup:"Nadzorowany: zapisuj w dzienniku wszystko, co ten token mówi",
+  tokSpk:"Głośniki (domyślne cele)",tokAll:"Pozwól ogłaszać także na innych głośnikach",tokTts:"Może używać mowy (TTS)",tokSnd:"Może odtwarzać dźwięki z biblioteki",tokAct:"Może uruchamiać skrypty / sceny",
+  tokMax:"Maks. głośność % (puste = bez limitu)",tokTtsHint:"Silnik TTS, język i głos wybrane teraz w zakładce Mów staną się domyślnymi dla tego tokenu, więc skrót wysyła tylko wiadomość.",
+  tokCreate:"Utwórz token",tokShown:"Skopiuj token teraz - pokazuje się tylko raz!",tokSteps:"Aplikacja Skróty → + → „Pobierz zawartość URL”: wklej adres, Pokaż więcej → Metoda POST → dodaj oba nagłówki → Treść żądania: JSON z polem tekstowym „message” (jako wartość użyj „Zapytaj o dane” lub „Dyktuj tekst”). Nazwij skrót i dodaj go do ekranu blokady / Siri.",
+  tokURL:"Adres URL",tokAuth:"Nagłówek Authorization",tokCT:"Nagłówek Content-Type",tokBody:"Treść JSON (tekst)",tokBody2:"Treść JSON (dźwięk z biblioteki)",tokRevoke:"Odwołaj",tokConfirm:"Odwołać ten token? Skróty, które go używają, przestaną działać.",
+  tokNone:"Brak tokenów.",tokUsed:"ostatnio użyty",tokNever:"nieużywany",tokUses:"użyć",tokSupB:"👁 nadzorowany",tokLimited:"ograniczone głośniki",tokNeed:"Wpisz nazwę i zaznacz co najmniej jeden głośnik.",
+  logTitle:"Dziennik ogłoszeń",logClear:"Wyczyść dziennik",logAll:"Wszystkie źródła",logConfirm:"Wyczyścić cały dziennik?",logNoText:"(tekst niezapisany)",logEmpty:"Nic jeszcze nie zapisano.",logViewTok:"Dziennik",stop2:"■ Stop",stopped:"Zatrzymano ■",preparing:"Przygotowuję głos…",playing:"Gra ♪",queued:"W kolejce - zagra za {s} s",updNew:"Dostępna nowa wersja",updHave:"masz",updHow:"Otwórz stronę dodatku i kliknij Aktualizuj.",updOpen:"Otwórz stronę dodatku",updAuto:"automatyczna aktualizacja włączona",updManual:"automatyczna aktualizacja wyłączona (włącz na stronie dodatku)",copy:"Kopiuj",copied:"Skopiowano ✓",allThree:"Wszystkie trzy sposoby otwierania:",w1:"① Skrypt w HA",w2:"② Skrót iOS (Otwórz URL)",w3:"③ Osobna aplikacja (Do ekranu początkowego)",quick:"⚡ Szybkie",qSounds:"Ulubione dźwięki - dotknij, by ogłosić",qMsg:"Powiedz coś",qNoFav:"Brak ulubionych dźwięków. Oznacz dźwięki ★ w Bibliotece.",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
   setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",speakers:"Głośniki",app:"📱 Aplikacja",
   actBefore:"Uruchom przed (skrypt / scena)",actAfter:"Uruchom po (skrypt / scena)",actNone:"— brak —",
   ttsent:"Silnik TTS",message:"Wiadomość",lang:"Język",voice:"Głos",deflt:"(domyślny)",ttsnone:"Nie znaleziono silnika TTS w Home Assistant",
@@ -257,7 +296,7 @@ document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i
 document.querySelectorAll("[data-ph]").forEach(e => e.placeholder = t(e.dataset.ph));
 
 // ---- tabs
-const TABS = [["quick","quick"],["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"],["spk","speakers"],["help","app"]];
+const TABS = [["quick","quick"],["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"],["spk","speakers"],["tok","tokens"],["help","app"]];
 TABS.forEach(([id, k]) => {
   const b = document.createElement("button"); b.textContent = t(k); b.dataset.id = id;
   b.onclick = () => showTab(id); $("tabs").append(b);
@@ -265,7 +304,7 @@ TABS.forEach(([id, k]) => {
 function showTab(id){
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.id===id));
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="p-"+id));
-  if(id==="lib") renderLib(); if(id==="spk") renderSpk(); if(id==="help") renderHelp();
+  if(id==="lib") renderLib(); if(id==="spk") renderSpk(); if(id==="tok") renderTokens(); if(id==="help") renderHelp();
 }
 
 // ---- state
@@ -502,6 +541,83 @@ $("qGo").onclick = async () => {
   if(!$("ttsEnt").value) return toast(t("ttsnone"),true);
   const ok = await announce({message:m,tts_entity:$("ttsEnt").value,language:$("ttsLang").value||undefined,voice:$("ttsVoice").value||undefined});
   if(ok){ store.set("recent",[m,...recent().filter(x=>x!==m)].slice(0,6)); renderQuick(); }
+};
+
+// ---- tokens (for shortcuts) + announcement log
+let TK = [];
+const ago = ts => ts ? new Date(ts*1000).toLocaleString() : t("tokNever");
+async function renderTokens(){
+  try{ TK = await api("tokens"); }catch(e){ return toast(e.message,true); }
+  const box = $("tokList"); box.innerHTML = TK.length ? "" : `<div class="empty">${t("tokNone")}</div>`;
+  TK.forEach(k => {
+    const d = document.createElement("div"); d.className = "item";
+    const spk = (k.targets||[]).map(e => (S.players.find(p=>p.entity_id===e)||{name:e}).name).join(", ");
+    d.innerHTML = `<div class="n"><b></b> <small class="hint">${esc(k.prefix)}…</small>
+      <div class="badges">${k.supervised?`<span class="badge warn">${t("tokSupB")}</span>`:""}
+      ${k.allow_all_speakers?"":`<span class="badge">${t("tokLimited")}</span>`}
+      <span class="badge">${t("tokUses")}: ${k.uses||0}</span><span class="badge">${t("tokUsed")}: ${esc(k.last_used?ago(k.last_used):t("tokNever"))}</span></div>
+      <small class="hint spk"></small></div>
+      <button class="b alt sm lg">${t("logViewTok")}</button><button class="b red sm rv">${t("tokRevoke")}</button>`;
+    d.querySelector("b").textContent = k.name; d.querySelector(".spk").textContent = spk;
+    d.querySelector(".lg").onclick = () => { $("logFilter").value = k.id; renderLog(); $("logList").scrollIntoView({behavior:"smooth"}); };
+    d.querySelector(".rv").onclick = async () => { if(!confirm(t("tokConfirm"))) return;
+      try{ await api("tokens/"+k.id,{method:"DELETE"}); renderTokens(); }catch(e){toast(e.message,true)} };
+    box.append(d);
+  });
+  const cur = $("logFilter").value;
+  $("logFilter").innerHTML = `<option value="">${t("logAll")}</option>` + TK.map(k=>`<option value="${esc(k.id)}">${esc(k.name)}</option>`).join("");
+  $("logFilter").value = cur;
+  renderLog();
+}
+async function renderLog(){
+  const box = $("logList");
+  try{
+    const rows = await api("log?limit=100" + ($("logFilter").value ? "&token="+encodeURIComponent($("logFilter").value) : ""));
+    box.innerHTML = rows.length ? "" : `<div class="empty">${t("logEmpty")}</div>`;
+    rows.forEach(e => {
+      const d = document.createElement("div"); d.className = "item";
+      const names = (e.targets||[]).map(x => (S.players.find(p=>p.entity_id===x)||{name:x}).name).join(", ");
+      d.innerHTML = `<div class="n"><div class="badges"><span class="badge">${esc(new Date(e.ts*1000).toLocaleString())}</span>
+        <span class="badge">${esc(e.source)}</span>${e.supervised?`<span class="badge warn">👁</span>`:""}
+        <span class="badge ${e.ok?"ok":"err"}">${e.ok?"✓":"✗ "+esc(e.error)}</span></div>
+        <div style="margin-top:4px"></div><small class="hint"></small></div>`;
+      d.querySelector("div[style]").textContent = (e.kind==="tts"?"🗣 ":"🔔 ") + (e.said === "(text not recorded)" ? t("logNoText") : e.said);
+      d.querySelector("small").textContent = "→ " + names;
+      box.append(d);
+    });
+  }catch(e){ box.innerHTML = ""; toast(e.message,true); }
+}
+$("logRefresh").onclick = renderTokens; $("logFilter").onchange = renderLog;
+$("logClear").onclick = async () => { if(!confirm(t("logConfirm"))) return; try{ await api("log",{method:"DELETE"}); renderLog(); }catch(e){toast(e.message,true)} };
+$("tokNew").onclick = () => {
+  const f = $("tokForm"); f.hidden = !f.hidden; if(f.hidden) return;
+  $("tkSpk").innerHTML = "";
+  visible().forEach(p => { const c = document.createElement("button"); c.type="button"; c.className = "chip"; c.dataset.id = p.entity_id;
+    c.innerHTML = `<span class="dot ${esc(p.state)}"></span><span></span>`; c.children[1].textContent = p.name;
+    c.onclick = () => c.classList.toggle("on"); $("tkSpk").append(c); });
+};
+$("tkCancel").onclick = () => { $("tokForm").hidden = true; };
+$("tkCreate").onclick = async () => {
+  const sel = [...document.querySelectorAll("#tkSpk .chip.on")].map(c=>c.dataset.id), name = $("tkName").value.trim();
+  if(!name || !sel.length) return toast(t("tokNeed"),true);
+  try{
+    const r = await post("tokens",{name,supervised:$("tkSup").checked,targets:sel,allow_all_speakers:$("tkAll").checked,
+      allow_tts:$("tkTts").checked,allow_sounds:$("tkSnd").checked,allow_actions:$("tkAct").checked,
+      max_volume:$("tkMax").value===""?null:+$("tkMax").value/100,
+      tts_entity:$("ttsEnt").value||"",language:$("ttsLang").value||"",voice:$("ttsVoice").value||""});
+    $("tokForm").hidden = true; $("tkName").value = "";
+    const box = $("tokResult"); box.innerHTML = "";
+    const card = document.createElement("div"); card.className = "prof"; card.style.border = "1.5px solid var(--warn)";
+    const h = document.createElement("div"); h.innerHTML = `<b>⚠ ${t("tokShown")}</b>`; card.append(h);
+    card.append(copyRow("Token", r.token));
+    const hint = document.createElement("div"); hint.className = "hint"; hint.style.marginTop = "10px"; hint.textContent = t("tokSteps"); card.append(hint);
+    card.append(copyRow(t("tokURL"), S.base_url + "/api/announce"));
+    card.append(copyRow(t("tokAuth"), "Bearer " + r.token));
+    card.append(copyRow(t("tokCT"), "application/json"));
+    card.append(copyRow(t("tokBody"), JSON.stringify({message:lang==="pl"?"Obiad gotowy":"Dinner is ready"})));
+    card.append(copyRow(t("tokBody2"), JSON.stringify({sound:(S.library[0]||{name:"Gong"}).name})));
+    box.append(card); card.scrollIntoView({behavior:"smooth"}); renderTokens();
+  }catch(e){ toast(e.message,true); }
 };
 
 // ---- speakers: detection, favorites, hide/remove, duplicates, calibration, per-speaker profile

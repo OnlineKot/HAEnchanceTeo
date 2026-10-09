@@ -23,6 +23,7 @@ Details & API: [hannounce_enhanced/DOCS.md](hannounce_enhanced/DOCS.md)
 - ★ Favorites, speaker detection + calibration, duplicate removal, manual hide/restore
 - 🧠 Per-speaker memory: volume, resume what was playing, delays, power on/off, quiet hours
 - 🖥 Standalone web interface (port 8765, installable as iPhone app)
+- 🔑 Tokens for Shortcuts (revocable, limited) + supervised tokens with an announcement log
 - 🔌 External API with key for automations
 
 MIT License © TeodorTeo.com

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """HAnnounce Enhanced - Home Assistant add-on by TeodorTeo.com (https://teodorteo.com)."""
 import asyncio
+import collections
 import hashlib
+import secrets
 import hmac
 import json
 import logging
@@ -65,6 +67,7 @@ def _json_error(status, message):
         403: web.HTTPForbidden,
         404: web.HTTPNotFound,
         413: web.HTTPRequestEntityTooLarge,
+        429: web.HTTPTooManyRequests,
         502: web.HTTPBadGateway,
     }[status]
     return cls(text=json.dumps({"error": message}), content_type="application/json")
@@ -520,7 +523,7 @@ async def launcher_info():
     return {"slug": slug, "path": path,
             "deeplink": f"homeassistant://navigate{path}" if path else "",
             "standalone": f"{await base_url()}/?quick=1", "notify": notify,
-            "api_enabled": bool(OPTIONS.get("api_key"))}
+            "api_enabled": bool(OPTIONS.get("api_key") or tokens)}
 
 
 async def make_script(body):
@@ -843,6 +846,118 @@ async def announce(body):
             "queued": round(queued, 1), "prepared": prepared}
 
 
+# ---------------------------------------------------------------- tokens + audit log
+TOKENS_FILE = DATA / "tokens.json"
+LOG_FILE = DATA / "log.jsonl"
+tokens: list = []
+audit = collections.deque(maxlen=1000)
+_rate: dict = {}
+RATE_PER_MIN = 30
+
+
+def load_tokens():
+    global tokens
+    try:
+        tokens = json.loads(TOKENS_FILE.read_text())
+    except (OSError, ValueError):
+        tokens = []
+    audit.clear()
+    try:
+        for line in LOG_FILE.read_text().splitlines()[-1000:]:
+            audit.append(json.loads(line))
+    except (OSError, ValueError):
+        pass
+
+
+def save_tokens():
+    tmp = TOKENS_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(tokens, indent=1))
+    tmp.replace(TOKENS_FILE)
+
+
+def token_hash(raw):
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def find_token(raw):
+    if not raw:
+        return None
+    digest, found = token_hash(raw), None
+    for tok in tokens:  # no early exit: constant-ish time
+        if hmac.compare_digest(tok["hash"], digest):
+            found = tok
+    return found
+
+
+def public_token(tok):
+    return {k: v for k, v in tok.items() if k != "hash"}
+
+
+def write_log(entry):
+    entry["ts"] = int(time.time())
+    audit.append(entry)
+    try:
+        with open(LOG_FILE, "a") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        if LOG_FILE.stat().st_size > 1_000_000:
+            LOG_FILE.write_text("".join(json.dumps(e, ensure_ascii=False) + "\n" for e in audit))
+    except OSError as exc:
+        log.warning("Could not write log: %s", exc)
+
+
+def apply_token(tok, body):
+    """Enforce a token's limits and fill in its defaults (so a shortcut can send just a message)."""
+    now = time.time()
+    hits = _rate.setdefault(tok["id"], collections.deque())
+    while hits and now - hits[0] > 60:
+        hits.popleft()
+    if len(hits) >= RATE_PER_MIN:
+        raise _json_error(429, "too many announcements - slow down")
+    hits.append(now)
+    body = dict(body)
+    is_sound = bool(body.get("item") or body.get("sound"))
+    if is_sound and not tok.get("allow_sounds", True):
+        raise _json_error(403, "this token may not play sounds")
+    if body.get("message") and not tok.get("allow_tts", True):
+        raise _json_error(403, "this token may not use text-to-speech")
+    if len(str(body.get("message") or "")) > 500:
+        raise _json_error(400, "message too long (max 500 characters)")
+    targets = body.get("targets") or body.get("target") or tok.get("targets") or []
+    if isinstance(targets, str):
+        targets = [t.strip() for t in targets.split(",") if t.strip()]
+    if not tok.get("allow_all_speakers"):
+        allowed = set(tok.get("targets") or [])
+        targets = [t for t in targets if t in allowed]
+    if not targets:
+        raise _json_error(403, "no speaker allowed for this token")
+    body["targets"] = targets
+    body.pop("target", None)
+    for key in ("tts_entity", "language", "voice"):
+        if not body.get(key) and tok.get(key):
+            body[key] = tok[key]
+    if not tok.get("allow_actions"):
+        body.pop("before_action", None)
+        body.pop("after_action", None)
+    if tok.get("max_volume") is not None:
+        vol = body.get("volume")
+        body["volume"] = min(float(vol), tok["max_volume"]) if vol not in (None, "") else tok["max_volume"]
+    return body
+
+
+def log_entry(request, tok, body, result=None, error=None):
+    """Supervised tokens (and the panel / admin key) are recorded in full; other tokens only as metadata."""
+    full = tok is None or tok.get("supervised")
+    said = body.get("message") if body.get("message") else (
+        (find_item(body.get("item") or body.get("sound")) or {}).get("name") or str(body.get("item") or body.get("sound") or ""))
+    write_log({
+        "source": "panel/admin" if tok is None else tok["name"], "token_id": tok["id"] if tok else "",
+        "supervised": bool(tok and tok.get("supervised")), "ip": request.remote,
+        "kind": "tts" if body.get("message") else "sound",
+        "said": said if full else ("(text not recorded)" if body.get("message") else said),
+        "targets": body.get("targets") or [], "ok": error is None, "error": error or "",
+        "skipped": (result or {}).get("skipped", [])})
+
+
 # ---------------------------------------------------------------- handlers
 async def h_index(request):
     return web.Response(text=(STATIC / "index.html").read_text(), content_type="text/html")
@@ -914,7 +1029,7 @@ async def h_state(request):
                           key=lambda a: (a["entity_id"].split(".")[0], a["name"].lower())),
         "generators": GENERATORS,
         "base_url": await base_url(),
-        "api_enabled": bool(OPTIONS.get("api_key")),
+        "api_enabled": bool(OPTIONS.get("api_key") or tokens),
         "credit": {"name": CREDIT, "url": CREDIT_URL},
     })
 
@@ -989,6 +1104,12 @@ async def h_stop(request):
         targets = (await request.json()).get("targets") or []
     except ValueError:
         targets = []
+    tok = request.get("token")
+    if tok and not tok.get("allow_all_speakers"):
+        allowed = set(tok.get("targets") or [])
+        targets = [t for t in (targets or allowed) if t in allowed]
+        if not targets:
+            raise _json_error(403, "no speaker allowed for this token")
     if not targets:
         targets = [p["entity_id"] for p in await build_players(await ha_get("/states"))
                    if p["state"] in ("playing", "buffering")]
@@ -1060,7 +1181,73 @@ async def h_announce(request):
         body = await request.json()
     except ValueError:
         raise _json_error(400, "invalid JSON")
-    return web.json_response(await announce(body))
+    tok = request.get("token")
+    try:
+        if tok:
+            body = apply_token(tok, body)
+        result = await announce(body)
+    except web.HTTPException as exc:
+        try:
+            msg = json.loads(exc.text).get("error", exc.reason)
+        except (ValueError, TypeError):
+            msg = exc.reason
+        log_entry(request, tok, body if isinstance(body, dict) else {}, error=msg)
+        raise
+    if tok:
+        tok["last_used"] = int(time.time())
+        tok["uses"] = tok.get("uses", 0) + 1
+        save_tokens()
+    log_entry(request, tok, body, result)
+    return web.json_response(result)
+
+
+async def h_tokens(request):
+    return web.json_response([public_token(t) for t in tokens])
+
+
+async def h_token_create(request):
+    body = await request.json()
+    name = str(body.get("name") or "").strip()[:60]
+    speakers_ = [x for x in (body.get("targets") or []) if str(x).startswith("media_player.")]
+    if not name or not speakers_:
+        raise _json_error(400, "name and at least one speaker are required")
+    raw = "hae_" + secrets.token_urlsafe(24)
+    mv = body.get("max_volume")
+    tok = {
+        "id": uuid.uuid4().hex[:12], "name": name, "hash": token_hash(raw), "prefix": raw[:8],
+        "created": int(time.time()), "last_used": None, "uses": 0,
+        "supervised": bool(body.get("supervised", True)),
+        "targets": speakers_, "allow_all_speakers": bool(body.get("allow_all_speakers")),
+        "allow_tts": bool(body.get("allow_tts", True)), "allow_sounds": bool(body.get("allow_sounds", True)),
+        "allow_actions": bool(body.get("allow_actions")),
+        "max_volume": None if mv in (None, "") else max(0.0, min(1.0, float(mv))),
+        "tts_entity": body.get("tts_entity") or "", "language": body.get("language") or "",
+        "voice": body.get("voice") or ""}
+    tokens.append(tok)
+    save_tokens()
+    return web.json_response({**public_token(tok), "token": raw})
+
+
+async def h_token_delete(request):
+    tok = next((t for t in tokens if t["id"] == request.match_info["id"]), None)
+    if not tok:
+        raise _json_error(404, "not found")
+    tokens.remove(tok)
+    save_tokens()
+    return web.json_response({"ok": True})
+
+
+async def h_log(request):
+    limit = max(1, min(int(request.query.get("limit", 100)), 1000))
+    who = request.query.get("token", "")
+    rows = [e for e in audit if not who or e.get("token_id") == who]
+    return web.json_response(list(reversed(rows))[:limit])
+
+
+async def h_log_clear(request):
+    audit.clear()
+    LOG_FILE.unlink(missing_ok=True)
+    return web.json_response({"ok": True})
 
 
 async def h_version(request):
@@ -1264,14 +1451,24 @@ async def ingress_guard(request, handler):
     return await handler(request)
 
 
+SCOPED_PATHS = {"/api/announce", "/api/sounds", "/api/stop"}
+
+
 @web.middleware
 async def key_guard(request, handler):
     if request.path.startswith("/api/"):
         key = OPTIONS.get("api_key") or ""
         supplied = (request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
                     or request.query.get("key", ""))
-        if not key or not hmac.compare_digest(supplied.encode(), key.encode()):
-            raise _json_error(401, "invalid or missing API key")
+        if key and supplied and hmac.compare_digest(supplied.encode(), key.encode()):
+            request["token"] = None  # admin key: full access
+        else:
+            tok = find_token(supplied)
+            if not tok:
+                raise _json_error(401, "invalid or missing API key / token")
+            if request.path not in SCOPED_PATHS:
+                raise _json_error(403, "this token may only announce")
+            request["token"] = tok
     return await handler(request)
 
 
@@ -1286,6 +1483,11 @@ def routes(with_index=True):
         web.post("/api/upload", h_upload),
         web.post("/api/tts/item", h_tts_item),
         web.post("/api/stop", h_stop),
+        web.get("/api/tokens", h_tokens),
+        web.post("/api/tokens", h_token_create),
+        web.delete("/api/tokens/{id}", h_token_delete),
+        web.get("/api/log", h_log),
+        web.delete("/api/log", h_log_clear),
         web.get("/api/tts/voices", h_tts_voices),
         web.post("/api/generate", h_generate),
         web.post("/api/announce", h_announce),
@@ -1324,6 +1526,7 @@ async def main():
     load_meta()
     load_devices()
     load_speakers()
+    load_tokens()
     session = ClientSession(timeout=ClientTimeout(total=30))
     ui, ext = build_apps()
     for app, port in ((ui, INGRESS_PORT), (ext, MEDIA_PORT)):

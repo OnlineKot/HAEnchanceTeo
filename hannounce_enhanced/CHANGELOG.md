@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.10.0
+- Tokens for shortcuts (hashed, revocable, per-token speakers/limits/defaults, rate limit) and supervised tokens with a full announcement log.
+
 ## 1.9.0
 - TTS is pre-rendered (no surprise delay, cached), honest "preparing/playing/queued" status, per-speaker queue, Stop button + /api/stop.
 
