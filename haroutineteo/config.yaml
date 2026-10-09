@@ -1,0 +1,25 @@
+name: HARoutineTeo
+version: "1.0.0"
+slug: haroutineteo
+description: Routines with steps (announce, fade lights, scenes, waits, conditions) triggered from your phone, by time or by an entity, with live step progress on the Dynamic Island. By TeodorTeo.com
+url: https://teodorteo.com
+arch:
+  - amd64
+  - aarch64
+init: false
+startup: application
+boot: auto
+homeassistant_api: true
+hassio_api: true
+ingress: true
+ingress_port: 8099
+panel_icon: mdi:play-circle
+panel_title: HARoutine
+ports:
+  8768/tcp: 8768
+ports_description:
+  8768/tcp: "Token API for Shortcuts / scripts (run routines from your phone)"
+options:
+  log_level: info
+schema:
+  log_level: list(debug|info|warning)

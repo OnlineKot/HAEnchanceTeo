@@ -27,8 +27,8 @@ one batched notification to your phone, problem sensors and an event log.
 **Reminders and timers in plain language** ("in 15 min…", "every day at 7:30…", PL/EN), notification with Done/Snooze buttons,
 spoken on speakers, **Dynamic Island countdown**, and a token API for iPhone Shortcuts ("Hey Siri, remind me…").
 
-### 📡 [HAPingTeo](hapingteo/DOCS.md)
-**Uptime and latency monitor.** Ping / TCP / HTTP (+keyword) / DNS checks for internet, router and home devices, history and
-uptime, down/up alerts, Home Assistant sensors, one-click presets.
+### ▶ [HARoutineTeo](haroutineteo/DOCS.md)
+**Routines with steps** instead of YAML scripts: announce, fade lights over minutes, scenes, waits, wait-for-state, conditions and
+stop-if. Run from an iPhone Shortcut, by time or by an entity, with **live step progress on the Dynamic Island**.
 
 MIT License © TeodorTeo.com
