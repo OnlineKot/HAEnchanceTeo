@@ -583,8 +583,10 @@ async def ws_handler(request):
                 result = await run_event(device, data.get("event"), data.get("data"))
                 await ws.send_json({"t": "ack", "id": data.get("id"), **result})
             elif kind == "watch" and admin:
-                client.watch = {e for e in (entity(x) for x in (data.get("entities") or [])[:300]) if e}
-                await ws.send_json({"t": "states", "states": {e: states.get(e) for e in client.watch}})
+                wanted = {e for e in (entity(x) for x in (data.get("entities") or [])[:300]) if e}
+                if wanted != client.watch:
+                    client.watch = wanted
+                    await ws.send_json({"t": "states", "states": {e: states.get(e) for e in client.watch}})
     finally:
         clients.discard(client)
     return ws
@@ -864,10 +866,18 @@ async def main():
     load_all()
     session = ClientSession(timeout=ClientTimeout(total=30))
     ui, pub = build_apps()
-    for app, port in ((ui, INGRESS_PORT), (pub, PUBLIC_PORT)):
-        runner = web.AppRunner(app)
-        await runner.setup()
-        await web.TCPSite(runner, "0.0.0.0", port).start()
+    bound = 0
+    for name, app, port in (("admin panel", ui, INGRESS_PORT), ("device interface", pub, PUBLIC_PORT)):
+        try:
+            runner = web.AppRunner(app)
+            await runner.setup()
+            await web.TCPSite(runner, "0.0.0.0", port).start()
+            bound += 1
+        except OSError as exc:  # e.g. another add-on already uses this port - keep running, say it clearly
+            log.error("Cannot listen on port %s for the %s: %s. Change the port in the add-on Network settings "
+                      "or stop whatever else uses it.", port, name, exc)
+    if not bound:
+        raise SystemExit(1)
     log.info("HALiveTeo by %s (%s) - admin :%s, devices :%s, events %s_action/%s_event",
              CREDIT, CREDIT_URL, INGRESS_PORT, PUBLIC_PORT, PREFIX, PREFIX)
     asyncio.create_task(ha_listener())

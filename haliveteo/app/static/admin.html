@@ -157,11 +157,11 @@ async function load(){
 live = HL.live({
   onMsg: m => {
     if(m.t === "hello"){ B.feed = m.feed || B.feed; }
-    else if(m.t === "states"){ liveStates = {...liveStates, ...m.states}; refreshPrev(); }
+    else if(m.t === "states"){ liveStates = {...liveStates, ...m.states}; drawPrev(); }
     else if(m.t === "state"){ liveStates[m.e] = m.st; (prevEls[m.e] || []).forEach(([t, el]) => el.update(m.st)); }
     else if(m.t === "feed"){ B.feed.push(m.entry); B.feed = B.feed.slice(-200); if($("v-feed").classList.contains("on")) renderFeed(); }
   },
-  onStatus: ok => { if(ok && cur) watchPrev(); }
+  onStatus: ok => { lastWatch = null; if(ok && cur) watchPrev(); }
 });
 
 // ---------- devices
@@ -375,16 +375,19 @@ $("addJson").onclick = () => { const b = $("jsonBox"); b.hidden = !b.hidden; clo
 $("jsonApply").onclick = () => { try{ const j = JSON.parse($("jsonTa").value); if(!j || !Array.isArray(j.tiles)) throw new Error("tiles[]"); W = {cols:j.cols || W.cols, tiles:j.tiles}; $("eColsIn").value = W.cols; setDirty(); renderTiles(); $("jsonBox").hidden = true; }catch(e){ toast("JSON: " + e.message, true); } };
 
 // ---------- live preview
+let lastWatch = null;
 function watchPrev(){
   if(!cur || !W) return;
   const ents = new Set(); W.tiles.forEach(t => { const e = t.type === "button" ? ((t.action.kind === "script" || t.action.kind === "scene") ? t.action.entity_id : "") : t.entity_id; if(e) ents.add(e); });
-  live.send({t:"watch", entities:[...ents]});
+  const sig = [...ents].sort().join(",");
+  if(sig === lastWatch) return;           // only tell the server when the entity list really changed
+  lastWatch = sig; live.send({t:"watch", entities:[...ents]});
 }
-function refreshPrev(){
+function drawPrev(){
   if(!W) return;
   prevEls = HL.renderGrid($("prev"), {cols:W.cols, tiles:W.tiles.map((t,i) => ({...t, id:t.id || "n"+i}))}, liveStates, {press(){}, slide(){}});
-  watchPrev();
 }
+function refreshPrev(){ drawPrev(); watchPrev(); }
 
 // ---------- Live Activities (Dynamic Island / Lock Screen via the Companion app)
 $("tLive").textContent = "🏝️ Live Activities"; $("actNew").textContent = tr("+ Nowa aktywność","+ New activity");
