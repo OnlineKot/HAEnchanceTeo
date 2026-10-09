@@ -10,6 +10,16 @@ Panel **HAnnounce** pojawia się w bocznym menu Home Assistanta (ingress).
 - **Jednorazowo** – dźwięk jest odtworzony i automatycznie usuwany, albo **zapisz w bibliotece** i używaj wielokrotnie.
 - Opcjonalna **zmiana głośności** na czas ogłoszenia (potem przywracana).
 
+## Pamięć i ustawienia każdego urządzenia
+Zakładka **Urządzenia**: profil domyślny + osobne ustawienia dla każdego głośnika (przycisk „Kopiuj do wszystkich”).
+- **Głośność ogłoszenia** i **przywrócenie głośności** po ogłoszeniu.
+- **Po ogłoszeniu**: *Zostaw odtwarzaczowi* (flaga `announce`, np. Sonos/Cast same wznawiają) /
+  *Przywróć to, co grało* (add-on zapamiętuje utwór i pozycję, po ogłoszeniu włącza go z powrotem i przewija) / *Nic nie rób*.
+- **Czekaj po zakończeniu** (np. 2 s) zanim wróci poprzedni stan; **czekaj przed odtworzeniem** dla głośników, które muszą się „obudzić”.
+- **Włącz jeśli wyłączony, potem wyłącz**; **wyłącz wyciszenie** na czas ogłoszenia (potem wraca).
+- **Godziny ciszy** (czas lokalny HA): w tym czasie głośnik jest pomijany albo gra ciszej.
+Profile działają dla panelu, API i automatyzacji. Skrypty tworzone przyciskiem „Utwórz skrypt” są statyczne – nie korzystają z profili.
+
 ## Własny interfejs (bez wchodzenia w HA)
 Ten sam panel działa samodzielnie pod adresem **`http://<IP_HA>:8765/`**. Wymaga ustawienia `api_key` w konfiguracji –
 przy pierwszym wejściu poprosi o klucz i go zapamięta.

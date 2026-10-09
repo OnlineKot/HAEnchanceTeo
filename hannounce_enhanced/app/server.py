@@ -408,14 +408,177 @@ async def make_script(body):
     return result
 
 
-async def restore_volume(levels, delay):
-    await asyncio.sleep(delay)
-    for entity, level in levels.items():
+# ---------------------------------------------------------------- per-device memory/profiles
+DEVICES_FILE = DATA / "devices.json"
+DEFAULT_PROFILE = {
+    "volume": None,           # announce volume 0..1 (None = leave as is)
+    "restore_volume": True,   # put the volume back afterwards
+    "resume_mode": "auto",    # auto = player handles announce | manual = we restore playback | none
+    "before_delay": 0.0,      # seconds to wait before playing (speakers that need to wake up)
+    "after_delay": 2.0,       # seconds after the announcement ends before restoring the old state
+    "power_cycle": False,     # turn on if off, turn off again afterwards
+    "unmute": False,          # unmute during the announcement, restore mute afterwards
+    "quiet_from": "",         # "HH:MM" quiet hours start
+    "quiet_to": "",           # "HH:MM" quiet hours end
+    "quiet_volume": None,     # volume during quiet hours (None = skip this speaker)
+}
+devices: dict = {}
+_tz_cache = None
+
+
+def clean_profile(raw):
+    p = dict(DEFAULT_PROFILE)
+
+    def num(key, lo, hi, scale=1.0):
+        v = raw.get(key)
+        if v in (None, ""):
+            return None
+        return max(lo, min(hi, float(v) * scale))
+    for key in ("volume", "quiet_volume"):
+        p[key] = num(key, 0.0, 1.0)
+    p["before_delay"] = num("before_delay", 0, 15) or 0.0
+    p["after_delay"] = num("after_delay", 0, 60) or 0.0
+    for key in ("restore_volume", "power_cycle", "unmute"):
+        p[key] = bool(raw.get(key, DEFAULT_PROFILE[key]))
+    if raw.get("resume_mode") in ("auto", "manual", "none"):
+        p["resume_mode"] = raw["resume_mode"]
+    for key in ("quiet_from", "quiet_to"):
+        v = str(raw.get(key) or "")
+        p[key] = v if re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", v) else ""
+    return p
+
+
+def load_devices():
+    global devices
+    try:
+        devices = json.loads(DEVICES_FILE.read_text())
+    except (OSError, ValueError):
+        devices = {}
+
+
+def save_devices():
+    tmp = DEVICES_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(devices, indent=1))
+    tmp.replace(DEVICES_FILE)
+
+
+def profile_for(entity):
+    return clean_profile(devices.get(entity) or devices.get("_default") or {})
+
+
+async def local_minutes():
+    global _tz_cache
+    if _tz_cache is None:
         try:
-            await ha_service("media_player", "volume_set",
-                             {"entity_id": entity, "volume_level": level})
-        except web.HTTPException as exc:
-            log.warning("Could not restore volume of %s: %s", entity, exc.text)
+            from zoneinfo import ZoneInfo
+            _tz_cache = ZoneInfo((await ha_get("/config")).get("time_zone", "UTC"))
+        except Exception:  # noqa: BLE001
+            _tz_cache = False
+    from datetime import datetime
+    now = datetime.now(_tz_cache or None)
+    return now.hour * 60 + now.minute
+
+
+def in_quiet(cfg, now_min):
+    if not cfg["quiet_from"] or not cfg["quiet_to"]:
+        return False
+    f = int(cfg["quiet_from"][:2]) * 60 + int(cfg["quiet_from"][3:])
+    t = int(cfg["quiet_to"][:2]) * 60 + int(cfg["quiet_to"][3:])
+    if f == t:
+        return False
+    return f <= now_min < t if f < t else (now_min >= f or now_min < t)
+
+
+def _position_now(attrs, state):
+    pos = attrs.get("media_position")
+    if pos is None:
+        return None
+    if state == "playing" and attrs.get("media_position_updated_at"):
+        from datetime import datetime, timezone
+        try:
+            upd = datetime.fromisoformat(attrs["media_position_updated_at"])
+            pos += (datetime.now(timezone.utc) - upd).total_seconds()
+        except ValueError:
+            pass
+    return pos
+
+
+async def snapshot(entity):
+    try:
+        st = await ha_get(f"/states/{entity}")
+    except web.HTTPException:
+        return {"state": "unknown"}
+    a = st["attributes"]
+    return {"state": st["state"], "volume": a.get("volume_level"), "muted": a.get("is_volume_muted"),
+            "content_id": a.get("media_content_id"), "content_type": a.get("media_content_type"),
+            "position": _position_now(a, st["state"]), "duration": a.get("media_duration")}
+
+
+async def safe_service(domain, service, data):
+    try:
+        await ha_service(domain, service, data)
+    except web.HTTPException as exc:
+        log.warning("%s.%s failed: %s", domain, service, exc.text)
+
+
+async def wait_finished(entity, estimate, poll):
+    """Wait until the announcement is over: poll the player state, or just wait the known duration."""
+    if not poll:
+        await asyncio.sleep(estimate + 1.5)
+        return
+    await asyncio.sleep(1.5)
+    deadline = time.time() + estimate + 20
+    while time.time() < deadline:
+        try:
+            if (await ha_get(f"/states/{entity}"))["state"] not in ("playing", "buffering"):
+                return
+        except web.HTTPException:
+            return
+        await asyncio.sleep(0.7)
+
+
+async def after_announcement(entity, snap, cfg, changed, estimate, poll):
+    """Give the speaker its memory back: volume, mute, playback position, power."""
+    await wait_finished(entity, estimate, poll)
+    await asyncio.sleep(cfg["after_delay"])
+    if "volume" in changed and cfg["restore_volume"] and snap.get("volume") is not None:
+        await safe_service("media_player", "volume_set", {"entity_id": entity, "volume_level": snap["volume"]})
+    if "mute" in changed and snap.get("muted") is not None:
+        await safe_service("media_player", "volume_mute", {"entity_id": entity, "is_volume_muted": snap["muted"]})
+    resumed = False
+    if cfg["resume_mode"] == "manual" and snap["state"] == "playing" and snap.get("content_id"):
+        await safe_service("media_player", "play_media", {
+            "entity_id": entity, "media_content_id": snap["content_id"],
+            "media_content_type": snap.get("content_type") or "music"})
+        resumed = True
+        pos = snap.get("position")
+        if pos and 3 < pos < (snap.get("duration") or 0) - 3:
+            await asyncio.sleep(2)
+            await safe_service("media_player", "media_seek", {"entity_id": entity, "seek_position": pos})
+    if "power" in changed and not resumed:
+        await safe_service("media_player", "turn_off", {"entity_id": entity})
+
+
+async def announce_on(entity, cfg, snap, media, volume, estimate):
+    changed = set()
+    if cfg["power_cycle"] and snap["state"] in ("off", "standby"):
+        await safe_service("media_player", "turn_on", {"entity_id": entity})
+        changed.add("power")
+        await asyncio.sleep(max(cfg["before_delay"], 1.5))
+    elif cfg["before_delay"]:
+        await asyncio.sleep(cfg["before_delay"])
+    if cfg["unmute"] and snap.get("muted"):
+        await safe_service("media_player", "volume_mute", {"entity_id": entity, "is_volume_muted": False})
+        changed.add("mute")
+    if volume is not None:
+        await ha_service("media_player", "volume_set", {"entity_id": entity, "volume_level": volume})
+        changed.add("volume")
+    manual = cfg["resume_mode"] == "manual"
+    await ha_service("media_player", "play_media", {
+        "entity_id": entity, "media_content_type": "music", "announce": not manual, **media})
+    if changed or manual:
+        poll = manual or snap["state"] not in ("playing", "buffering")
+        asyncio.create_task(after_announcement(entity, snap, cfg, changed, estimate, poll))
 
 
 async def announce(body):
@@ -426,13 +589,13 @@ async def announce(body):
         raise _json_error(400, "targets must be a list of media_player entities")
 
     item = None
-    play = {"entity_id": targets, "media_content_type": "music", "announce": True}
+    media = {}
     if body.get("item") or body.get("sound"):
         ref = body.get("item") or body.get("sound")
         item = find_item(ref)
         if not item:
             raise _json_error(404, f"sound not found: {ref}")
-        play["media_content_id"] = f"{await base_url()}/media/{item['file']}"
+        media["media_content_id"] = f"{await base_url()}/media/{item['file']}"
         duration = item["duration"]
     elif body.get("message"):
         tts = body.get("tts_entity")
@@ -443,34 +606,32 @@ async def announce(body):
                 raise _json_error(400, "no tts entity available in Home Assistant")
             tts = ents[0]
         msg = str(body["message"])
-        play["media_content_id"] = tts_media_id(tts, msg, body.get("language"), body.get("voice"))
+        media["media_content_id"] = tts_media_id(tts, msg, body.get("language"), body.get("voice"))
         duration = 2 + len(msg) * 0.075
     else:
         raise _json_error(400, "give 'item'/'sound' or 'message'")
 
-    levels = {}
-    volume = body.get("volume")
-    if volume not in (None, ""):
-        volume = max(0.0, min(1.0, float(volume)))
-        for entity in targets:
-            try:
-                state = await ha_get(f"/states/{entity}")
-                level = state["attributes"].get("volume_level")
-                if level is not None:
-                    levels[entity] = level
-            except web.HTTPException:
-                pass
-        await ha_service("media_player", "volume_set",
-                         {"entity_id": targets, "volume_level": volume})
-
-    await ha_service("media_player", "play_media", play)
-    log.info("Announced %s on %s", item["name"] if item else "TTS", targets)
-
-    if levels:
-        asyncio.create_task(restore_volume(levels, duration + 3))
+    override = body.get("volume")
+    override = None if override in (None, "") else max(0.0, min(1.0, float(override)))
+    now_min = await local_minutes()
+    skipped, jobs = [], []
+    for entity in targets:
+        cfg = profile_for(entity)
+        volume = override if override is not None else cfg["volume"]
+        if in_quiet(cfg, now_min):
+            if cfg["quiet_volume"] is None:
+                skipped.append(entity)
+                continue
+            volume = cfg["quiet_volume"] if override is None else min(override, cfg["quiet_volume"])
+        snap = await snapshot(entity)
+        jobs.append(announce_on(entity, cfg, snap, media, volume, duration))
+    if jobs:
+        await asyncio.gather(*jobs)
+    log.info("Announced %s on %s (skipped: %s)", item["name"] if item else "TTS",
+             [t for t in targets if t not in skipped], skipped)
     if item and not item["saved"]:
-        asyncio.create_task(drop_later(item, duration + 30))
-    return {"ok": True, "duration": round(duration, 2)}
+        asyncio.create_task(drop_later(item, duration + 40))
+    return {"ok": True, "duration": round(duration, 2), "skipped": skipped}
 
 
 # ---------------------------------------------------------------- handlers
@@ -659,6 +820,27 @@ async def h_script(request):
     return web.json_response(await make_script(await request.json()))
 
 
+async def h_devices(request):
+    return web.json_response({"default": DEFAULT_PROFILE, "profiles": {
+        k: clean_profile(v) for k, v in devices.items()}})
+
+
+async def h_device_set(request):
+    body = await request.json()
+    entity = body.get("entity_id", "")
+    if entity != "_default" and not entity.startswith("media_player."):
+        raise _json_error(400, "entity_id must be a media_player or _default")
+    if body.get("reset"):
+        devices.pop(entity, None)
+    else:
+        devices[entity] = clean_profile(body.get("profile") or {})
+        for other in body.get("copy_to") or []:
+            if str(other).startswith("media_player."):
+                devices[other] = dict(devices[entity])
+    save_devices()
+    return await h_devices(request)
+
+
 async def h_rename(request):
     item = next((i for i in library if i["id"] == request.match_info["id"]), None)
     if not item:
@@ -711,6 +893,8 @@ def routes(with_index=True):
         web.post("/api/generate", h_generate),
         web.post("/api/announce", h_announce),
         web.post("/api/script", h_script),
+        web.get("/api/devices", h_devices),
+        web.post("/api/devices", h_device_set),
         web.post("/api/library/{id}", h_rename),
         web.delete("/api/library/{id}", h_delete),
     ]
@@ -734,6 +918,7 @@ async def main():
     shutil.rmtree(ONCE, ignore_errors=True)
     ONCE.mkdir(parents=True, exist_ok=True)
     load_meta()
+    load_devices()
     session = ClientSession(timeout=ClientTimeout(total=30))
     ui, ext = build_apps()
     for app, port in ((ui, INGRESS_PORT), (ext, MEDIA_PORT)):

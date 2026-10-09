@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.0
+- Per-speaker profiles: volume memory, resume playback (media + position), before/after delays, power cycle, unmute, quiet hours.
+
 ## 1.3.0
 - TTS uses the engines configured in Home Assistant: engine, language and voice pickers, preview, save TTS to library.
 

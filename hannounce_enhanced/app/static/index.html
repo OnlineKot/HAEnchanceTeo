@@ -108,6 +108,8 @@ footer a{color:var(--acc);text-decoration:none;font-weight:600}
     <div class="out" id="gOut"></div>
   </div>
 
+  <div class="pane" id="p-dev"><div id="devList"></div></div>
+
   <div class="pane" id="p-lib"><div id="libList"></div></div>
 </div>
 
@@ -121,16 +123,22 @@ footer a{color:var(--acc);text-decoration:none;font-weight:600}
 
 <script>
 const L = {
- en:{targets:"Speakers",setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",
+ en:{targets:"Speakers",setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",devices:"Devices",
   ttsent:"TTS engine",message:"Message",lang:"Language",voice:"Voice",deflt:"(default)",ttsnone:"No TTS engine found in Home Assistant",announce:"Announce",rec:"● Record",stop:"■ Stop",devrec:"Use device recorder",
   nomic:"Browser microphone needs HTTPS - use \"Use device recorder\" or open HA over HTTPS.",file:"Audio file",type:"Sound",freq:"Frequency Hz",dur:"Duration s",rep:"Repeat",
   preview:"▶ Preview",name:"Name",once:"Announce once",save:"Save to library",saveAnn:"Save & announce",empty:"Library is empty.",del:"Delete",rename:"Rename",
-  mkscript:"📱 Create script (iPhone)",scriptOk:"Script created: ",scriptManual:"Could not create it automatically. Paste into scripts.yaml, then reload scripts:",scriptHow:"iPhone: long-press the lock screen → Customize → add the Home Assistant widget → choose this script. (Companion app must be installed.)",askkey:"API key (from add-on configuration)",sel:"Select at least one speaker.",sent:"Announced ✓",saved:"Saved ✓",confirmDel:"Delete this sound?",by:"Created by",nomsg:"Type a message.",nofile:"Choose or record a sound first.",newname:"New name"},
- pl:{targets:"Głośniki",setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",
+  mkscript:"📱 Create script (iPhone)",scriptOk:"Script created: ",scriptManual:"Could not create it automatically. Paste into scripts.yaml, then reload scripts:",scriptHow:"iPhone: long-press the lock screen → Customize → add the Home Assistant widget → choose this script. (Companion app must be installed.)",dDefault:"Default for all speakers",dVol:"Announce volume % (empty = unchanged)",dRestVol:"Restore volume afterwards",dResume:"After announcement",
+  dAuto:"Let the player handle it (announce)",dManual:"Restore what was playing (media + position)",dNone:"Do nothing",dBefore:"Wait before playing (s)",dAfter:"Wait after it ends, then restore (s)",
+  dPower:"Turn on if off, turn off afterwards",dUnmute:"Unmute during announcement",dQuiet:"Quiet hours",dQFrom:"from",dQTo:"to",dQVol:"Quiet volume % (empty = skip speaker)",
+  dSave:"Save",dReset:"Reset",dCopy:"Copy to all speakers",dSaved:"Settings saved ✓",dInherit:"uses default",dEdit:"Edit",askkey:"API key (from add-on configuration)",sel:"Select at least one speaker.",sent:"Announced ✓",saved:"Saved ✓",confirmDel:"Delete this sound?",by:"Created by",nomsg:"Type a message.",nofile:"Choose or record a sound first.",newname:"New name"},
+ pl:{targets:"Głośniki",setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",devices:"Urządzenia",
   ttsent:"Silnik TTS",message:"Wiadomość",lang:"Język",voice:"Głos",deflt:"(domyślny)",ttsnone:"Nie znaleziono silnika TTS w Home Assistant",announce:"Ogłoś",rec:"● Nagrywaj",stop:"■ Stop",devrec:"Nagrywarka urządzenia",
   nomic:"Mikrofon w przeglądarce wymaga HTTPS - użyj „Nagrywarka urządzenia” albo otwórz HA przez HTTPS.",file:"Plik audio",type:"Dźwięk",freq:"Częstotliwość Hz",dur:"Czas s",rep:"Powtórzenia",
   preview:"▶ Podgląd",name:"Nazwa",once:"Ogłoś jednorazowo",save:"Zapisz w bibliotece",saveAnn:"Zapisz i ogłoś",empty:"Biblioteka jest pusta.",del:"Usuń",rename:"Zmień nazwę",
-  mkscript:"📱 Utwórz skrypt (iPhone)",scriptOk:"Utworzono skrypt: ",scriptManual:"Nie udało się automatycznie. Wklej do scripts.yaml i przeładuj skrypty:",scriptHow:"iPhone: przytrzymaj ekran blokady → Dostosuj → dodaj widżet Home Assistant → wybierz ten skrypt. (Wymaga aplikacji Companion.)",askkey:"Klucz API (z konfiguracji dodatku)",sel:"Wybierz co najmniej jeden głośnik.",sent:"Ogłoszono ✓",saved:"Zapisano ✓",confirmDel:"Usunąć ten dźwięk?",by:"Stworzone przez",nomsg:"Wpisz wiadomość.",nofile:"Najpierw wybierz lub nagraj dźwięk.",newname:"Nowa nazwa"}
+  mkscript:"📱 Utwórz skrypt (iPhone)",scriptOk:"Utworzono skrypt: ",scriptManual:"Nie udało się automatycznie. Wklej do scripts.yaml i przeładuj skrypty:",scriptHow:"iPhone: przytrzymaj ekran blokady → Dostosuj → dodaj widżet Home Assistant → wybierz ten skrypt. (Wymaga aplikacji Companion.)",dDefault:"Domyślne dla wszystkich głośników",dVol:"Głośność ogłoszenia % (puste = bez zmian)",dRestVol:"Przywróć głośność po ogłoszeniu",dResume:"Po ogłoszeniu",
+  dAuto:"Zostaw odtwarzaczowi (announce)",dManual:"Przywróć to, co grało (utwór + pozycja)",dNone:"Nic nie rób",dBefore:"Czekaj przed odtworzeniem (s)",dAfter:"Czekaj po zakończeniu i przywróć (s)",
+  dPower:"Włącz jeśli wyłączony, po wszystkim wyłącz",dUnmute:"Wyłącz wyciszenie na czas ogłoszenia",dQuiet:"Godziny ciszy",dQFrom:"od",dQTo:"do",dQVol:"Głośność w ciszy % (puste = pomiń głośnik)",
+  dSave:"Zapisz",dReset:"Resetuj",dCopy:"Kopiuj do wszystkich głośników",dSaved:"Zapisano ustawienia ✓",dInherit:"używa domyślnych",dEdit:"Edytuj",askkey:"Klucz API (z konfiguracji dodatku)",sel:"Wybierz co najmniej jeden głośnik.",sent:"Ogłoszono ✓",saved:"Zapisano ✓",confirmDel:"Usunąć ten dźwięk?",by:"Stworzone przez",nomsg:"Wpisz wiadomość.",nofile:"Najpierw wybierz lub nagraj dźwięk.",newname:"Nowa nazwa"}
 };
 const lang = (navigator.language||"en").toLowerCase().startsWith("pl") ? "pl" : "en";
 const t = k => L[lang][k] || L.en[k] || k;
@@ -155,7 +163,7 @@ document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i
 const store = {get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}}, set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 
 // ---- tabs
-const TABS = [["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"]];
+const TABS = [["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"],["dev","devices"]];
 TABS.forEach(([id, key]) => {
   const b = document.createElement("button"); b.textContent = t(key); b.dataset.id = id;
   b.onclick = () => showTab(id); $("tabs").append(b);
@@ -163,7 +171,7 @@ TABS.forEach(([id, key]) => {
 function showTab(id){
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.id===id));
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="p-"+id));
-  store.set("tab",id); if(id==="lib") renderLib();
+  store.set("tab",id); if(id==="lib") renderLib(); if(id==="dev") renderDevs();
 }
 
 // ---- state
@@ -317,6 +325,49 @@ $("gPrev").onclick = async () => {
   try{ const it = await genItem(false,""); $("gAudio").src = "media/"+it.file; $("gAudio").hidden=false; $("gAudio").play(); }
   catch(e){ toast(e.message,true); }
 };
+
+// ---- devices (per-speaker memory / behaviour)
+let D = {default:{},profiles:{}};
+const pct = v => v==null ? "" : Math.round(v*100);
+function devForm(eid, name){
+  const p = D.profiles[eid] || D.default;
+  const box = document.createElement("details"); box.className = "item"; box.style.display = "block";
+  const sum = document.createElement("summary"); sum.style.cursor="pointer";
+  sum.innerHTML = `<b></b> <small>${eid==="_default"||D.profiles[eid] ? "" : t("dInherit")}</small>`;
+  sum.querySelector("b").textContent = name; box.append(sum);
+  const f = document.createElement("div");
+  f.innerHTML = `
+   <label class="f">${t("dVol")}</label><input type="number" min="0" max="100" class="vol" value="${pct(p.volume)}">
+   <label class="f"><input type="checkbox" class="rv" ${p.restore_volume?"checked":""}> ${t("dRestVol")}</label>
+   <label class="f">${t("dResume")}</label><select class="rm">
+     <option value="auto">${t("dAuto")}</option><option value="manual">${t("dManual")}</option><option value="none">${t("dNone")}</option></select>
+   <div class="row"><div class="grow"><label class="f">${t("dBefore")}</label><input type="number" min="0" max="15" step="0.5" class="bd" value="${p.before_delay}"></div>
+   <div class="grow"><label class="f">${t("dAfter")}</label><input type="number" min="0" max="60" step="0.5" class="ad" value="${p.after_delay}"></div></div>
+   <label class="f"><input type="checkbox" class="pw" ${p.power_cycle?"checked":""}> ${t("dPower")}</label>
+   <label class="f"><input type="checkbox" class="um" ${p.unmute?"checked":""}> ${t("dUnmute")}</label>
+   <label class="f">${t("dQuiet")}</label>
+   <div class="row"><div class="grow">${t("dQFrom")} <input type="time" class="qf" value="${p.quiet_from}"></div>
+   <div class="grow">${t("dQTo")} <input type="time" class="qt" value="${p.quiet_to}"></div></div>
+   <label class="f">${t("dQVol")}</label><input type="number" min="0" max="100" class="qv" value="${pct(p.quiet_volume)}">
+   <div class="row"><button class="b sv">${t("dSave")}</button><button class="b alt rs">${t("dReset")}</button>
+   ${eid==="_default" ? `<button class="b alt cp">${t("dCopy")}</button>` : ""}</div>`;
+  f.querySelector(".rm").value = p.resume_mode;
+  const read = () => { const q=c=>f.querySelector(c); const n=c=>q(c).value===""?null:+q(c).value;
+    return {volume:n(".vol")==null?null:n(".vol")/100, restore_volume:q(".rv").checked, resume_mode:q(".rm").value,
+      before_delay:+q(".bd").value||0, after_delay:+q(".ad").value||0, power_cycle:q(".pw").checked, unmute:q(".um").checked,
+      quiet_from:q(".qf").value, quiet_to:q(".qt").value, quiet_volume:n(".qv")==null?null:n(".qv")/100}; };
+  const save = async (extra={}) => { try{ D = await api("devices",{method:"POST",body:JSON.stringify({entity_id:eid,profile:read(),...extra})}); toast(t("dSaved")); renderDevs(); }catch(e){toast(e.message,true)} };
+  f.querySelector(".sv").onclick = () => save();
+  f.querySelector(".rs").onclick = async () => { try{ D = await api("devices",{method:"POST",body:JSON.stringify({entity_id:eid,reset:true})}); renderDevs(); }catch(e){toast(e.message,true)} };
+  const cp = f.querySelector(".cp"); if(cp) cp.onclick = () => save({copy_to:S.players.map(x=>x.entity_id)});
+  box.append(f); return box;
+}
+async function renderDevs(){
+  try{ D = await api("devices"); }catch(e){ return toast(e.message,true); }
+  const box = $("devList"); box.innerHTML = "";
+  box.append(devForm("_default", t("dDefault")));
+  S.players.forEach(p => box.append(devForm(p.entity_id, p.name)));
+}
 
 // ---- library
 function renderLib(){

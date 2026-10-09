@@ -20,7 +20,7 @@ Details & API: [hannounce_enhanced/DOCS.md](hannounce_enhanced/DOCS.md)
 - 📤 Upload any audio file (auto-converted to mp3 via ffmpeg)
 - 🔔 Generator: tone, beeps, chime, gong, notification, siren, alarm
 - ⚡ One-time or saved library (rename, preview, delete)
-- 🔊 Optional volume override with restore
+- 🧠 Per-speaker memory: volume, resume what was playing, delays, power on/off, quiet hours
 - 🖥 Standalone web interface (port 8765, installable as iPhone app)
 - 🔌 External API with key for automations
 
