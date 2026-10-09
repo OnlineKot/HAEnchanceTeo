@@ -4,7 +4,7 @@ A repository of Home Assistant add-ons by **[TeodorTeo.com](https://teodorteo.co
 
 ## Install / Instalacja
 1. Home Assistant → *Settings → Add-ons → Add-on Store → ⋮ → Repositories*
-2. Add: `https://github.com/OnlineKot/HAnnounceEnchanced#claude/hannounce-enhanced`
+2. Add: `https://github.com/OnlineKot/HAEnchanceTeo#claude/hannounce-enhanced`
 3. Pick an add-on from the list below, install and start it.
 
 ## Add-ons
