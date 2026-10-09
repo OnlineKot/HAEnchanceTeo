@@ -56,7 +56,16 @@ ostatnie wiadomości).
 - **Skrypt w HA:** w zakładce 📱 Aplikacja wybierz telefon i kliknij „Utwórz skrypt”. Powstaje jeden skrypt
   `script.hannounce_open`, który wysyła na telefon powiadomienie „dotknij, by otworzyć” (Android otwiera od razu).
   Skrypt niczego nie odtwarza. Uruchom go widżetem „Skrypty” aplikacji HA.
+- **Wszystkie trzy naraz:** po kliknięciu „Utwórz skrypt” dostajesz skrypt oraz gotowe do skopiowania adresy skrótu iOS i osobnej aplikacji.
 - **Osobna aplikacja:** `http://<IP_HA>:8765/?quick=1` → Udostępnij → Do ekranu początkowego (tryb pełnoekranowy, tylko widok Szybkie).
+
+## Aktualizacje
+- **Interfejs odświeża się sam** co kilka sekund (stany głośników, ulubione, biblioteka) – zmiany z innego telefonu
+  lub z automatyzacji widać bez przeładowania strony.
+- **Nowa wersja add-onu:** u góry pojawia się żółty baner z numerem nowej wersji i przyciskiem do strony dodatku
+  (tam klikasz *Aktualizuj*). W stopce widać zainstalowaną wersję i stan automatycznej aktualizacji.
+- **Automatyczne aktualizacje:** włącz przełącznik „Aktualizuj automatycznie” na stronie dodatku
+  (Ustawienia → Dodatki → HAnnounce Enhanced). Sklep odświeża repozytorium cyklicznie; wymusisz to przez ⋮ → *Sprawdź aktualizacje*.
 
 ## Konfiguracja
 | Opcja | Opis |

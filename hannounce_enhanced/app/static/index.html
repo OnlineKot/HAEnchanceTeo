@@ -85,6 +85,8 @@ code{background:var(--bg);padding:1px 5px;border-radius:5px;word-break:break-all
 <main>
 <header><div class="logo">📣</div><div><h1>HAnnounce Enhanced</h1><small data-i="tagline"></small></div></header>
 
+<div class="card" id="updBanner" hidden style="border-color:var(--warn)"></div>
+
 <div class="card">
   <h2><span data-i="targets"></span><span class="sp"></span>
     <button class="link" id="selFav">★ <span data-i="favs"></span></button>
@@ -182,13 +184,13 @@ code{background:var(--bg);padding:1px 5px;border-radius:5px;word-break:break-all
 
 <div class="card" id="scriptRes" hidden></div>
 
-<footer><span data-i="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
+<footer><span id="verInfo"></span><br><span data-i="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
 </main>
 <div id="toast"></div>
 
 <script>
 const L = {
- en:{tagline:"Announcements for your speakers",quick:"⚡ Quick",qSounds:"Favorite sounds - tap to announce",qMsg:"Say something",qNoFav:"No favorite sounds yet. Mark sounds with ★ in the Library.",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
+ en:{tagline:"Announcements for your speakers",updNew:"New version available",updHave:"you have",updHow:"Open the add-on page and tap Update.",updOpen:"Open add-on page",updAuto:"auto-update on",updManual:"auto-update off (enable it on the add-on page)",copy:"Copy",copied:"Copied ✓",allThree:"All three ways to open it:",w1:"① Script in HA",w2:"② iOS shortcut (Open URL)",w3:"③ Standalone app (Add to Home Screen)",quick:"⚡ Quick",qSounds:"Favorite sounds - tap to announce",qMsg:"Say something",qNoFav:"No favorite sounds yet. Mark sounds with ★ in the Library.",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
   setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",speakers:"Speakers",app:"📱 App",
   actBefore:"Run before (script / scene)",actAfter:"Run after (script / scene)",actNone:"— none —",
   ttsent:"TTS engine",message:"Message",lang:"Language",voice:"Voice",deflt:"(default)",ttsnone:"No TTS engine found in Home Assistant",
@@ -208,7 +210,7 @@ const L = {
   dAuto:"Let the player handle it (announce)",dManual:"Restore what was playing (media + position)",dNone:"Do nothing",dBefore:"Wait before playing (s)",dAfter:"Wait after it ends, then restore (s)",
   dPower:"Turn on if off, turn off afterwards",dUnmute:"Unmute during announcement",dQuiet:"Quiet hours",dQFrom:"from",dQTo:"to",dQVol:"Quiet volume % (empty = skip speaker)",
   dSave:"Save",dReset:"Reset",dCopy:"Copy to all speakers",dSaved:"Settings saved ✓"},
- pl:{tagline:"Ogłoszenia na Twoich głośnikach",quick:"⚡ Szybkie",qSounds:"Ulubione dźwięki - dotknij, by ogłosić",qMsg:"Powiedz coś",qNoFav:"Brak ulubionych dźwięków. Oznacz dźwięki ★ w Bibliotece.",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
+ pl:{tagline:"Ogłoszenia na Twoich głośnikach",updNew:"Dostępna nowa wersja",updHave:"masz",updHow:"Otwórz stronę dodatku i kliknij Aktualizuj.",updOpen:"Otwórz stronę dodatku",updAuto:"automatyczna aktualizacja włączona",updManual:"automatyczna aktualizacja wyłączona (włącz na stronie dodatku)",copy:"Kopiuj",copied:"Skopiowano ✓",allThree:"Wszystkie trzy sposoby otwierania:",w1:"① Skrypt w HA",w2:"② Skrót iOS (Otwórz URL)",w3:"③ Osobna aplikacja (Do ekranu początkowego)",quick:"⚡ Szybkie",qSounds:"Ulubione dźwięki - dotknij, by ogłosić",qMsg:"Powiedz coś",qNoFav:"Brak ulubionych dźwięków. Oznacz dźwięki ★ w Bibliotece.",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
   setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",speakers:"Głośniki",app:"📱 Aplikacja",
   actBefore:"Uruchom przed (skrypt / scena)",actAfter:"Uruchom po (skrypt / scena)",actNone:"— brak —",
   ttsent:"Silnik TTS",message:"Wiadomość",lang:"Język",voice:"Głos",deflt:"(domyślny)",ttsnone:"Nie znaleziono silnika TTS w Home Assistant",
@@ -348,12 +350,24 @@ $("saySave").onclick = async () => {
   try{ await post("tts/item",{...b,save:true,name}); toast(t("saved")); refresh(); }catch(e){toast(e.message,true)}
 };
 
-function showScriptResult(r){
+function copyRow(label, value){
+  const w = document.createElement("div"); w.style.marginTop = "10px";
+  w.innerHTML = `<label class="f"></label><div class="row" style="margin-top:0"><input type="text" readonly class="grow"><button class="b alt sm">${t("copy")}</button></div>`;
+  w.querySelector("label").textContent = label; const inp = w.querySelector("input"); inp.value = value;
+  w.querySelector("button").onclick = async () => {
+    try{ await navigator.clipboard.writeText(value); }catch{ inp.select(); document.execCommand("copy"); }
+    toast(t("copied"));
+  };
+  return w;
+}
+function showScriptResult(r, extras){
   const box = $("scriptRes"); box.hidden = false; box.innerHTML = "";
   const p = document.createElement("div");
   p.textContent = (r.created ? t("scriptOk") + r.entity_id : t("scriptManual"));
   box.append(p);
   if(!r.created){ const pre=document.createElement("textarea"); pre.readOnly=true; pre.value=r.yaml; box.append(pre); }
+  if(extras){ const h=document.createElement("div"); h.className="sec"; h.style.marginTop="14px"; h.textContent=t("allThree"); box.append(h);
+    extras.forEach(([l,v]) => box.append(copyRow(l,v))); }
   box.scrollIntoView({behavior:"smooth"});
 }
 
@@ -614,15 +628,48 @@ async function renderHelp(){
   <p>“Run before/after” in Options (e.g. dim lights before, restore after). In the API: <code>before_action</code>, <code>after_action</code>.</p>`;
   $("lnGo").onclick = async () => {
     if(!$("lnPhone").value) return toast(pl?"Nie znaleziono telefonu z aplikacją HA (mobile_app_*).":"No phone with the HA app found (mobile_app_*).",true);
-    try{ showScriptResult(await post("launcher",{notify:$("lnPhone").value,platform:$("lnOs").value,target:$("lnTarget").value})); }
+    try{ const r = await post("launcher",{notify:$("lnPhone").value,platform:$("lnOs").value,target:$("lnTarget").value});
+      showScriptResult(r, [[t("w1"), r.entity_id], [t("w2"), info.deeplink || ""], [t("w3"), info.standalone]]); }
     catch(e){ toast(e.message,true); }
   };
 }
 
 
+// ---- live updates: the interface refreshes itself, and tells you when a new add-on version exists
+let lastP = "", lastL = "";
+const sigP = st => JSON.stringify(st.players.map(p=>[p.entity_id,p.state,p.favorite,p.hidden,p.duplicate_of]));
+const sigL = st => JSON.stringify(st.library.map(i=>[i.id,i.name,i.favorite]));
+async function live(){
+  if(document.hidden) return;
+  try{
+    const n = await api("state");
+    const p = sigP(n), l = sigL(n);
+    S = n;
+    if(p !== lastP){ lastP = p; renderChips();
+      if($("p-spk").classList.contains("on") && !document.activeElement?.closest("#spkList")) renderSpk(); }
+    if(l !== lastL){ lastL = l; renderQuick(); renderLib(); }
+  }catch{}
+}
+async function checkVersion(){
+  try{
+    const v = await api("version"), box = $("updBanner"), pl = lang==="pl";
+    $("verInfo").textContent = v.version ? `v${v.version} · ` + (v.auto_update ? t("updAuto") : t("updManual")) : "";
+    if(v.update_available){
+      box.hidden = false;
+      const inFrame = window.top !== window;
+      box.innerHTML = `<b>⬆ ${t("updNew")}: v${esc(v.latest)}</b> <small>(${t("updHave")} v${esc(v.version)})</small><div class="hint">${t("updHow")}</div>` +
+        (inFrame && v.addon_path ? `<div class="row"><a class="b sm" style="text-decoration:none" href="${esc(v.addon_path)}" target="_top">${t("updOpen")}</a></div>` : "");
+    } else box.hidden = true;
+  }catch{}
+}
+setInterval(live, 8000);
+setInterval(checkVersion, 10*60*1000);
+document.addEventListener("visibilitychange", () => { if(!document.hidden){ live(); checkVersion(); } });
+
 if(new URLSearchParams(location.search).has("quick")) document.body.classList.add("kiosk");
 showTab((location.hash||"").slice(1) || "quick");
-refresh().catch(e => toast(e.message,true));
+refresh().then(()=>{ lastP=sigP(S); lastL=sigL(S); }).catch(e => toast(e.message,true));
+checkVersion();
 </script>
 </body>
 </html>

@@ -1001,6 +1001,23 @@ async def h_announce(request):
     return web.json_response(await announce(body))
 
 
+async def h_version(request):
+    """Installed vs. latest add-on version, as reported by the Supervisor."""
+    info = {}
+    try:
+        async with session.get(f"{SUPERVISOR}/addons/self/info",
+                               headers={"Authorization": f"Bearer {TOKEN}"}) as r:
+            info = (await r.json()).get("data", {})
+    except Exception as exc:  # noqa: BLE001
+        log.info("Version info unavailable: %s", exc)
+    slug = info.get("slug", "")
+    return web.json_response({
+        "version": info.get("version"), "latest": info.get("version_latest"),
+        "update_available": bool(info.get("update_available")),
+        "auto_update": bool(info.get("auto_update")),
+        "addon_path": f"/hassio/addon/{slug}/info" if slug else ""})
+
+
 async def h_launcher_info(request):
     return web.json_response(await launcher_info())
 
@@ -1210,6 +1227,7 @@ def routes(with_index=True):
         web.post("/api/generate", h_generate),
         web.post("/api/announce", h_announce),
         web.post("/api/script", h_script),
+        web.get("/api/version", h_version),
         web.get("/api/launcher", h_launcher_info),
         web.post("/api/launcher", h_launcher_create),
         web.post("/api/library/dedupe", h_library_dedupe),

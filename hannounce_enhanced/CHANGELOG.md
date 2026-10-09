@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.8.0
+- Live auto-refresh of the interface, "new version available" banner + version in footer, one-click set-up of all three launch methods with copy buttons.
+
 ## 1.7.0
 - One generic launcher script/shortcut that opens the interface full screen (replaces per-sound scripts); new ⚡ Quick view with favorite sounds as tiles, recent messages; ?quick=1 kiosk mode.
 
