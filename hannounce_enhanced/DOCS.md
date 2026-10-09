@@ -59,6 +59,15 @@ ostatnie wiadomości).
 - **Wszystkie trzy naraz:** po kliknięciu „Utwórz skrypt” dostajesz skrypt oraz gotowe do skopiowania adresy skrótu iOS i osobnej aplikacji.
 - **Osobna aplikacja:** `http://<IP_HA>:8765/?quick=1` → Udostępnij → Do ekranu początkowego (tryb pełnoekranowy, tylko widok Szybkie).
 
+## Opóźnienia, kolejka i Stop
+- **TTS jest przygotowywany z góry** (silnikiem z HA) i dopiero wtedy wysyłany na głośnik jako gotowy plik – dzięki temu nie ma
+  niespodziewanego opóźnienia przy odtwarzaniu. Panel pokazuje „Przygotowuję głos…” a potem „Gra ♪”. Ta sama wiadomość
+  wysłana ponownie jest natychmiastowa (pamięć podręczna).
+- **Kolejka:** kolejne ogłoszenie na tym samym głośniku czeka, aż poprzednie się skończy (zamiast je przerywać lub nakładać się).
+  Panel pokazuje „W kolejce – zagra za N s”.
+- **■ Stop** (przy głośnikach i w widoku Szybkie, oraz `POST /api/stop`) natychmiast zatrzymuje odtwarzanie na zaznaczonych
+  głośnikach (bez zaznaczenia – na wszystkich, które grają) i czyści kolejkę.
+
 ## Aktualizacje
 - **Interfejs odświeża się sam** co kilka sekund (stany głośników, ulubione, biblioteka) – zmiany z innego telefonu
   lub z automatyzacji widać bez przeładowania strony.

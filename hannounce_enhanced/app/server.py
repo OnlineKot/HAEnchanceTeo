@@ -732,7 +732,23 @@ async def run_after(entity, delay):
     await run_action(entity)
 
 
+slots: dict = {}  # entity -> time until which an announcement is still running
+
+
+async def wait_slot(entity):
+    """Queue: a new announcement waits for the previous one on the same speaker instead of cutting it."""
+    wait = slots.get(entity, 0) - time.time()
+    if wait > 30:
+        raise _json_error(400, f"{entity} is busy for another {int(wait)} s - press Stop to cancel")
+    if wait > 0:
+        await asyncio.sleep(wait)
+    return max(wait, 0.0)
+
+
 async def announce_on(entity, cfg, snap, media, volume, estimate):
+    queued = await wait_slot(entity)
+    if snap is None:
+        snap = await snapshot(entity)
     changed = set()
     if cfg["power_cycle"] and snap["state"] in ("off", "standby"):
         await safe_service("media_player", "turn_on", {"entity_id": entity})
@@ -749,9 +765,11 @@ async def announce_on(entity, cfg, snap, media, volume, estimate):
     manual = cfg["resume_mode"] == "manual"
     await ha_service("media_player", "play_media", {
         "entity_id": entity, "media_content_type": "music", "announce": not manual, **media})
+    slots[entity] = time.time() + estimate + 1.5 + ((cfg["after_delay"] + 3) if (changed or manual) else 0)
     if changed or manual:
         poll = manual or snap["state"] not in ("playing", "buffering")
         asyncio.create_task(after_announcement(entity, snap, cfg, changed, estimate, poll))
+    return queued
 
 
 async def announce(body):
@@ -763,6 +781,7 @@ async def announce(body):
 
     item = None
     media = {}
+    prepared = False
     if body.get("item") or body.get("sound"):
         ref = body.get("item") or body.get("sound")
         item = find_item(ref)
@@ -779,8 +798,15 @@ async def announce(body):
                 raise _json_error(400, "no tts entity available in Home Assistant")
             tts = ents[0]
         msg = str(body["message"])
-        media["media_content_id"] = tts_media_id(tts, msg, body.get("language"), body.get("voice"))
-        duration = 2 + len(msg) * 0.075
+        try:  # render first: the speaker then only has to fetch a ready file = no surprise delay
+            item = await render_tts(tts, msg, body.get("language"), body.get("voice"))
+            media["media_content_id"] = f"{await base_url()}/media/{item['file']}"
+            duration = item["duration"]
+            prepared = True
+        except web.HTTPException as exc:
+            log.info("TTS pre-render failed (%s) - falling back to media-source", exc.text)
+            media["media_content_id"] = tts_media_id(tts, msg, body.get("language"), body.get("voice"))
+            duration = 2 + len(msg) * 0.075
     else:
         raise _json_error(400, "give 'item'/'sound' or 'message'")
 
@@ -799,21 +825,22 @@ async def announce(body):
                 skipped.append(entity)
                 continue
             volume = cfg["quiet_volume"] if override is None else min(override, cfg["quiet_volume"])
-        snap = await snapshot(entity)
-        jobs.append(announce_on(entity, cfg, snap, media, volume, duration))
+        jobs.append(announce_on(entity, cfg, None, media, volume, duration))
     if before and jobs:
         await run_action(before)
         await asyncio.sleep(max(0.0, min(30.0, float(body.get("before_wait", 1)))))
+    queued = 0.0
     if jobs:
-        await asyncio.gather(*jobs)
+        queued = max(await asyncio.gather(*jobs))
     if after and jobs:
         extra = max(profile_for(t)["after_delay"] for t in targets if t not in skipped)
         asyncio.create_task(run_after(after, duration + 2.5 + extra))
     log.info("Announced %s on %s (skipped: %s)", item["name"] if item else "TTS",
              [t for t in targets if t not in skipped], skipped)
-    if item and not item["saved"]:
-        asyncio.create_task(drop_later(item, duration + 40))
-    return {"ok": True, "duration": round(duration, 2), "skipped": skipped}
+    if item and not item["saved"] and not item.get("cache"):
+        asyncio.create_task(drop_later(item, duration + 40 + queued))
+    return {"ok": True, "duration": round(duration, 2), "skipped": skipped,
+            "queued": round(queued, 1), "prepared": prepared}
 
 
 # ---------------------------------------------------------------- handlers
@@ -909,17 +936,22 @@ async def convert_to_item(src, name, kind, saved):
     return item
 
 
-async def h_tts_item(request):
-    """Render a TTS message with a Home Assistant engine into a sound (preview or library)."""
-    body = await request.json()
-    msg, tts = str(body.get("message") or "").strip(), body.get("tts_entity")
-    if not msg or not tts:
-        raise _json_error(400, "message and tts_entity required")
+tts_cache: dict = {}
+
+
+async def render_tts(tts, msg, language=None, voice=None, save=False, name=None):
+    """Render TTS with a Home Assistant engine into a local sound, so playback starts instantly.
+    Unsaved renders are cached (same engine/text/language/voice = no new delay)."""
+    key = (tts, msg, language or "", voice or "")
+    if not save:
+        cached = tts_cache.get(key)
+        if cached and cached["id"] in once and item_path(cached).exists():
+            return cached
     req = {"engine_id": tts, "message": msg}
-    if body.get("language"):
-        req["language"] = body["language"]
-    if body.get("voice"):
-        req["options"] = {"voice": body["voice"]}
+    if language:
+        req["language"] = language
+    if voice:
+        req["options"] = {"voice": voice}
     async with session.post(f"{HA}/tts_get_url", headers=ha_headers(), json=req) as r:
         if r.status >= 400:
             raise _json_error(502, f"tts_get_url: {r.status} {await r.text()}")
@@ -931,11 +963,41 @@ async def h_tts_item(request):
             if r.status >= 400:
                 raise _json_error(502, f"tts download failed: {r.status}")
             tmp.write_bytes(await r.read())
-        item = await convert_to_item(tmp, (body.get("name") or "").strip() or msg[:40],
-                                     "tts", bool(body.get("save")))
+        item = await convert_to_item(tmp, (name or "").strip() or msg[:40], "tts", save)
     finally:
         tmp.unlink(missing_ok=True)
+    if not save:
+        item["cache"] = True
+        tts_cache[key] = item
+    return item
+
+
+async def h_tts_item(request):
+    """Render a TTS message into a sound (preview or library)."""
+    body = await request.json()
+    msg, tts = str(body.get("message") or "").strip(), body.get("tts_entity")
+    if not msg or not tts:
+        raise _json_error(400, "message and tts_entity required")
+    item = await render_tts(tts, msg, body.get("language"), body.get("voice"),
+                            bool(body.get("save")), body.get("name"))
     return web.json_response(public(item))
+
+
+async def h_stop(request):
+    """Stop playback right now on the given speakers (or on everything that is playing)."""
+    try:
+        targets = (await request.json()).get("targets") or []
+    except ValueError:
+        targets = []
+    if not targets:
+        targets = [p["entity_id"] for p in await build_players(await ha_get("/states"))
+                   if p["state"] in ("playing", "buffering")]
+    targets = [t for t in targets if str(t).startswith("media_player.")]
+    if targets:
+        await safe_service("media_player", "media_stop", {"entity_id": targets})
+        for t in targets:
+            slots.pop(t, None)
+    return web.json_response({"ok": True, "stopped": targets})
 
 
 async def h_tts_voices(request):
@@ -1223,6 +1285,7 @@ def routes(with_index=True):
         web.get("/api/sounds", h_sounds),
         web.post("/api/upload", h_upload),
         web.post("/api/tts/item", h_tts_item),
+        web.post("/api/stop", h_stop),
         web.get("/api/tts/voices", h_tts_voices),
         web.post("/api/generate", h_generate),
         web.post("/api/announce", h_announce),

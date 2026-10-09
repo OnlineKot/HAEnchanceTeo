@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.9.0
+- TTS is pre-rendered (no surprise delay, cached), honest "preparing/playing/queued" status, per-speaker queue, Stop button + /api/stop.
+
 ## 1.8.0
 - Live auto-refresh of the interface, "new version available" banner + version in footer, one-click set-up of all three launch methods with copy buttons.
 

@@ -91,7 +91,8 @@ code{background:var(--bg);padding:1px 5px;border-radius:5px;word-break:break-all
   <h2><span data-i="targets"></span><span class="sp"></span>
     <button class="link" id="selFav">★ <span data-i="favs"></span></button>
     <button class="link" id="selAll" data-i="all"></button>
-    <button class="link" id="selNone" data-i="none"></button></h2>
+    <button class="link" id="selNone" data-i="none"></button>
+    <button class="link stopb" id="stopAll" style="color:var(--err)" data-i="stop2"></button></h2>
   <div class="chips" id="players"></div>
   <details class="opts">
     <summary data-i="options"></summary>
@@ -113,7 +114,7 @@ code{background:var(--bg);padding:1px 5px;border-radius:5px;word-break:break-all
     <div class="sec" style="margin-top:18px" data-i="qMsg"></div>
     <textarea id="qMsg" style="min-height:64px"></textarea>
     <div class="chips" id="qRecent" style="margin-top:8px"></div>
-    <div class="row"><button class="b" id="qGo" data-i="announce"></button></div>
+    <div class="row"><button class="b" id="qGo" data-i="announce"></button><button class="b red" id="qStop" data-i="stop2"></button></div>
   </div>
 
   <div class="pane" id="p-say">
@@ -190,7 +191,7 @@ code{background:var(--bg);padding:1px 5px;border-radius:5px;word-break:break-all
 
 <script>
 const L = {
- en:{tagline:"Announcements for your speakers",updNew:"New version available",updHave:"you have",updHow:"Open the add-on page and tap Update.",updOpen:"Open add-on page",updAuto:"auto-update on",updManual:"auto-update off (enable it on the add-on page)",copy:"Copy",copied:"Copied ✓",allThree:"All three ways to open it:",w1:"① Script in HA",w2:"② iOS shortcut (Open URL)",w3:"③ Standalone app (Add to Home Screen)",quick:"⚡ Quick",qSounds:"Favorite sounds - tap to announce",qMsg:"Say something",qNoFav:"No favorite sounds yet. Mark sounds with ★ in the Library.",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
+ en:{tagline:"Announcements for your speakers",stop2:"■ Stop",stopped:"Stopped ■",preparing:"Preparing voice…",playing:"Playing ♪",queued:"Queued - plays in {s} s",updNew:"New version available",updHave:"you have",updHow:"Open the add-on page and tap Update.",updOpen:"Open add-on page",updAuto:"auto-update on",updManual:"auto-update off (enable it on the add-on page)",copy:"Copy",copied:"Copied ✓",allThree:"All three ways to open it:",w1:"① Script in HA",w2:"② iOS shortcut (Open URL)",w3:"③ Standalone app (Add to Home Screen)",quick:"⚡ Quick",qSounds:"Favorite sounds - tap to announce",qMsg:"Say something",qNoFav:"No favorite sounds yet. Mark sounds with ★ in the Library.",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
   setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",speakers:"Speakers",app:"📱 App",
   actBefore:"Run before (script / scene)",actAfter:"Run after (script / scene)",actNone:"— none —",
   ttsent:"TTS engine",message:"Message",lang:"Language",voice:"Voice",deflt:"(default)",ttsnone:"No TTS engine found in Home Assistant",
@@ -210,7 +211,7 @@ const L = {
   dAuto:"Let the player handle it (announce)",dManual:"Restore what was playing (media + position)",dNone:"Do nothing",dBefore:"Wait before playing (s)",dAfter:"Wait after it ends, then restore (s)",
   dPower:"Turn on if off, turn off afterwards",dUnmute:"Unmute during announcement",dQuiet:"Quiet hours",dQFrom:"from",dQTo:"to",dQVol:"Quiet volume % (empty = skip speaker)",
   dSave:"Save",dReset:"Reset",dCopy:"Copy to all speakers",dSaved:"Settings saved ✓"},
- pl:{tagline:"Ogłoszenia na Twoich głośnikach",updNew:"Dostępna nowa wersja",updHave:"masz",updHow:"Otwórz stronę dodatku i kliknij Aktualizuj.",updOpen:"Otwórz stronę dodatku",updAuto:"automatyczna aktualizacja włączona",updManual:"automatyczna aktualizacja wyłączona (włącz na stronie dodatku)",copy:"Kopiuj",copied:"Skopiowano ✓",allThree:"Wszystkie trzy sposoby otwierania:",w1:"① Skrypt w HA",w2:"② Skrót iOS (Otwórz URL)",w3:"③ Osobna aplikacja (Do ekranu początkowego)",quick:"⚡ Szybkie",qSounds:"Ulubione dźwięki - dotknij, by ogłosić",qMsg:"Powiedz coś",qNoFav:"Brak ulubionych dźwięków. Oznacz dźwięki ★ w Bibliotece.",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
+ pl:{tagline:"Ogłoszenia na Twoich głośnikach",stop2:"■ Stop",stopped:"Zatrzymano ■",preparing:"Przygotowuję głos…",playing:"Gra ♪",queued:"W kolejce - zagra za {s} s",updNew:"Dostępna nowa wersja",updHave:"masz",updHow:"Otwórz stronę dodatku i kliknij Aktualizuj.",updOpen:"Otwórz stronę dodatku",updAuto:"automatyczna aktualizacja włączona",updManual:"automatyczna aktualizacja wyłączona (włącz na stronie dodatku)",copy:"Kopiuj",copied:"Skopiowano ✓",allThree:"Wszystkie trzy sposoby otwierania:",w1:"① Skrypt w HA",w2:"② Skrót iOS (Otwórz URL)",w3:"③ Osobna aplikacja (Do ekranu początkowego)",quick:"⚡ Szybkie",qSounds:"Ulubione dźwięki - dotknij, by ogłosić",qMsg:"Powiedz coś",qNoFav:"Brak ulubionych dźwięków. Oznacz dźwięki ★ w Bibliotece.",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
   setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",speakers:"Głośniki",app:"📱 Aplikacja",
   actBefore:"Uruchom przed (skrypt / scena)",actAfter:"Uruchom po (skrypt / scena)",actNone:"— brak —",
   ttsent:"Silnik TTS",message:"Wiadomość",lang:"Język",voice:"Głos",deflt:"(domyślny)",ttsnone:"Nie znaleziono silnika TTS w Home Assistant",
@@ -313,9 +314,17 @@ function extra(){ const x={targets:targets(),...actions_()}; if($("volOn").check
 function needTargets(){ if(!targets().length){toast(t("sel"),true);return false} return true; }
 async function announce(body){
   if(!needTargets()) return false;
-  try{ const r = await post("announce",{...extra(),...body}); toast(t("sent") + (r.skipped?.length ? " (" + r.skipped.length + " skipped)" : "")); return true; }
-  catch(e){ toast(e.message,true); return false; }
+  if(body.message) toast("⏳ " + t("preparing"));   // TTS is rendered first, so there is a short wait before the sound
+  try{
+    const r = await post("announce",{...extra(),...body});
+    toast((r.queued > 0.5 ? t("queued").replace("{s}", Math.round(r.queued)) : t("playing")) + (r.skipped?.length ? " (" + r.skipped.length + " skipped)" : ""));
+    return true;
+  }catch(e){ toast(e.message,true); return false; }
 }
+async function stopAll(){
+  try{ await post("stop",{targets:targets()}); toast(t("stopped")); }catch(e){ toast(e.message,true); }
+}
+$("stopAll").onclick = stopAll; $("qStop").onclick = stopAll;
 
 // ---- say (uses the TTS engines configured in Home Assistant)
 function loadLangs(){
