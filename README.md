@@ -19,14 +19,6 @@ duplicate removal, API tokens for Shortcuts with a supervised log, full-screen q
 layout of live tiles (buttons, toggles, sliders, states) in a Home Assistant look, a real-time action feed, **Live Activities on the iPhone Dynamic Island / Lock Screen** (via the Companion app), Home Assistant events for
 automations, and a REST API for screenless devices (Shortcuts, ESP).
 
-### 🛡 [HAWatchTeo](hawatchteo/DOCS.md)
-**Entity watchdog.** Finds unavailable, stale and low-battery entities (with integration, device and area), ignore rules,
-one batched notification to your phone, problem sensors and an event log.
-
-### ⏰ [HARemindTeo](haremindteo/DOCS.md)
-**Reminders and timers in plain language** ("in 15 min…", "every day at 7:30…", PL/EN), notification with Done/Snooze buttons,
-spoken on speakers, **Dynamic Island countdown**, and a token API for iPhone Shortcuts ("Hey Siri, remind me…").
-
 ### ▶ [HARoutineTeo](haroutineteo/DOCS.md)
 **Routines with steps** instead of YAML scripts: announce, fade lights over minutes, scenes, waits, wait-for-state, conditions and
 stop-if. Run from an iPhone Shortcut, by time or by an entity, with **live step progress on the Dynamic Island**.

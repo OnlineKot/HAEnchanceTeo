@@ -1,4 +1,0 @@
-configuration:
-  log_level:
-    name: Poziom logów
-    description: Szczegółowość logów dodatku. Pozostałe ustawienia są w panelu.
