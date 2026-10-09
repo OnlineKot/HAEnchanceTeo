@@ -10,6 +10,14 @@ Panel **HAnnounce** pojawia się w bocznym menu Home Assistanta (ingress).
 - **Jednorazowo** – dźwięk jest odtworzony i automatycznie usuwany, albo **zapisz w bibliotece** i używaj wielokrotnie.
 - Opcjonalna **zmiana głośności** na czas ogłoszenia (potem przywracana).
 
+## Ekran blokady iPhone'a
+W zakładce **Biblioteka** (zapisany dźwięk) lub **Mów (TTS)** zaznacz głośniki i kliknij **📱 Utwórz skrypt**.
+Add-on tworzy w HA skrypt `script.hannounce_...`, który odtwarza ogłoszenie na wybranych głośnikach.
+Potem na iPhonie (aplikacja Home Assistant Companion): przytrzymaj ekran blokady → *Dostosuj* → dodaj widżet
+Home Assistant → wybierz skrypt. Skrypt możesz też podpiąć pod Centrum sterowania (iOS 18), Skróty/Siri albo Back Tap.
+Jeśli add-on nie może sam zapisać skryptu, pokaże gotowy YAML do wklejenia w `scripts.yaml`.
+Uwaga: skrypt zapamiętuje adres dźwięku (`base_url`/IP hosta) – po zmianie IP utwórz go ponownie.
+
 ## Konfiguracja
 | Opcja | Opis |
 |---|---|

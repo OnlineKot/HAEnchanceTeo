@@ -62,7 +62,8 @@ footer a{color:var(--acc);text-decoration:none;font-weight:600}
     <label class="f" data-i="ttsent"></label><select id="ttsEnt"></select>
     <label class="f" data-i="message"></label><textarea id="ttsMsg"></textarea>
     <label class="f" data-i="lang"></label><input type="text" id="ttsLang" placeholder="pl, en, de ...">
-    <div class="row"><button class="b" id="sayGo" data-i="announce"></button></div>
+    <div class="row"><button class="b" id="sayGo" data-i="announce"></button>
+    <button class="b alt" id="sayScript" data-i="mkscript"></button></div>
   </div>
 
   <div class="pane" id="p-rec">
@@ -98,6 +99,8 @@ footer a{color:var(--acc);text-decoration:none;font-weight:600}
   <div class="pane" id="p-lib"><div id="libList"></div></div>
 </div>
 
+<div class="card" id="scriptRes" hidden></div>
+
 <footer>
   <span data-i="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a>
 </footer>
@@ -110,12 +113,12 @@ const L = {
   ttsent:"TTS engine",message:"Message",lang:"Language (optional)",announce:"Announce",rec:"● Record",stop:"■ Stop",devrec:"Use device recorder",
   nomic:"Browser microphone needs HTTPS - use \"Use device recorder\" or open HA over HTTPS.",file:"Audio file",type:"Sound",freq:"Frequency Hz",dur:"Duration s",rep:"Repeat",
   preview:"▶ Preview",name:"Name",once:"Announce once",save:"Save to library",saveAnn:"Save & announce",empty:"Library is empty.",del:"Delete",rename:"Rename",
-  sel:"Select at least one speaker.",sent:"Announced ✓",saved:"Saved ✓",confirmDel:"Delete this sound?",by:"Created by",nomsg:"Type a message.",nofile:"Choose or record a sound first.",newname:"New name"},
+  mkscript:"📱 Create script (iPhone)",scriptOk:"Script created: ",scriptManual:"Could not create it automatically. Paste into scripts.yaml, then reload scripts:",scriptHow:"iPhone: long-press the lock screen → Customize → add the Home Assistant widget → choose this script. (Companion app must be installed.)",sel:"Select at least one speaker.",sent:"Announced ✓",saved:"Saved ✓",confirmDel:"Delete this sound?",by:"Created by",nomsg:"Type a message.",nofile:"Choose or record a sound first.",newname:"New name"},
  pl:{targets:"Głośniki",setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",
   ttsent:"Silnik TTS",message:"Wiadomość",lang:"Język (opcjonalnie)",announce:"Ogłoś",rec:"● Nagrywaj",stop:"■ Stop",devrec:"Nagrywarka urządzenia",
   nomic:"Mikrofon w przeglądarce wymaga HTTPS - użyj „Nagrywarka urządzenia” albo otwórz HA przez HTTPS.",file:"Plik audio",type:"Dźwięk",freq:"Częstotliwość Hz",dur:"Czas s",rep:"Powtórzenia",
   preview:"▶ Podgląd",name:"Nazwa",once:"Ogłoś jednorazowo",save:"Zapisz w bibliotece",saveAnn:"Zapisz i ogłoś",empty:"Biblioteka jest pusta.",del:"Usuń",rename:"Zmień nazwę",
-  sel:"Wybierz co najmniej jeden głośnik.",sent:"Ogłoszono ✓",saved:"Zapisano ✓",confirmDel:"Usunąć ten dźwięk?",by:"Stworzone przez",nomsg:"Wpisz wiadomość.",nofile:"Najpierw wybierz lub nagraj dźwięk.",newname:"Nowa nazwa"}
+  mkscript:"📱 Utwórz skrypt (iPhone)",scriptOk:"Utworzono skrypt: ",scriptManual:"Nie udało się automatycznie. Wklej do scripts.yaml i przeładuj skrypty:",scriptHow:"iPhone: przytrzymaj ekran blokady → Dostosuj → dodaj widżet Home Assistant → wybierz ten skrypt. (Wymaga aplikacji Companion.)",sel:"Wybierz co najmniej jeden głośnik.",sent:"Ogłoszono ✓",saved:"Zapisano ✓",confirmDel:"Usunąć ten dźwięk?",by:"Stworzone przez",nomsg:"Wpisz wiadomość.",nofile:"Najpierw wybierz lub nagraj dźwięk.",newname:"Nowa nazwa"}
 };
 const lang = (navigator.language||"en").toLowerCase().startsWith("pl") ? "pl" : "en";
 const t = k => L[lang][k] || L.en[k] || k;
@@ -175,6 +178,24 @@ async function announce(body){
 $("sayGo").onclick = () => {
   const m = $("ttsMsg").value.trim(); if(!m) return toast(t("nomsg"),true);
   announce({message:m,tts_entity:$("ttsEnt").value,language:$("ttsLang").value.trim()||undefined});
+};
+
+async function makeScript(body){
+  if(!needTargets()) return;
+  try{
+    const r = await api("script",{method:"POST",body:JSON.stringify({targets:targets(),...body})});
+    const box = $("scriptRes"); box.hidden = false; box.innerHTML = "";
+    const p = document.createElement("div");
+    p.textContent = (r.created ? t("scriptOk") + r.entity_id : t("scriptManual")) ;
+    box.append(p);
+    if(!r.created){ const pre=document.createElement("textarea"); pre.readOnly=true; pre.value=r.yaml; box.append(pre); }
+    const h = document.createElement("div"); h.className="hint"; h.textContent=t("scriptHow"); box.append(h);
+    box.scrollIntoView({behavior:"smooth"});
+  }catch(e){ toast(e.message,true); }
+}
+$("sayScript").onclick = () => {
+  const m = $("ttsMsg").value.trim(); if(!m) return toast(t("nomsg"),true);
+  makeScript({message:m,tts_entity:$("ttsEnt").value,language:$("ttsLang").value.trim()||undefined});
 };
 
 // ---- shared "sound source" actions: name box + once / save / save&announce
@@ -256,9 +277,10 @@ function renderLib(){
     const d = document.createElement("div"); d.className = "item";
     d.innerHTML = `<div class="n"><b></b><br><small>${it.kind} · ${it.duration.toFixed(1)} s</small></div>
       <audio controls preload="none" src="media/${it.file}" style="width:200px;margin:0"></audio>
-      <button class="b a">${t("announce")}</button><button class="b alt r">${t("rename")}</button><button class="b red x">${t("del")}</button>`;
+      <button class="b a">${t("announce")}</button><button class="b alt s">${t("mkscript")}</button><button class="b alt r">${t("rename")}</button><button class="b red x">${t("del")}</button>`;
     d.querySelector("b").textContent = it.name;
     d.querySelector(".a").onclick = () => announce({item:it.id});
+    d.querySelector(".s").onclick = () => makeScript({item:it.id});
     d.querySelector(".r").onclick = async () => {
       const n = prompt(t("newname"), it.name); if(!n) return;
       try{ await api("library/"+it.id,{method:"POST",body:JSON.stringify({name:n})}); refresh(); }catch(e){toast(e.message,true)}

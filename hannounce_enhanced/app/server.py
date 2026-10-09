@@ -319,6 +319,56 @@ def players_list(states):
     return sorted(out, key=lambda p: p["name"].lower())
 
 
+def slugify(text):
+    text = re.sub(r"[^a-z0-9]+", "_", text.lower().replace("ł", "l")).strip("_")
+    return text[:40] or "sound"
+
+
+async def make_script(body):
+    """Create a Home Assistant script that plays a sound/TTS on the chosen speakers."""
+    targets = body.get("targets") or []
+    if not targets or not all(str(t).startswith("media_player.") for t in targets):
+        raise _json_error(400, "select at least one speaker")
+    data = {"media_content_type": "music", "announce": True}
+    if body.get("item"):
+        item = find_item(body["item"])
+        if not item or not item["saved"]:
+            raise _json_error(404, "save the sound to the library first")
+        data["media_content_id"] = f"{await base_url()}/media/{item['file']}"
+        name = item["name"]
+    elif body.get("message"):
+        tts = body.get("tts_entity")
+        if not tts:
+            raise _json_error(400, "tts_entity required")
+        msg = str(body["message"])
+        data["media_content_id"] = f"media-source://tts/{tts}?message={quote(msg)}"
+        if body.get("language"):
+            data["media_content_id"] += f"&language={quote(str(body['language']))}"
+        name = msg[:30]
+    else:
+        raise _json_error(400, "give 'item' or 'message'")
+    sid = "hannounce_" + slugify(name)
+    cfg = {
+        "alias": f"Announce: {name}", "icon": "mdi:bullhorn", "mode": "single",
+        "description": f"Created by HAnnounce Enhanced - {CREDIT} ({CREDIT_URL})",
+        "sequence": [{"action": "media_player.play_media",
+                      "target": {"entity_id": targets}, "data": data}],
+    }
+    result = {"entity_id": f"script.{sid}", "created": False,
+              "yaml": f"{sid}: {json.dumps(cfg, ensure_ascii=False)}"}
+    try:
+        async with session.post(f"{HA}/config/script/config/{sid}", headers=ha_headers(),
+                                json=cfg) as r:
+            if r.status < 300:
+                await ha_service("script", "reload", {})
+                result["created"] = True
+            else:
+                log.warning("Script create refused: %s %s", r.status, (await r.text())[:200])
+    except Exception as exc:  # noqa: BLE001
+        log.warning("Script create failed: %s", exc)
+    return result
+
+
 async def restore_volume(levels, delay):
     await asyncio.sleep(delay)
     for entity, level in levels.items():
@@ -481,6 +531,10 @@ async def h_announce(request):
     return web.json_response(await announce(body))
 
 
+async def h_script(request):
+    return web.json_response(await make_script(await request.json()))
+
+
 async def h_rename(request):
     item = next((i for i in library if i["id"] == request.match_info["id"]), None)
     if not item:
@@ -529,6 +583,7 @@ def build_apps():
         web.post("/api/upload", h_upload),
         web.post("/api/generate", h_generate),
         web.post("/api/announce", h_announce),
+        web.post("/api/script", h_script),
         web.post("/api/library/{id}", h_rename),
         web.delete("/api/library/{id}", h_delete),
     ])
