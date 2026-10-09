@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.11.0
+- Home Assistant look (theme variables, Roboto, pill buttons, filled fields, switches, tabs).
+
 ## 1.10.0
 - Tokens for shortcuts (hashed, revocable, per-token speakers/limits/defaults, rate limit) and supervised tokens with a full announcement log.
 

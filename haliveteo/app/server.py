@@ -25,6 +25,7 @@ DATA = Path(os.environ.get("HAL_DATA", "/data"))
 STATIC = Path(__file__).parent / "static"
 DEVICES_FILE = DATA / "devices.json"
 FEED_FILE = DATA / "feed.jsonl"
+ACT_FILE = DATA / "activities.json"
 
 INGRESS_PORT = int(os.environ.get("HAL_INGRESS_PORT", 8099))
 PUBLIC_PORT = int(os.environ.get("HAL_PUBLIC_PORT", 8766))
@@ -42,6 +43,8 @@ states: dict = {}
 feed = collections.deque(maxlen=500)
 clients: set = set()
 _rate: dict = {}
+activities: list = []
+running: dict = {}  # activity id -> runtime info of a Live Activity we started
 
 
 def load_options():
@@ -74,6 +77,11 @@ def load_all():
         devices = json.loads(DEVICES_FILE.read_text())
     except (OSError, ValueError):
         devices = []
+    global activities
+    try:
+        activities = json.loads(ACT_FILE.read_text())
+    except (OSError, ValueError):
+        activities = []
     try:
         for line in FEED_FILE.read_text().splitlines()[-500:]:
             feed.append(json.loads(line))
@@ -104,7 +112,7 @@ ENTITY_RE = re.compile(r"^[a-z0-9_]+\.[a-z0-9_]+$")
 SERVICE_RE = re.compile(r"^[a-z0-9_]+\.[a-z0-9_]+$")
 TILE_TYPES = ("button", "toggle", "slider", "state")
 SLIDER_MODES = ("light", "volume", "number")
-ACTION_KINDS = ("service", "script", "scene", "event")
+ACTION_KINDS = ("service", "script", "scene", "event", "live")
 
 
 def s(value, n=80):
@@ -129,7 +137,7 @@ def clean_tile(raw):
         return None
     color = s(raw.get("color"), 7)
     tile = {"id": re.sub(r"[^a-z0-9]", "", s(raw.get("id"), 12).lower()) or uuid.uuid4().hex[:8],
-            "type": typ, "label": s(raw.get("label"), 40), "icon": s(raw.get("icon"), 8),
+            "type": typ, "label": s(raw.get("label"), 40), "icon": s(raw.get("icon"), 40),
             "color": color if re.fullmatch(r"#[0-9a-fA-F]{6}", color) else "",
             "width": 2 if raw.get("width") == 2 else 1, "confirm": bool(raw.get("confirm")),
             "entity_id": entity(raw.get("entity_id"))}
@@ -146,6 +154,9 @@ def clean_tile(raw):
         if kind in ("script", "scene") and not action["entity_id"].startswith(kind + "."):
             return None
         if kind == "event" and not action["event_type"]:
+            return None
+        action["activity"] = re.sub(r"[^a-z0-9]", "", s(a.get("activity"), 16).lower())
+        if kind == "live" and not action["activity"]:
             return None
         tile["action"] = action
     elif typ in ("toggle", "slider", "state") and not tile["entity_id"]:
@@ -227,6 +238,8 @@ async def ha_listener():
                         states.clear()
                         for st in data["result"]:
                             states[st["entity_id"]] = {"s": st["state"], "a": st["attributes"]}
+                        for act in activities:
+                            asyncio.create_task(live_eval(act["entity_id"]))
                     elif data.get("type") == "event":
                         ev = data["event"]["data"]
                         eid, new = ev["entity_id"], ev.get("new_state")
@@ -237,9 +250,190 @@ async def ha_listener():
                         for c in list(clients):
                             if eid in c.watch:
                                 asyncio.create_task(send(c, {"t": "state", "e": eid, "st": states.get(eid)}))
+                        if any(a["entity_id"] == eid for a in activities):
+                            asyncio.create_task(live_eval(eid))
         except Exception as exc:  # noqa: BLE001
             log.warning("HA stream lost (%s) - retrying in 5 s", exc)
         await asyncio.sleep(5)
+
+
+
+# ---------------------------------------------------------------- Live Activities / Live Updates (Dynamic Island)
+# Uses the Home Assistant Companion app: a notify.mobile_app_* call with live_update:true + tag starts/updates a
+# Live Activity (iOS, Dynamic Island + Lock Screen) or Live Update (Android); clear_notification ends it.
+PHONE_RE = re.compile(r"^mobile_app_[a-z0-9_]{1,60}$")
+TAG_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+HEX_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+
+def hexc(v):
+    v = s(v, 7)
+    return v if HEX_RE.match(v) else ""
+
+
+def csv_list(v):
+    items = v if isinstance(v, list) else str(v or "").split(",")
+    return [str(x).strip()[:60] for x in items if str(x).strip()][:20]
+
+
+def clean_activity(raw):
+    tag = s(raw.get("tag"), 64)
+    lo, hi = num(raw.get("progress_min"), 0), num(raw.get("progress_max"), 100)
+    icon = s(raw.get("icon"), 64)
+    rel = num(raw.get("relevance"), None) if raw.get("relevance") not in (None, "") else None
+    url = s(raw.get("url"), 200)
+    return {
+        "id": re.sub(r"[^a-z0-9]", "", s(raw.get("id"), 16).lower()) or uuid.uuid4().hex[:8],
+        "name": s(raw.get("name"), 40).strip() or "Live Activity",
+        "enabled": bool(raw.get("enabled", True)),
+        "phones": [p for p in (str(x).removeprefix("notify.") for x in (raw.get("phones") or [])) if PHONE_RE.match(p)][:6],
+        "tag": tag if TAG_RE.match(tag) else "hl_" + uuid.uuid4().hex[:8],
+        "title": s(raw.get("title"), 80), "message": s(raw.get("message"), 300),
+        "entity_id": entity(raw.get("entity_id")),
+        "start_states": csv_list(raw.get("start_states")), "end_states": csv_list(raw.get("end_states")),
+        "progress_mode": "range" if raw.get("progress_mode") == "range" else "none",
+        "progress_attr": s(raw.get("progress_attr"), 40),
+        "progress_min": lo if lo < hi else 0, "progress_max": hi if lo < hi else 100,
+        "chrono_attr": s(raw.get("chrono_attr"), 40), "chrono_state": bool(raw.get("chrono_state")),
+        "critical_text": s(raw.get("critical_text"), 40),
+        "icon": icon if re.match(r"^mdi:[a-z0-9-]{1,60}$", icon) else "mdi:home-assistant",
+        "color": hexc(raw.get("color")) or "#03A9F4",
+        "background_color": hexc(raw.get("background_color")), "text_color": hexc(raw.get("text_color")),
+        "url": url if url.startswith("/") or url.startswith("https://") else "",
+        "relevance": None if rel is None else max(0.0, min(1.0, rel)),
+        "min_interval": int(max(5, min(3600, num(raw.get("min_interval"), 30)))),
+    }
+
+
+async def render(tpl):
+    """Plain text, or a Home Assistant Jinja template ({{ states('sensor.x') }}) rendered by HA."""
+    tpl = tpl or ""
+    if "{{" in tpl or "{%" in tpl:
+        try:
+            async with session.post(f"{HA}/template", headers=ha_headers(), json={"template": tpl}) as r:
+                if r.status < 400:
+                    return (await r.text()).strip()
+        except Exception as exc:  # noqa: BLE001
+            log.warning("template render failed: %s", exc)
+    return tpl
+
+
+def parse_ts(v):
+    try:
+        f = float(v)
+        return f if f > 1e9 else None
+    except (TypeError, ValueError):
+        pass
+    try:
+        from datetime import datetime
+        return datetime.fromisoformat(str(v).replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return None
+
+
+async def activity_payload(act, st, first):
+    a = (st or {}).get("a") or {}
+    data = {"tag": act["tag"], "live_update": True, "notification_icon": act["icon"],
+            "notification_icon_color": act["color"], "color": act["color"]}
+    prog = None
+    if act["progress_mode"] == "range":
+        v = num(a.get(act["progress_attr"]) if act["progress_attr"] else (st or {}).get("s"), None)
+        if v is not None:
+            prog = int(round((v - act["progress_min"]) / (act["progress_max"] - act["progress_min"]) * 100))
+            prog = max(0, min(100, prog))
+            data["progress"], data["progress_max"] = prog, 100
+    if act["chrono_attr"] or act["chrono_state"]:
+        ts = parse_ts(a.get(act["chrono_attr"]) if act["chrono_attr"] else (st or {}).get("s"))
+        if ts and ts > time.time():
+            data.update(chronometer=True, when=int(ts), when_relative=False)
+    crit = await render(act["critical_text"]) if act["critical_text"] else (f"{prog}%" if prog is not None else "")
+    if crit:
+        data["critical_text"] = crit
+    for key in ("background_color", "text_color", "url"):
+        if act[key]:
+            data[key] = act[key]
+    if act["relevance"] is not None:
+        data["relevance_score"] = act["relevance"]
+    if not first:
+        data["silent"], data["alert_once"] = True, True
+    title = await render(act["title"]) or act["name"]
+    message = await render(act["message"]) or (st or {}).get("s", "")
+    return {"title": title, "message": message, "data": data}, prog
+
+
+async def live_send(act, st, first, force=False):
+    if not act["phones"]:
+        raise err(400, "pick at least one phone")
+    payload, prog = await activity_payload(act, st, first)
+    run = running.setdefault(act["id"], {"t": 0, "started": time.time(), "sig": None, "pending": None})
+    sig = (payload["message"], prog, payload["data"].get("when"))
+    if not first and not force and run["sig"] == sig:
+        return False
+    for phone in act["phones"]:
+        await ha_post(f"/services/notify/{phone}", payload)
+    run.update(t=time.time(), sig=sig)
+    if first:
+        run["started"] = time.time()
+    await push_feed({"device": "Live Activity", "device_id": "", "tile": "", "label": act["name"], "icon": "🏝️",
+                     "type": "live", "value": prog if prog is not None else payload["message"], "ok": True, "error": "",
+                     "source": "start" if first else "update", "entity_id": act["entity_id"]})
+    return True
+
+
+async def live_end(act):
+    run = running.pop(act["id"], None)
+    if run and run.get("pending"):
+        run["pending"].cancel()
+    for phone in act["phones"]:
+        try:
+            await ha_post(f"/services/notify/{phone}", {"message": "clear_notification", "data": {"tag": act["tag"]}})
+        except web.HTTPException as exc:
+            log.warning("could not end %s on %s: %s", act["name"], phone, exc.text)
+    await push_feed({"device": "Live Activity", "device_id": "", "tile": "", "label": act["name"], "icon": "🏝️",
+                     "type": "live", "value": None, "ok": True, "error": "", "source": "end", "entity_id": act["entity_id"]})
+
+
+async def delayed_update(act, wait):
+    await asyncio.sleep(wait)
+    run = running.get(act["id"])
+    if not run:
+        return
+    run["pending"] = None
+    st = states.get(act["entity_id"])
+    if st:
+        try:
+            await live_send(act, st, first=False)
+        except web.HTTPException as exc:
+            log.warning("live update failed: %s", exc.text)
+
+
+async def live_eval(eid):
+    """Decide from a state change whether a bound Live Activity starts, updates (throttled) or ends."""
+    for act in list(activities):
+        if not act["enabled"] or act["entity_id"] != eid or not act["phones"]:
+            continue
+        try:
+            st = states.get(eid)
+            cur = st["s"] if st else "unavailable"
+            bad = cur in ("unavailable", "unknown")
+            is_end = cur in act["end_states"]
+            is_start = (cur in act["start_states"]) if act["start_states"] else (not bad and not is_end)
+            run = running.get(act["id"])
+            if not run:
+                if is_start and not is_end:
+                    await live_send(act, st, first=True)
+            elif is_end:
+                await live_end(act)
+            elif time.time() - run["started"] > 7.5 * 3600:       # iOS ends activities after ~8 h
+                await live_send(act, st, first=True)
+            else:
+                wait = act["min_interval"] - (time.time() - run["t"])
+                if wait <= 0:
+                    await live_send(act, st, first=False)
+                elif not run.get("pending"):
+                    run["pending"] = asyncio.create_task(delayed_update(act, wait))
+        except web.HTTPException as exc:
+            log.warning("Live Activity '%s': %s", act["name"], exc.text)
 
 
 # ---------------------------------------------------------------- actions
@@ -276,6 +470,14 @@ async def exec_tile(tile, value=None):
             await ha_post(f"/services/{domain}/{service}", data)
         elif a["kind"] in ("script", "scene"):
             await ha_post(f"/services/{a['kind']}/turn_on", {"entity_id": a["entity_id"]})
+        elif a["kind"] == "live":
+            act = next((x for x in activities if x["id"] == a["activity"]), None)
+            if not act:
+                raise err(400, "unknown Live Activity")
+            if act["id"] in running:
+                await live_end(act)
+            else:
+                await live_send(act, states.get(act["entity_id"]), first=True)
         else:
             await ha_post(f"/events/{a['event_type']}", {"source": "haliveteo"})
     elif typ == "toggle":
@@ -442,7 +644,9 @@ async def h_bootstrap(request):
     ents = sorted(({"id": e, "name": (v["a"] or {}).get("friendly_name", e), "state": v["s"]}
                    for e, v in states.items()), key=lambda x: x["id"])
     online = collections.Counter(c.device["id"] for c in clients if c.device)
+    notify = sorted(n for d in services if d["domain"] == "notify" for n in d["services"] if PHONE_RE.match(n))
     return web.json_response({"devices": [public_device(d) | {"online": online.get(d["id"], 0)} for d in devices],
+                              "activities": [a | {"running": a["id"] in running} for a in activities], "notify": notify,
                               "entities": ents, "services": svc,
                               "feed": list(feed)[-50:], "prefix": PREFIX,
                               "public_port": PUBLIC_PORT, "credit": {"name": CREDIT, "url": CREDIT_URL}})
@@ -454,7 +658,7 @@ async def h_dev_create(request):
     if not name:
         raise err(400, "name required")
     raw, digest, prefix = new_token()
-    dev = {"id": uuid.uuid4().hex[:8], "name": name, "icon": s(body.get("icon"), 8) or "📱", "hash": digest,
+    dev = {"id": uuid.uuid4().hex[:8], "name": name, "icon": s(body.get("icon"), 40) or "mdi:cellphone", "hash": digest,
            "prefix": prefix, "created": int(time.time()), "last_seen": None, "enabled": True,
            "show_feed": bool(body.get("show_feed", True)), "layout": clean_layout(body.get("layout"))}
     devices.append(dev)
@@ -474,7 +678,7 @@ async def h_dev_update(request):
     if "name" in body and s(body["name"], 40).strip():
         dev["name"] = s(body["name"], 40).strip()
     if "icon" in body:
-        dev["icon"] = s(body["icon"], 8) or "📱"
+        dev["icon"] = s(body["icon"], 40) or "mdi:cellphone"
     for key in ("enabled", "show_feed"):
         if key in body:
             dev[key] = bool(body[key])
@@ -511,6 +715,61 @@ async def h_admin_test(request):
     if not dev:
         raise err(404, "device not found")
     return web.json_response(await run_action(dev, body.get("tile"), body.get("value"), source="admin-test"))
+
+
+def save_activities():
+    tmp = ACT_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(activities, indent=1))
+    tmp.replace(ACT_FILE)
+
+
+def get_act(request):
+    act = next((a for a in activities if a["id"] == request.match_info["id"]), None)
+    if not act:
+        raise err(404, "activity not found")
+    return act
+
+
+async def h_act_save(request):
+    act = clean_activity(await request.json())
+    if not act["entity_id"]:
+        raise err(400, "pick the entity that drives this Live Activity")
+    old = next((a for a in activities if a["id"] == act["id"]), None)
+    if old:
+        if old["id"] in running and old["tag"] != act["tag"]:
+            await live_end(old)
+        activities[activities.index(old)] = act
+    else:
+        activities.append(act)
+    save_activities()
+    asyncio.create_task(live_eval(act["entity_id"]))
+    return web.json_response(act | {"running": act["id"] in running})
+
+
+async def h_act_delete(request):
+    act = get_act(request)
+    if act["id"] in running:
+        await live_end(act)
+    activities.remove(act)
+    save_activities()
+    return web.json_response({"ok": True})
+
+
+async def h_act_start(request):
+    act = get_act(request)
+    await live_send(act, states.get(act["entity_id"]), first=True, force=True)
+    return web.json_response({"ok": True})
+
+
+async def h_act_end(request):
+    await live_end(get_act(request))
+    return web.json_response({"ok": True})
+
+
+async def h_act_preview(request):
+    act = clean_activity(await request.json())
+    payload, _ = await activity_payload(act, states.get(act["entity_id"]), True)
+    return web.json_response({"service": [f"notify.{p}" for p in act["phones"]], "payload": payload})
 
 
 async def h_feed_clear(request):
@@ -581,6 +840,11 @@ def build_apps():
         web.post("/api/admin/devices/{id}/token", h_dev_token),
         web.delete("/api/admin/devices/{id}", h_dev_delete),
         web.post("/api/admin/test", h_admin_test),
+        web.post("/api/admin/activities", h_act_save),
+        web.post("/api/admin/activities/preview", h_act_preview),
+        web.delete("/api/admin/activities/{id}", h_act_delete),
+        web.post("/api/admin/activities/{id}/start", h_act_start),
+        web.post("/api/admin/activities/{id}/end", h_act_end),
         web.delete("/api/admin/feed", h_feed_clear)])
     pub = web.Application(client_max_size=256 * 1024)
     pub.add_routes(common + [

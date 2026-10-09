@@ -79,6 +79,39 @@ code{background:var(--bg);padding:1px 5px;border-radius:5px;word-break:break-all
 .tile b{font-size:15px;line-height:1.2}.tile small{color:var(--mut)}.tile .star{position:absolute;right:9px;top:6px;color:#f5b301;font-size:13px}
 .kiosk .tabs,.kiosk footer,.kiosk #scriptRes{display:none}
 #p-help h2{font-size:15px;margin:18px 0 4px}
+
+/* ---- Home Assistant look (theme variables from home-assistant/frontend color.globals.ts) ---- */
+@font-face{font-family:Roboto;font-weight:400;font-display:swap;src:local("Roboto"),url("/static/fonts/roboto/Roboto-Regular.woff2") format("woff2")}
+@font-face{font-family:Roboto;font-weight:500;font-display:swap;src:local("Roboto Medium"),url("/static/fonts/roboto/Roboto-Medium.woff2") format("woff2")}
+:root{--primary-color:#009ac7;--rgb-primary-color:0,154,199;--primary-text-color:#212121;--secondary-text-color:#727272;--primary-background-color:#fafafa;--card-background-color:#fff;--secondary-background-color:#e5e5e5;--divider-color:rgba(0,0,0,.12);--outline-color:rgba(0,0,0,.12);--shadow-color:rgba(0,0,0,.16);--error-color:#db4437;--warning-color:#ffa600;--success-color:#43a047;--input-fill-color:rgb(245,245,245);--input-idle-line-color:rgba(0,0,0,.42);--input-hover-line-color:rgba(0,0,0,.87);--input-label-ink-color:rgba(0,0,0,.6);--ha-font:Roboto,Noto,"Noto Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --bg:var(--primary-background-color);--card:var(--card-background-color);--fg:var(--primary-text-color);--mut:var(--secondary-text-color);--acc:var(--primary-color);--acc2:#0288d1;--accbg:rgba(var(--rgb-primary-color),.15);--bd:var(--divider-color);--ok:var(--success-color);--warn:var(--warning-color);--err:var(--error-color);--sh:none}
+@media (prefers-color-scheme:dark){:root{--primary-background-color:#111;--card-background-color:#1c1c1c;--secondary-background-color:#282828;--primary-text-color:#e1e1e1;--secondary-text-color:#9b9b9b;--divider-color:rgba(225,225,225,.12);--outline-color:rgba(225,225,225,.12);--shadow-color:rgba(0,0,0,.48);--input-fill-color:rgba(255,255,255,.05);--input-idle-line-color:rgba(255,255,255,.42);--input-hover-line-color:rgba(255,255,255,.87);--input-label-ink-color:rgba(255,255,255,.6)}}
+body{font:400 14px/20px var(--ha-font);-webkit-font-smoothing:antialiased}
+header{background:var(--card-background-color);border-bottom:1px solid var(--divider-color);margin:-14px -14px 16px;padding:0 16px;height:56px}
+header .logo{background:none;box-shadow:none;width:auto;height:auto;font-size:22px}header h1{font-size:20px;font-weight:400}
+.card{border-radius:12px;box-shadow:none;border:1px solid var(--divider-color)}
+.card>h2,.sec{font-size:14px;text-transform:none;letter-spacing:.0071em;font-weight:500}
+.tabs{border-bottom:1px solid var(--divider-color)}
+.tabs button{text-transform:uppercase;letter-spacing:.0892857143em;font:500 14px/20px var(--ha-font);border-bottom-width:2px;padding:12px 16px}
+.tabs button.on{color:var(--primary-color);border-bottom-color:var(--primary-color)}
+button.b{height:40px;padding:0 24px;border-radius:20px;font:500 14px/20px var(--ha-font);letter-spacing:.0178em}
+button.b.sm{height:32px;padding:0 14px;font-size:13px;border-radius:16px}
+button.b.alt{background:transparent;box-shadow:inset 0 0 0 1px var(--outline-color);border:0}
+input[type=text],input[type=number],input[type=search],input[type=time],select,textarea{border:0;border-bottom:1px solid var(--input-idle-line-color);border-radius:4px 4px 0 0;background:var(--input-fill-color);padding:12px 16px;font:400 16px/24px var(--ha-font);min-height:48px}
+input:focus,select:focus,textarea:focus{border-bottom:2px solid var(--primary-color);padding-bottom:11px}
+label.f{font-weight:500;color:var(--input-label-ink-color)}
+input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;width:52px;height:32px;border-radius:16px;border:2px solid var(--outline-color);background:var(--secondary-background-color);position:relative;cursor:pointer;transition:.18s;margin:0}
+input[type=checkbox]::after{content:"";position:absolute;top:50%;left:6px;width:16px;height:16px;border-radius:50%;background:var(--secondary-text-color);transform:translateY(-50%);transition:.18s}
+input[type=checkbox]:checked{background:var(--primary-color);border-color:var(--primary-color)}
+input[type=checkbox]:checked::after{left:24px;width:24px;height:24px;background:#fff;transform:translateY(-50%) translateX(-4px)}
+label.chk{gap:12px}
+.chip{border-radius:16px;border:1px solid var(--outline-color);font:500 14px/20px var(--ha-font);padding:6px 14px}
+.chip.on{background:rgba(var(--rgb-primary-color),.15);border-color:var(--primary-color);color:var(--primary-color)}
+.tile{border-radius:12px;border:1px solid var(--divider-color);background:var(--card-background-color)}
+.tile:hover{border-color:var(--primary-color)}
+.tile b{font-weight:500}
+.badge{border-radius:8px}
+#toast{background:#323232;color:#fff;border-radius:8px;box-shadow:0 3px 8px var(--shadow-color)}
 </style>
 </head>
 <body>

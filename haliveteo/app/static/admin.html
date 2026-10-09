@@ -6,21 +6,22 @@
 <title>HALiveTeo</title>
 <link rel="stylesheet" href="static/common.css">
 <style>
-main{max-width:1000px;margin:0 auto;padding:14px 14px 30px}
-header{display:flex;align-items:center;gap:10px;margin:2px 0 12px}
-header .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#26a69a,#00695c);display:grid;place-items:center;font-size:20px;box-shadow:var(--sh)}
-header h1{font-size:19px;margin:0;line-height:1.1}header small{color:var(--mut)}
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--bd);margin-bottom:14px}
-.tabs button{background:none;border:0;border-bottom:3px solid transparent;color:var(--mut);padding:9px 14px;cursor:pointer;font:inherit;font-weight:600}
-.tabs button.on{color:var(--acc);border-bottom-color:var(--acc)}
+main{max-width:1000px;margin:0 auto;padding:16px 16px 30px}
+.bar .ibtn svg{width:24px;height:24px;fill:var(--primary-color)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--divider-color);margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--secondary-text-color);padding:12px 16px;cursor:pointer;font:500 14px/20px var(--ha-font);letter-spacing:.0892857143em;text-transform:uppercase;white-space:nowrap}
+.tabs button.on{color:var(--primary-color);border-bottom-color:var(--primary-color)}
+.shape{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none}.shape svg{width:24px;height:24px;fill:currentColor}
+.ipick{margin-top:6px}.ipick .grid8{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:4px;max-height:150px;overflow:auto;margin-top:6px}
+.ipick button{background:var(--input-fill-color);border:0;border-radius:8px;height:40px;cursor:pointer;color:var(--primary-text-color);display:grid;place-items:center}.ipick button svg{width:22px;height:22px;fill:currentColor}.ipick button:hover{background:rgba(var(--rgb-primary-color),.15)}
 .view{display:none}.view.on{display:block}
-.sec{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:0 0 10px;display:flex;align-items:center;gap:8px;font-weight:700}
+.sec{font-size:14px;line-height:20px;color:var(--secondary-text-color);margin:0 0 12px;display:flex;align-items:center;gap:8px;font-weight:500;letter-spacing:.0071em}
 .sec .sp{flex:1}
 label.f{display:block;margin:10px 0 4px;color:var(--mut);font-size:13px}
 label.chk{display:flex;gap:8px;align-items:center;margin:9px 0;font-size:14px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:10px}.row>.grow{flex:1;min-width:110px}
 .dev{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--bd)}.dev:first-child{border:0}
-.dev .ic{font-size:28px}.dev .n{flex:1;min-width:150px}
+.dev .n{flex:1;min-width:150px}
 .badge{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--bg);border:1px solid var(--bd);color:var(--mut)}
 .tl{display:flex;gap:6px;align-items:center;padding:8px 0;border-top:1px solid var(--bd);flex-wrap:wrap}.tl:first-child{border:0}
 .tl .n{flex:1;min-width:130px}.tl .n b{font-size:14px}
@@ -40,7 +41,9 @@ footer{text-align:center;color:var(--mut);font-size:13px;margin:18px 0 6px}foote
 </head>
 <body>
 <main>
-<header><div class="logo">⚡</div><div><h1>HALiveTeo</h1><small id="tag"></small></div></header>
+</main>
+<div class="bar"><span class="ibtn" id="barIcon"></span><h1>HALiveTeo</h1><small class="hint" id="tag" style="margin-right:12px"></small></div>
+<main>
 <div class="tabs" id="tabs"></div>
 
 <div class="view" id="v-devices">
@@ -72,7 +75,6 @@ footer{text-align:center;color:var(--mut);font-size:13px;margin:18px 0 6px}foote
       <div class="card">
         <div class="sec"><span id="tTiles"></span><span class="sp"></span>
           <button class="b alt sm" id="addAuto"></button><button class="b alt sm" id="addJson">JSON</button><button class="b sm" id="addTile"></button></div>
-        <div id="tileForm" hidden></div>
         <div id="auto" hidden></div>
         <div id="jsonBox" hidden><textarea id="jsonTa" style="min-height:240px;font-family:monospace;font-size:12px"></textarea>
           <div class="row"><button class="b sm" id="jsonApply"></button></div></div>
@@ -83,6 +85,11 @@ footer{text-align:center;color:var(--mut);font-size:13px;margin:18px 0 6px}foote
   </div>
 </div>
 
+<div class="view" id="v-live">
+  <div class="card"><div class="sec"><span id="tLive"></span><span class="sp"></span><button class="b sm" id="actNew"></button></div>
+    <div class="hint" id="liveInfo" style="margin-bottom:12px"></div><div id="actList"></div></div>
+</div>
+
 <div class="view" id="v-feed">
   <div class="card"><div class="sec"><span id="tFeed"></span><span class="sp"></span><button class="b alt sm" id="feedClear"></button></div><div id="feedList"></div></div>
 </div>
@@ -91,9 +98,12 @@ footer{text-align:center;color:var(--mut);font-size:13px;margin:18px 0 6px}foote
 
 <footer><span id="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
 </main>
+<dialog class="hd" id="tileDlg"><div class="hd-card" id="tileForm"></div></dialog>
+<dialog class="hd" id="actDlg"><div class="hd-card" id="actForm"></div></dialog>
 <datalist id="dlEnt"></datalist><datalist id="dlSvc"></datalist>
 <div id="toast"></div>
 <script src="static/common.js"></script>
+<script src="static/icons.js"></script>
 <script>
 const tr = HL.tr, esc = HL.esc, $ = id => document.getElementById(id);
 let toastT; const toast = (m,bad)=>{const e=$("toast");e.textContent=m;e.style.background=bad?"var(--err)":"";e.style.color=bad?"#fff":"";e.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),3200)};
@@ -104,7 +114,7 @@ async function api(p, o = {}){
   return j;
 }
 const post = (p, b) => api(p, {method:"POST", body:JSON.stringify(b)});
-const ICONS = ["📱","📟","🖥️","💻","⌚","🏠","🛋️","🛏️","🍳","🚪","🚗","🎮","🔔","🎛️","📺","💡"];
+const ICONS = ["cellphone","tablet","monitor","television","laptop","home","sofa","bed","silverware-fork-knife","door","car","gamepad-variant","bell","tune","speaker","lightbulb"];
 const TILE_ICONS = ["💡","🔆","🔌","🌡️","🎵","🔊","🔒","🚪","🪟","🌀","▶️","⏹️","⏭️","🏠","🌙","☀️","🔥","❄️","🔔","🚨","📺","🎬","🎮","🧹","☕","🛏️"];
 
 // ---------- state
@@ -122,17 +132,18 @@ $("eOnT").textContent = tr("Urządzenie włączone","Device enabled");
 $("tTiles").textContent = tr("Kafelki","Tiles"); $("addTile").textContent = tr("+ Kafelek","+ Tile"); $("addAuto").textContent = tr("Auto z encji","Auto from entities");
 $("jsonApply").textContent = tr("Zastosuj JSON","Apply JSON"); $("tPrev").textContent = tr("Podgląd na żywo","Live preview");
 $("tFeed").textContent = tr("Akcje na żywo","Live actions"); $("feedClear").textContent = tr("Wyczyść","Clear");
-[$("nIcon"), $("eIconIn")].forEach(s => s.innerHTML = ICONS.map(i => `<option>${i}</option>`).join(""));
+[$("nIcon"), $("eIconIn")].forEach(s => s.innerHTML = ICONS.map(i => `<option value="mdi:${i}">${i}</option>`).join(""));
+$("barIcon").innerHTML = HL.icon("mdi:lightning-bolt-circle");
 $("eColsIn").innerHTML = [1,2,3,4,5,6].map(i => `<option>${i}</option>`).join("");
 
 // ---------- tabs
-[["devices",tr("Urządzenia","Devices")],["feed","📡 " + tr("Na żywo","Live")],["help",tr("Pomoc","Help")]].forEach(([id,l]) => {
+[["devices",tr("Urządzenia","Devices")],["live","🏝️ Live Activities"],["feed",tr("Na żywo","Live")],["help",tr("Pomoc","Help")]].forEach(([id,l]) => {
   const b = document.createElement("button"); b.textContent = l; b.dataset.id = id; b.onclick = () => show(id); $("tabs").append(b);
 });
 function show(id){
   document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.id === id));
   document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + id));
-  if(id === "feed") renderFeed(); if(id === "help") renderHelp();
+  if(id === "feed") renderFeed(); if(id === "help") renderHelp(); if(id === "live") renderActs();
 }
 function showEdit(){ document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-edit")); document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("on")); }
 
@@ -174,7 +185,7 @@ function renderDevices(){
   box.innerHTML = B.devices.length ? "" : `<div class="hint">${tr("Brak urządzeń. Utwórz pierwsze.","No devices yet. Create the first one.")}</div>`;
   B.devices.forEach(d => {
     const el = document.createElement("div"); el.className = "dev";
-    el.innerHTML = `<div class="ic">${esc(d.icon)}</div><div class="n"><span class="dot ${d.online ? "on" : ""}"></span> <b></b>
+    el.innerHTML = `<div class="shape" style="background:color-mix(in srgb,var(--primary-color) 20%,transparent);color:var(--primary-color)">${HL.icon(d.icon)}</div><div class="n"><span class="dot ${d.online ? "on" : ""}"></span> <b></b>
       <div class="hint">${d.layout.tiles.length} ${tr("kafelków","tiles")} · ${esc(d.prefix)}… · ${d.last_seen ? tr("ostatnio","last seen") + " " + new Date(d.last_seen*1000).toLocaleString() : tr("jeszcze nie połączone","never connected")}
       ${d.enabled ? "" : ` · <span class="badge">${tr("wyłączone","disabled")}</span>`}</div></div>
       <button class="b sm ed">${tr("Edytuj","Edit")}</button><button class="b alt sm tk">${tr("Nowy token / link","New token / link")}</button>
@@ -197,12 +208,13 @@ $("nCreate").onclick = async () => {
 };
 
 // ---------- editor
+const closeTile = () => { const d = $("tileDlg"); if(d.open) d.close(); };
 function setDirty(v = true){ dirty = v; $("dirty").hidden = !v; $("dirty").textContent = tr("niezapisane zmiany","unsaved changes"); }
 function edit(id){
   cur = B.devices.find(d => d.id === id); W = JSON.parse(JSON.stringify(cur.layout));
-  $("eNameIn").value = cur.name; $("eIconIn").value = cur.icon; $("eColsIn").value = W.cols;
+  $("eNameIn").value = cur.name; if(![...$("eIconIn").options].some(o => o.value === cur.icon)) $("eIconIn").add(new Option(cur.icon, cur.icon)); $("eIconIn").value = cur.icon; $("eColsIn").value = W.cols;
   $("eFeed").checked = cur.show_feed; $("eOn").checked = cur.enabled;
-  ["tileForm","auto","jsonBox"].forEach(x => $(x).hidden = true);
+  ["auto","jsonBox"].forEach(x => $(x).hidden = true); closeTile();
   setDirty(false); renderTiles(); showEdit(); watchPrev();
 }
 $("back").onclick = () => { if(dirty && !confirm(tr("Porzucić niezapisane zmiany?","Discard unsaved changes?"))) return; cur = null; show("devices"); };
@@ -219,14 +231,14 @@ $("save").onclick = async () => {
 };
 const typeName = t => ({button:tr("przycisk","button"),toggle:tr("przełącznik","toggle"),slider:tr("suwak","slider"),state:tr("stan","state")}[t]);
 function tileSummary(t){
-  if(t.type === "button"){ const a = t.action; return a.kind === "service" ? a.service + (a.entity_id ? " → " + a.entity_id : "") : a.kind === "event" ? "event " + a.event_type : a.kind + " " + a.entity_id; }
+  if(t.type === "button"){ const a = t.action; return a.kind === "service" ? a.service + (a.entity_id ? " → " + a.entity_id : "") : a.kind === "event" ? "event " + a.event_type : a.kind === "live" ? "Live Activity: " + ((B.activities.find(x => x.id === a.activity) || {}).name || a.activity) : a.kind + " " + a.entity_id; }
   return t.entity_id + (t.type === "slider" ? " · " + t.mode : "") + (t.attribute ? " · " + t.attribute : "");
 }
 function renderTiles(){
   const box = $("tileList"); box.innerHTML = W.tiles.length ? "" : `<div class="hint">${tr("Brak kafelków. Dodaj ręcznie albo „Auto z encji”.","No tiles yet. Add one or use “Auto from entities”.")}</div>`;
   W.tiles.forEach((t, i) => {
     const el = document.createElement("div"); el.className = "tl";
-    el.innerHTML = `<span style="font-size:20px">${esc(t.icon || "•")}</span><div class="n"><b></b><div class="hint"></div></div>
+    el.innerHTML = `<span class="shape" style="color:var(--primary-color)">${HL.icon(HL.tileIcon(t))}</span><div class="n"><b></b><div class="hint"></div></div>
       <button class="b alt sm" data-a="up">↑</button><button class="b alt sm" data-a="dn">↓</button><button class="b alt sm" data-a="ed">✎</button>
       <button class="b alt sm" data-a="cp">⧉</button>${t.type === "slider" || t.type === "state" ? "" : `<button class="b alt sm" data-a="ts">▶</button>`}<button class="b red sm" data-a="rm">🗑</button>`;
     el.querySelector("b").textContent = t.label || t.entity_id || "—"; el.querySelector(".hint").textContent = typeName(t.type) + " · " + tileSummary(t) + (t.width === 2 ? " · 2×" : "");
@@ -249,33 +261,46 @@ function renderTiles(){
   refreshPrev();
 }
 
-// ---------- tile form
+// ---------- icon picker (Material Design Icons, same set as Home Assistant)
+function iconPicker(host, input, onPick){
+  host.className = "ipick";
+  host.innerHTML = `<input type="text" placeholder="${tr("Szukaj ikony…","Search icons…")}"><div class="grid8"></div>`;
+  const q = host.querySelector("input"), g = host.querySelector(".grid8");
+  const draw = () => { const f = q.value.trim().toLowerCase(); g.innerHTML = "";
+    Object.keys(HL.MDI).filter(n => !f || n.includes(f)).slice(0, 120).forEach(n => { const b = document.createElement("button"); b.type = "button"; b.title = n; b.innerHTML = HL.icon(n);
+      b.onclick = () => { input.value = "mdi:" + n; onPick && onPick("mdi:" + n); }; g.append(b); }); };
+  q.oninput = draw; draw();
+}
+
+// ---------- tile form (dialog)
 function tileForm(tile, idx){
-  const T = tile ? JSON.parse(JSON.stringify(tile)) : {type:"button", label:"", icon:"", color:"", width:1, confirm:false, entity_id:"", action:{kind:"service", service:"", entity_id:"", data:{}, event_type:""}, mode:"light", min:0, max:100, step:1, attribute:"", unit:""};
-  if(!T.action) T.action = {kind:"service", service:"", entity_id:"", data:{}, event_type:""};
-  const box = $("tileForm"); box.hidden = false; $("auto").hidden = true; $("jsonBox").hidden = true;
+  const T = tile ? JSON.parse(JSON.stringify(tile)) : {type:"button", label:"", icon:"", color:"", width:1, confirm:false, entity_id:"", action:{kind:"service", service:"", entity_id:"", data:{}, event_type:"", activity:""}, mode:"light", min:0, max:100, step:1, attribute:"", unit:""};
+  if(!T.action) T.action = {kind:"service", service:"", entity_id:"", data:{}, event_type:"", activity:""};
+  const box = $("tileForm"); if(!$("tileDlg").open) $("tileDlg").showModal(); $("auto").hidden = true; $("jsonBox").hidden = true;
   const draw = () => {
-    box.innerHTML = `<div class="card" style="border-color:var(--acc)">
+    box.innerHTML = `<h2>${tile ? tr("Edytuj kafelek","Edit tile") : tr("Nowy kafelek","New tile")}</h2>
       <div class="row"><div class="grow"><label class="f">${tr("Typ","Type")}</label><select id="fType">${["button","toggle","slider","state"].map(x => `<option value="${x}" ${T.type===x?"selected":""}>${typeName(x)}</option>`).join("")}</select></div>
       <div class="grow"><label class="f">${tr("Nazwa","Label")}</label><input type="text" id="fLabel" value="${esc(T.label)}"></div></div>
-      <label class="f">${tr("Ikona (emoji)","Icon (emoji)")}</label><input type="text" id="fIcon" value="${esc(T.icon)}" style="max-width:120px">
-      <div class="icons">${TILE_ICONS.map(i => `<button type="button" data-i="${i}">${i}</button>`).join("")}</div>
-      <div class="row"><div><label class="f">${tr("Kolor","Color")}</label><input type="color" id="fColor" value="${T.color || "#009688"}"> <label class="chk" style="display:inline-flex"><input type="checkbox" id="fNoColor" ${T.color?"":"checked"}> ${tr("domyślny","default")}</label></div>
+      <label class="f">${tr("Ikona (puste = automatyczna)","Icon (empty = automatic)")}</label>
+      <div class="row" style="margin-top:0"><div class="shape" id="fIconPrev" style="background:color-mix(in srgb,var(--primary-color) 20%,transparent);color:var(--primary-color)"></div><input type="text" id="fIcon" value="${esc(T.icon)}" placeholder="mdi:lightbulb" class="grow"></div>
+      <div id="fPick"></div>
+      <div class="row"><div><label class="f">${tr("Kolor","Color")}</label><input type="color" id="fColor" value="${T.color || "#009ac7"}"> <label class="chk" style="display:inline-flex;margin-left:8px"><input type="checkbox" id="fNoColor" ${T.color?"":"checked"}> ${tr("domyślny","default")}</label></div>
       <div><label class="f">${tr("Szerokość","Width")}</label><select id="fWidth"><option value="1" ${T.width!==2?"selected":""}>1</option><option value="2" ${T.width===2?"selected":""}>2</option></select></div></div>
       <label class="chk"><input type="checkbox" id="fConfirm" ${T.confirm?"checked":""}> ${tr("Pytaj o potwierdzenie przed wykonaniem","Ask for confirmation before running")}</label>
       <div id="fType2"></div>
-      <div class="row"><button class="b" id="fOk">${tr("OK","OK")}</button><button class="b alt" id="fCancel">${tr("Anuluj","Cancel")}</button></div></div>`;
+      <div class="row" style="justify-content:flex-end"><button class="b alt" id="fCancel">${tr("Anuluj","Cancel")}</button><button class="b" id="fOk">${tr("Zapisz","Save")}</button></div>`;
     const ent = (id, val, ph) => `<input type="text" id="${id}" list="dlEnt" value="${esc(val)}" placeholder="${ph||"light.salon"}">`;
     const sp = $("fType2");
     if(T.type === "button"){
       const a = T.action;
-      sp.innerHTML = `<label class="f">${tr("Co robi","What it does")}</label><select id="aKind">${[["service",tr("wywołaj usługę","call a service")],["script","script"],["scene","scene"],["event",tr("wyślij zdarzenie","fire an event")]].map(([v,l]) => `<option value="${v}" ${a.kind===v?"selected":""}>${l}</option>`).join("")}</select>
+      sp.innerHTML = `<label class="f">${tr("Co robi","What it does")}</label><select id="aKind">${[["service",tr("wywołaj usługę","call a service")],["script","script"],["scene","scene"],["event",tr("wyślij zdarzenie","fire an event")],["live","Live Activity (Dynamic Island)"]].map(([v,l]) => `<option value="${v}" ${a.kind===v?"selected":""}>${l}</option>`).join("")}</select>
         <div id="aBody"></div>`;
       const body = () => { const k = $("aKind").value; a.kind = k;
         $("aBody").innerHTML = k === "service" ? `<label class="f">${tr("Usługa","Service")}</label><input type="text" id="aSvc" list="dlSvc" value="${esc(a.service)}" placeholder="light.turn_on">
             <label class="f">${tr("Encja (opcjonalnie)","Entity (optional)")}</label>${ent("aEnt", a.entity_id)}
             <label class="f">${tr("Dane (JSON, opcjonalnie)","Data (JSON, optional)")}</label><textarea id="aData" style="min-height:60px;font-family:monospace">${esc(JSON.stringify(a.data || {}))}</textarea>`
           : k === "event" ? `<label class="f">${tr("Nazwa zdarzenia","Event type")}</label><input type="text" id="aEvt" value="${esc(a.event_type)}" placeholder="my_event">`
+          : k === "live" ? `<label class="f">Live Activity</label><select id="aAct"><option value="">—</option>${B.activities.map(x => `<option value="${esc(x.id)}" ${a.activity===x.id?"selected":""}>${esc(x.name)}</option>`).join("")}</select><div class="hint">${tr("Dotknięcie włącza lub kończy tę aktywność na telefonie.","Tapping starts or ends this activity on the phone.")}</div>`
           : `<label class="f">${k}</label>${ent("aEnt", a.entity_id, k + ".nazwa")}`; };
       $("aKind").onchange = body; body();
     } else if(T.type === "toggle"){ sp.innerHTML = `<label class="f">${tr("Encja","Entity")}</label>${ent("tEnt", T.entity_id)}`; }
@@ -286,10 +311,11 @@ function tileForm(tile, idx){
     } else { sp.innerHTML = `<label class="f">${tr("Encja","Entity")}</label>${ent("tEnt", T.entity_id, "sensor.temperatura")}
         <div class="row"><div class="grow"><label class="f">${tr("Atrybut (opcjonalnie)","Attribute (optional)")}</label><input type="text" id="sAttr" value="${esc(T.attribute)}"></div>
         <div class="grow"><label class="f">${tr("Jednostka","Unit")}</label><input type="text" id="sUnit" value="${esc(T.unit)}"></div></div>`; }
+    const prev = () => { $("fIconPrev").innerHTML = HL.icon(HL.tileIcon({...T, icon:$("fIcon").value.trim(), type:$("fType").value, entity_id:($("tEnt")||{}).value || "", action:T.action})); };
+    $("fIcon").oninput = prev; iconPicker($("fPick"), $("fIcon"), prev); prev();
     $("fType").onchange = () => { collect(); T.type = $("fType").value; draw(); };
-    box.querySelectorAll(".icons button").forEach(b => b.onclick = () => { $("fIcon").value = b.dataset.i; });
-    $("fCancel").onclick = () => { box.hidden = true; };
-    $("fOk").onclick = () => { collect(); if(!valid()) return; if(idx == null) W.tiles.push(T); else W.tiles[idx] = T; box.hidden = true; setDirty(); renderTiles(); };
+    $("fCancel").onclick = closeTile;
+    $("fOk").onclick = () => { collect(); if(!valid()) return; if(idx == null) W.tiles.push(T); else W.tiles[idx] = T; closeTile(); setDirty(); renderTiles(); };
   };
   const collect = () => {
     T.label = $("fLabel").value.trim(); T.icon = $("fIcon").value.trim(); T.color = $("fNoColor").checked ? "" : $("fColor").value;
@@ -297,7 +323,9 @@ function tileForm(tile, idx){
     if(T.type === "button"){ const a = T.action;
       if(a.kind === "service"){ a.service = $("aSvc").value.trim(); a.entity_id = $("aEnt").value.trim();
         try{ a.data = JSON.parse($("aData").value || "{}"); }catch{ a.data = {}; T._badjson = true; } }
-      else if(a.kind === "event") a.event_type = $("aEvt").value.trim(); else a.entity_id = $("aEnt").value.trim(); }
+      else if(a.kind === "event") a.event_type = $("aEvt").value.trim();
+      else if(a.kind === "live") a.activity = $("aAct").value;
+      else a.entity_id = $("aEnt").value.trim(); }
     else { T.entity_id = $("tEnt").value.trim();
       if(T.type === "slider"){ T.mode = $("sMode").value; T.min = +$("sMin").value; T.max = +$("sMax").value; T.step = +$("sStep").value || 1; }
       if(T.type === "state"){ T.attribute = $("sAttr").value.trim(); T.unit = $("sUnit").value.trim(); } }
@@ -307,18 +335,19 @@ function tileForm(tile, idx){
     if(T.type === "button"){ const a = T.action;
       if(a.kind === "service" && !/^[a-z0-9_]+\.[a-z0-9_]+$/.test(a.service)){ toast(tr("Podaj usługę, np. light.turn_on","Enter a service, e.g. light.turn_on"), true); return false; }
       if((a.kind === "script" || a.kind === "scene") && !a.entity_id.startsWith(a.kind + ".")){ toast(tr(`Podaj encję ${a.kind}.…`, `Enter a ${a.kind}.… entity`), true); return false; }
-      if(a.kind === "event" && !a.event_type){ toast(tr("Podaj nazwę zdarzenia","Enter an event name"), true); return false; } }
+      if(a.kind === "event" && !a.event_type){ toast(tr("Podaj nazwę zdarzenia","Enter an event name"), true); return false; }
+      if(a.kind === "live" && !a.activity){ toast(tr("Wybierz Live Activity","Pick a Live Activity"), true); return false; } }
     else if(!/^[a-z0-9_]+\.[a-z0-9_]+$/.test(T.entity_id)){ toast(tr("Podaj encję, np. light.salon","Enter an entity, e.g. light.salon"), true); return false; }
     return true;
   };
-  draw(); box.scrollIntoView({behavior:"smooth"});
+  draw();
 }
 $("addTile").onclick = () => tileForm(null, null);
 
 // ---------- auto-generate from entities
 const AUTO = {light:"toggle",switch:"toggle",input_boolean:"toggle",fan:"toggle",cover:"toggle",lock:"toggle",scene:"scene",script:"script",media_player:"volume",sensor:"state",binary_sensor:"state",input_number:"number",number:"number"};
 $("addAuto").onclick = () => {
-  const box = $("auto"); box.hidden = !box.hidden; $("tileForm").hidden = true; $("jsonBox").hidden = true; if(box.hidden) return;
+  const box = $("auto"); box.hidden = !box.hidden; closeTile(); $("jsonBox").hidden = true; if(box.hidden) return;
   const doms = Object.keys(AUTO), on = new Set(["light","scene","script"]);
   box.innerHTML = `<div class="card" style="border-color:var(--acc)"><div class="chips" id="aDoms">${doms.map(d => `<label><input type="checkbox" value="${d}" ${on.has(d)?"checked":""}> ${d}</label>`).join("")}</div>
     <input type="text" id="aFilter" placeholder="${tr("Filtr (nazwa lub id)…","Filter (name or id)…")}" style="margin-top:10px"><div id="aList" style="max-height:260px;overflow:auto;margin-top:8px"></div>
@@ -342,7 +371,7 @@ $("addAuto").onclick = () => {
 };
 
 // ---------- JSON editor
-$("addJson").onclick = () => { const b = $("jsonBox"); b.hidden = !b.hidden; $("tileForm").hidden = true; $("auto").hidden = true; if(!b.hidden) $("jsonTa").value = JSON.stringify(W, null, 1); };
+$("addJson").onclick = () => { const b = $("jsonBox"); b.hidden = !b.hidden; closeTile(); $("auto").hidden = true; if(!b.hidden) $("jsonTa").value = JSON.stringify(W, null, 1); };
 $("jsonApply").onclick = () => { try{ const j = JSON.parse($("jsonTa").value); if(!j || !Array.isArray(j.tiles)) throw new Error("tiles[]"); W = {cols:j.cols || W.cols, tiles:j.tiles}; $("eColsIn").value = W.cols; setDirty(); renderTiles(); $("jsonBox").hidden = true; }catch(e){ toast("JSON: " + e.message, true); } };
 
 // ---------- live preview
@@ -355,6 +384,87 @@ function refreshPrev(){
   if(!W) return;
   prevEls = HL.renderGrid($("prev"), {cols:W.cols, tiles:W.tiles.map((t,i) => ({...t, id:t.id || "n"+i}))}, liveStates, {press(){}, slide(){}});
   watchPrev();
+}
+
+// ---------- Live Activities (Dynamic Island / Lock Screen via the Companion app)
+$("tLive").textContent = "🏝️ Live Activities"; $("actNew").textContent = tr("+ Nowa aktywność","+ New activity");
+$("liveInfo").innerHTML = tr(
+  "Pokazuje stan encji na <b>Dynamic Island</b> i ekranie blokady iPhone'a (Android: Live Updates) przez aplikację Home Assistant Companion. Wymaga: iOS 17.2+, Home Assistant Core 2026.7+ i aplikacji Companion z włączonymi Live Activities (Ustawienia → Live Activities). iPad nie obsługuje Live Activities. iOS kończy aktywność po ok. 8 h (HALiveTeo uruchamia ją wtedy od nowa).",
+  "Shows an entity's state on the iPhone <b>Dynamic Island</b> and Lock Screen (Android: Live Updates) through the Home Assistant Companion app. Requires iOS 17.2+, Home Assistant Core 2026.7+ and the Companion app with Live Activities enabled (Settings → Live Activities). iPad does not support Live Activities. iOS ends an activity after about 8 h (HALiveTeo restarts it then).");
+const PRESETS = [
+  ["status", tr("Status urządzenia","Device status"), e => ({start_states:"", end_states:"off,idle,standby,finished,done", message:`{{ states('${e}') }}`, icon:"mdi:washing-machine", progress_mode:"none", chrono_attr:"", min_interval:30})],
+  ["progress", tr("Pasek postępu (%)","Progress bar (%)"), e => ({start_states:"", end_states:"", message:`{{ states('${e}') }}%`, icon:"mdi:ev-station", color:"#4CAF50", progress_mode:"range", progress_min:0, progress_max:100, min_interval:60})],
+  ["timer", tr("Odliczanie (timer.*)","Countdown (timer.*)"), e => ({start_states:"active", end_states:"idle,paused", message:tr("Odliczanie","Countdown"), icon:"mdi:timer-outline", progress_mode:"none", chrono_attr:"finishes_at", relevance:0.9, min_interval:30})],
+  ["media", tr("Odtwarzacz (tytuł)","Media player (title)"), e => ({start_states:"playing", end_states:"idle,off,paused,standby", message:`{{ state_attr('${e}','media_title') }} – {{ state_attr('${e}','media_artist') }}`, icon:"mdi:music", color:"#03A9F4", progress_mode:"none", min_interval:20})]
+];
+function renderActs(){
+  const box = $("actList"); box.innerHTML = B.activities.length ? "" : `<div class="hint">${tr("Brak aktywności. Utwórz pierwszą – np. status pralki lub odliczanie timera.","No activities yet. Create one – e.g. washer status or a timer countdown.")}</div>`;
+  B.activities.forEach(a => {
+    const el = document.createElement("div"); el.className = "dev";
+    el.innerHTML = `<div class="shape" style="background:color-mix(in srgb,${esc(a.color)} 20%,transparent);color:${esc(a.color)}">${HL.icon(a.icon)}</div>
+      <div class="n"><span class="dot ${a.running ? "on" : ""}"></span> <b></b><div class="hint"></div></div>
+      <button class="b sm st">${tr("Start","Start")}</button><button class="b alt sm en">${tr("Zakończ","End")}</button><button class="b alt sm ed">${tr("Edytuj","Edit")}</button><button class="b red sm dl">${tr("Usuń","Delete")}</button>`;
+    el.querySelector("b").textContent = a.name + (a.enabled ? "" : " (" + tr("wyłączona","disabled") + ")");
+    el.querySelector(".hint").textContent = a.entity_id + " → " + (a.phones.join(", ") || tr("brak telefonu","no phone"));
+    el.querySelector(".st").onclick = async () => { try{ await post(`activities/${a.id}/start`, {}); toast(tr("Wysłano start do telefonu","Start sent to the phone")); await load(); renderActs(); }catch(e){ toast(e.message,true); } };
+    el.querySelector(".en").onclick = async () => { try{ await post(`activities/${a.id}/end`, {}); await load(); renderActs(); }catch(e){ toast(e.message,true); } };
+    el.querySelector(".ed").onclick = () => actForm(a);
+    el.querySelector(".dl").onclick = async () => { if(!confirm(tr("Usunąć tę aktywność?","Delete this activity?"))) return; try{ await api("activities/" + a.id, {method:"DELETE"}); await load(); renderActs(); }catch(e){ toast(e.message,true); } };
+    box.append(el);
+  });
+}
+$("actNew").onclick = () => actForm(null);
+function actForm(act){
+  const A = act ? JSON.parse(JSON.stringify(act)) : {id:"", name:"", enabled:true, phones:B.notify.slice(0,1), tag:"", title:"", message:"", entity_id:"", start_states:[], end_states:[], progress_mode:"none", progress_attr:"", progress_min:0, progress_max:100, chrono_attr:"", chrono_state:false, critical_text:"", icon:"mdi:home-assistant", color:"#03A9F4", background_color:"", text_color:"", url:"", relevance:null, min_interval:30};
+  const csv = v => Array.isArray(v) ? v.join(",") : (v || "");
+  const box = $("actForm"); $("actDlg").showModal();
+  box.innerHTML = `<h2>${act ? tr("Edytuj Live Activity","Edit Live Activity") : tr("Nowa Live Activity","New Live Activity")}</h2>
+    <label class="f">${tr("Nazwa","Name")}</label><input type="text" id="aName" value="${esc(A.name)}">
+    <label class="f">${tr("Telefony (aplikacja Companion)","Phones (Companion app)")}</label>
+    <div class="chips" id="aPhones" style="display:flex;flex-wrap:wrap;gap:6px">${[...new Set([...B.notify, ...A.phones])].map(n => `<label><input type="checkbox" value="${esc(n)}" ${A.phones.includes(n) ? "checked" : ""}> ${esc(n)}</label>`).join("") || `<span class="hint">${tr("Nie znaleziono telefonu (notify.mobile_app_*). Zainstaluj aplikację Home Assistant na telefonie.","No phone found (notify.mobile_app_*). Install the Home Assistant app on the phone.")}</span>`}</div>
+    <label class="f">${tr("Encja, która steruje aktywnością","Entity that drives the activity")}</label><input type="text" id="aEnt" list="dlEnt" value="${esc(A.entity_id)}" placeholder="sensor.pralka">
+    <label class="f">${tr("Szablon (wypełnia pola)","Preset (fills the fields)")}</label>
+    <div class="row" style="margin-top:0">${PRESETS.map(([id, l]) => `<button type="button" class="b alt sm" data-p="${id}">${esc(l)}</button>`).join("")}</div>
+    <div class="row"><div class="grow"><label class="f">${tr("Start gdy stan ∈ (po przecinku; puste = każdy poza końcowymi)","Start when state ∈ (comma list; empty = any except end states)")}</label><input type="text" id="aStart" value="${esc(csv(A.start_states))}"></div>
+    <div class="grow"><label class="f">${tr("Koniec gdy stan ∈ (po przecinku)","End when state ∈ (comma list)")}</label><input type="text" id="aEnd" value="${esc(csv(A.end_states))}"></div></div>
+    <label class="f">${tr("Tytuł (stały, ustawiany przy starcie)","Title (fixed, set at start)")}</label><input type="text" id="aTitle" value="${esc(A.title)}">
+    <label class="f">${tr("Treść (zwykły tekst lub szablon HA)","Message (plain text or HA template)")}</label><textarea id="aMsg" style="min-height:64px">${esc(A.message)}</textarea>
+    <label class="f">${tr("Tekst na wyspie (compact) – opcjonalnie","Dynamic Island compact text – optional")}</label><input type="text" id="aCrit" value="${esc(A.critical_text)}" placeholder="{{ states('sensor.x') }}%">
+    <div class="row"><div class="grow"><label class="f">${tr("Pasek postępu","Progress bar")}</label><select id="aPm"><option value="none" ${A.progress_mode==="none"?"selected":""}>${tr("brak","none")}</option><option value="range" ${A.progress_mode==="range"?"selected":""}>${tr("z wartości encji (min–max)","from entity value (min–max)")}</option></select></div>
+    <div class="grow"><label class="f">${tr("Atrybut (puste = stan)","Attribute (empty = state)")}</label><input type="text" id="aPa" value="${esc(A.progress_attr)}"></div>
+    <div class="grow"><label class="f">min</label><input type="number" id="aPmin" value="${A.progress_min}"></div><div class="grow"><label class="f">max</label><input type="number" id="aPmax" value="${A.progress_max}"></div></div>
+    <div class="row"><div class="grow"><label class="f">${tr("Odliczanie: atrybut z czasem końca (np. finishes_at)","Countdown: attribute with end time (e.g. finishes_at)")}</label><input type="text" id="aCh" value="${esc(A.chrono_attr)}"></div></div>
+    <label class="chk"><input type="checkbox" id="aChS" ${A.chrono_state?"checked":""}> ${tr("Stan encji jest czasem końca (timestamp)","Entity state is the end time (timestamp)")}</label>
+    <label class="f">${tr("Ikona","Icon")}</label>
+    <div class="row" style="margin-top:0"><div class="shape" id="aIconPrev"></div><input type="text" id="aIcon" value="${esc(A.icon)}" class="grow"><input type="color" id="aColor" value="${esc(A.color)}"></div><div id="aPick"></div>
+    <details style="margin-top:12px"><summary class="hint" style="cursor:pointer">${tr("Zaawansowane","Advanced")}</summary>
+      <div class="row"><div class="grow"><label class="f">tag</label><input type="text" id="aTag" value="${esc(A.tag)}" placeholder="${tr("auto","auto")}"></div>
+      <div class="grow"><label class="f">${tr("Min. odstęp aktualizacji (s)","Min. update interval (s)")}</label><input type="number" id="aInt" min="5" max="3600" value="${A.min_interval}"></div>
+      <div class="grow"><label class="f">relevance_score 0–1</label><input type="number" id="aRel" step="0.1" min="0" max="1" value="${A.relevance ?? ""}"></div></div>
+      <div class="row"><div class="grow"><label class="f">background_color</label><input type="text" id="aBg" value="${esc(A.background_color)}" placeholder="#101820"></div>
+      <div class="grow"><label class="f">text_color</label><input type="text" id="aTx" value="${esc(A.text_color)}" placeholder="#FFFFFF"></div></div>
+      <label class="f">${tr("Po dotknięciu otwórz (np. /lovelace/0)","Open on tap (e.g. /lovelace/0)")}</label><input type="text" id="aUrl" value="${esc(A.url)}"></details>
+    <label class="chk"><input type="checkbox" id="aOn" ${A.enabled?"checked":""}> ${tr("Włączona (reaguje na zmiany stanu)","Enabled (reacts to state changes)")}</label>
+    <pre id="aPrev" hidden></pre>
+    <div class="row" style="justify-content:flex-end"><button class="b alt" id="aCancel">${tr("Anuluj","Cancel")}</button><button class="b alt" id="aPreview">${tr("Podgląd ładunku","Preview payload")}</button><button class="b" id="aSave">${tr("Zapisz","Save")}</button></div>`;
+  const val = () => ({id:A.id, name:$("aName").value, enabled:$("aOn").checked, phones:[...document.querySelectorAll("#aPhones input:checked")].map(i => i.value),
+    entity_id:$("aEnt").value.trim(), start_states:$("aStart").value, end_states:$("aEnd").value, title:$("aTitle").value, message:$("aMsg").value, critical_text:$("aCrit").value,
+    progress_mode:$("aPm").value, progress_attr:$("aPa").value, progress_min:+$("aPmin").value, progress_max:+$("aPmax").value, chrono_attr:$("aCh").value.trim(), chrono_state:$("aChS").checked,
+    icon:$("aIcon").value.trim(), color:$("aColor").value, tag:$("aTag").value.trim(), min_interval:+$("aInt").value || 30, relevance:$("aRel").value, background_color:$("aBg").value.trim(), text_color:$("aTx").value.trim(), url:$("aUrl").value.trim()});
+  const prev = () => { $("aIconPrev").innerHTML = HL.icon($("aIcon").value); $("aIconPrev").style.cssText = `background:color-mix(in srgb,${$("aColor").value} 20%,transparent);color:${$("aColor").value}`; };
+  $("aIcon").oninput = prev; $("aColor").oninput = prev; iconPicker($("aPick"), $("aIcon"), prev); prev();
+  box.querySelectorAll("[data-p]").forEach(b => b.onclick = () => {
+    const e = $("aEnt").value.trim(); if(!e) return toast(tr("Najpierw wybierz encję","Pick the entity first"), true);
+    const o = PRESETS.find(x => x[0] === b.dataset.p)[2](e);
+    const set = (id, v) => { if(v !== undefined) $(id).value = v; };
+    set("aStart", o.start_states); set("aEnd", o.end_states); set("aMsg", o.message); set("aIcon", o.icon); if(o.color) set("aColor", o.color);
+    set("aPm", o.progress_mode); if(o.progress_min != null) set("aPmin", o.progress_min); if(o.progress_max != null) set("aPmax", o.progress_max);
+    set("aCh", o.chrono_attr ?? ""); set("aInt", o.min_interval); set("aRel", o.relevance ?? ""); if(!$("aTitle").value) set("aTitle", $("aName").value || e); prev(); });
+  $("aCancel").onclick = () => $("actDlg").close();
+  $("aPreview").onclick = async () => { try{ const r = await post("activities/preview", val()); $("aPrev").hidden = false; $("aPrev").textContent = JSON.stringify(r, null, 1); }catch(e){ toast(e.message,true); } };
+  $("aSave").onclick = async () => {
+    try{ const v = val(); if(!v.phones.length) return toast(tr("Wybierz co najmniej jeden telefon","Pick at least one phone"), true);
+      await post("activities", v); $("actDlg").close(); toast(tr("Zapisano ✓","Saved ✓")); await load(); renderActs(); }catch(e){ toast(e.message,true); } };
 }
 
 // ---------- feed

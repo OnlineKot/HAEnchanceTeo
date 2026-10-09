@@ -12,25 +12,25 @@
 <meta name="theme-color" content="#009688">
 <link rel="stylesheet" href="static/common.css">
 <style>
-main{max-width:900px;margin:0 auto;padding:12px 12px 80px}
-header{display:flex;align-items:center;gap:10px;margin:2px 0 12px}
-header .ic{font-size:26px}header h1{font-size:18px;margin:0;flex:1;line-height:1.1}
-header button{background:none;border:0;font-size:20px;cursor:pointer;color:var(--fg);padding:4px 6px}
-#banner{display:none;background:var(--warn);color:#fff;border-radius:12px;padding:8px 12px;margin-bottom:10px;font-size:14px}
-#drawer{position:fixed;left:0;right:0;bottom:0;max-height:55vh;overflow:auto;background:var(--card);border-top:1px solid var(--bd);box-shadow:0 -8px 24px rgba(0,0,0,.18);padding:12px 14px calc(14px + env(safe-area-inset-bottom));transform:translateY(105%);transition:.25s;z-index:5;border-radius:18px 18px 0 0}
+main{max-width:900px;margin:0 auto;padding:16px 16px 90px}
+#banner{display:none;background:var(--warning-color);color:#000;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:14px}
+#drawer{position:fixed;left:0;right:0;bottom:0;max-height:55vh;overflow:auto;background:var(--card-background-color);border-top:1px solid var(--divider-color);box-shadow:0 -8px 24px var(--shadow-color);padding:16px 16px calc(16px + env(safe-area-inset-bottom));transform:translateY(105%);transition:.25s;z-index:5;border-radius:28px 28px 0 0}
 #drawer.on{transform:none}
-.fe{display:flex;gap:8px;align-items:baseline;padding:5px 0;border-top:1px solid var(--bd);font-size:14px}.fe:first-of-type{border:0}
-.fe small{color:var(--mut)}.fe .bad{color:var(--err)}
-#setup{max-width:380px;margin:18vh auto 0;text-align:center}
-#toast{position:fixed;left:50%;top:14px;transform:translateX(-50%) translateY(-80px);background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:12px;transition:.25s;z-index:9;max-width:90%}
+.fe{display:flex;gap:12px;align-items:center;padding:8px 0;border-top:1px solid var(--divider-color);font-size:14px}.fe:first-of-type{border:0}
+.fe .sh{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--primary-color) 20%,transparent);color:var(--primary-color);flex:none}.fe .sh svg{width:20px;height:20px;fill:currentColor}
+.fe small{color:var(--secondary-text-color)}.fe .bad{color:var(--error-color)}
+#setup{max-width:380px;margin:16vh auto 0;text-align:center}
+#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%) translateY(-120px);background:#323232;color:#fff;padding:12px 20px;border-radius:8px;transition:.25s;z-index:9;max-width:90%;box-shadow:0 3px 8px var(--shadow-color)}
 #toast.on{transform:translateX(-50%)}
-.menu{position:fixed;right:10px;top:50px;background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:6px;display:none;z-index:6;min-width:210px}
-.menu.on{display:block}.menu button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--fg);padding:10px 12px;font:inherit;border-radius:8px;cursor:pointer}
-.menu button:hover{background:var(--bg)}
-footer{text-align:center;color:var(--mut);font-size:12px;margin-top:20px}footer a{color:var(--acc);text-decoration:none;font-weight:700}
-</style>
+.menu{position:fixed;right:8px;top:52px;background:var(--card-background-color);border:1px solid var(--divider-color);border-radius:12px;box-shadow:0 4px 16px var(--shadow-color);padding:8px 0;display:none;z-index:6;min-width:230px}
+.menu.on{display:block}.menu button{display:flex;gap:16px;align-items:center;width:100%;text-align:left;background:none;border:0;color:var(--primary-text-color);padding:10px 16px;font:400 14px/20px var(--ha-font);cursor:pointer}
+.menu button:hover{background:rgba(var(--rgb-primary-color),.08)}.menu svg{width:20px;height:20px;fill:var(--secondary-text-color)}
+.bar .ibtn svg{width:24px;height:24px;fill:currentColor}.bar .hi{color:var(--primary-color)}
+footer{text-align:center;color:var(--secondary-text-color);font-size:12px;margin-top:24px}footer a{color:var(--primary-color);text-decoration:none;font-weight:500}
+</style></style>
 </head>
 <body>
+<div class="bar" id="bar" hidden><span class="ibtn hi" id="devIcon"></span><h1 id="devName"></h1><span class="dot" id="conn" style="margin-right:6px"></span><button class="ibtn" id="feedBtn" title="Live"></button><button class="ibtn" id="menuBtn"></button></div>
 <main>
   <div id="setup" class="card" hidden>
     <div style="font-size:42px">⚡</div><h2>HALiveTeo</h2>
@@ -39,8 +39,6 @@ footer{text-align:center;color:var(--mut);font-size:12px;margin-top:20px}footer 
     <p><button class="b" id="tokGo"></button></p>
   </div>
   <div id="app" hidden>
-    <header><span class="ic" id="devIcon">📱</span><h1 id="devName"></h1><span class="dot" id="conn"></span>
-      <button id="feedBtn" title="Live">📡</button><button id="menuBtn">⋯</button></header>
     <div class="menu" id="menu">
       <button id="mWake"></button><button id="mFull"></button><button id="mTok"></button>
     </div>
@@ -52,16 +50,18 @@ footer{text-align:center;color:var(--mut);font-size:12px;margin-top:20px}footer 
 <div id="drawer"></div>
 <div id="toast"></div>
 <script src="static/common.js"></script>
+<script src="static/icons.js"></script>
 <script>
 const tr = HL.tr, $ = id => document.getElementById(id);
 const store = {get:k=>{try{return localStorage.getItem(k)}catch{return null}}, set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}, del:k=>{try{localStorage.removeItem(k)}catch{}}};
 let toastT; const toast = (m,bad)=>{const e=$("toast");e.textContent=m;e.style.background=bad?"var(--err)":"";e.style.color=bad?"#fff":"";e.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),2600)};
 $("by").textContent = tr("Stworzone przez","Created by");
+$("feedBtn").innerHTML = HL.icon("mdi:lightning-bolt-circle"); $("menuBtn").innerHTML = HL.icon("mdi:dots-vertical");
 $("setupTxt").textContent = tr("Wklej token urządzenia z panelu HALiveTeo (lub otwórz link z tokenem).","Paste the device token from the HALiveTeo panel (or open the link that contains it).");
 $("tokGo").textContent = tr("Połącz","Connect");
-$("mWake").textContent = "🔆 " + tr("Nie wygaszaj ekranu","Keep screen on");
-$("mFull").textContent = "⛶ " + tr("Pełny ekran","Fullscreen");
-$("mTok").textContent = "🔑 " + tr("Zmień token","Change token");
+$("mWake").innerHTML = HL.icon("mdi:brightness-6") + "<span>" + tr("Nie wygaszaj ekranu","Keep screen on") + "</span>";
+$("mFull").innerHTML = HL.icon("mdi:monitor") + "<span>" + tr("Pełny ekran","Fullscreen") + "</span>";
+$("mTok").innerHTML = HL.icon("mdi:key") + "<span>" + tr("Zmień token","Change token") + "</span>";
 
 // token from ?t=… link is stored, then removed from the address bar
 const q = new URLSearchParams(location.search);
@@ -72,11 +72,12 @@ if(!token){ $("setup").hidden = false;
 } else start();
 
 function start(){
-  $("app").hidden = false;
+  $("app").hidden = false; $("bar").hidden = false;
   let layout = {cols:2,tiles:[]}, st = {}, els = {}, pending = {}, seq = 0, live;
   const handlers = {
     press:(tile, el) => act({tile:tile.id}, el),
-    slide:(tile, value, el) => act({tile:tile.id, value}, el)
+    slide:(tile, value, el) => act({tile:tile.id, value}, el),
+    info:tile => HL.moreInfo(tile, st[tile.entity_id])
   };
   function act(body, el){
     navigator.vibrate && navigator.vibrate(12);
@@ -85,7 +86,7 @@ function start(){
   }
   function build(msg){
     layout = msg.device.layout; st = msg.states || {};
-    $("devName").textContent = msg.device.name; $("devIcon").textContent = msg.device.icon || "📱"; document.title = msg.device.name;
+    $("devName").textContent = msg.device.name; $("devIcon").innerHTML = HL.icon(msg.device.icon || "mdi:cellphone"); document.title = msg.device.name;
     els = HL.renderGrid($("grid"), layout, st, handlers);
     $("feedBtn").style.display = msg.device.show_feed ? "" : "none";
     if(msg.feed) renderFeed(msg.feed);
@@ -94,8 +95,8 @@ function start(){
   function renderFeed(rows){ feedRows = rows.slice(-40); drawFeed(); }
   function drawFeed(){
     const d = $("drawer");
-    d.innerHTML = `<b>📡 Live</b>` + (feedRows.length ? "" : `<div class="hint">${tr("Brak akcji.","No actions yet.")}</div>`) +
-      feedRows.slice().reverse().map(e => `<div class="fe"><span>${HL.esc(e.icon||"•")}</span><span><b>${HL.esc(e.label||e.type)}</b> <small>${HL.esc(e.device)} · ${HL.time(e.ts)}</small>${e.ok?"":` <span class="bad">${HL.esc(e.error)}</span>`}</span></div>`).join("");
+    d.innerHTML = `<div class="sec" style="font-weight:500;color:var(--secondary-text-color)">Live</div>` + (feedRows.length ? "" : `<div class="hint">${tr("Brak akcji.","No actions yet.")}</div>`) +
+      feedRows.slice().reverse().map(e => `<div class="fe"><span class="sh">${HL.icon(e.type==="live"?"mdi:lightning-bolt-circle":e.type==="event"?"mdi:bullhorn-outline":"mdi:gesture-tap")}</span><span><b>${HL.esc(e.label||e.type)}</b> <small>${HL.esc(e.device)} · ${HL.time(e.ts)}</small>${e.ok?"":` <span class="bad">${HL.esc(e.error)}</span>`}</span></div>`).join("");
   }
   live = HL.live({
     query: "?t=" + encodeURIComponent(token),

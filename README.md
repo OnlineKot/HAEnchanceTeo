@@ -16,7 +16,7 @@ duplicate removal, API tokens for Shortcuts with a supervised log, full-screen q
 
 ### ⚡ [HALiveTeo](haliveteo/DOCS.md)
 **Live actions from many devices.** Every phone, tablet or wall panel gets its own token and its own customizable
-layout of live tiles (buttons, toggles, sliders, states), a real-time action feed, Home Assistant events for
+layout of live tiles (buttons, toggles, sliders, states) in a Home Assistant look, a real-time action feed, **Live Activities on the iPhone Dynamic Island / Lock Screen** (via the Companion app), Home Assistant events for
 automations, and a REST API for screenless devices (Shortcuts, ESP).
 
 MIT License © TeodorTeo.com
