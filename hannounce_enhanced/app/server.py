@@ -288,6 +288,46 @@ async def ha_service(domain, service, data):
             raise _json_error(502, f"{domain}.{service}: {r.status} {await r.text()}")
 
 
+async def ws_call(msg):
+    """One-shot call to the Home Assistant WebSocket API."""
+    url = HA.replace("http", "ws", 1)
+    url = (url[:-4] if url.endswith("/api") else url) + "/websocket"
+    async with session.ws_connect(url) as ws:
+        await ws.receive_json()
+        await ws.send_json({"type": "auth", "access_token": TOKEN})
+        if (await ws.receive_json()).get("type") != "auth_ok":
+            raise _json_error(502, "Home Assistant websocket auth failed")
+        await ws.send_json({"id": 1, **msg})
+        reply = await ws.receive_json()
+        if not reply.get("success"):
+            raise _json_error(502, str((reply.get("error") or {}).get("message", "websocket error")))
+        return reply.get("result")
+
+
+async def tts_engines(states=None):
+    """TTS engines configured in Home Assistant, with their supported languages."""
+    names = {s["entity_id"]: s["attributes"].get("friendly_name", s["entity_id"])
+             for s in (states if states is not None else await ha_get("/states"))
+             if s["entity_id"].startswith("tts.")}
+    langs = {}
+    try:
+        res = await ws_call({"type": "tts/engine/list"})
+        for prov in (res or {}).get("providers", []):
+            langs[prov["engine_id"]] = prov.get("supported_languages") or []
+    except Exception as exc:  # noqa: BLE001
+        log.warning("tts/engine/list failed (%s), using entity list only", exc)
+    return [{"entity_id": e, "name": n, "languages": langs.get(e, [])} for e, n in names.items()]
+
+
+def tts_media_id(tts, message, language=None, voice=None):
+    mcid = f"media-source://tts/{tts}?message={quote(str(message))}"
+    if language:
+        mcid += f"&language={quote(str(language))}"
+    if voice:
+        mcid += f"&voice={quote(str(voice))}"
+    return mcid
+
+
 async def base_url():
     global _base_url_cache
     custom = (OPTIONS.get("base_url") or "").strip().rstrip("/")
@@ -342,9 +382,7 @@ async def make_script(body):
         if not tts:
             raise _json_error(400, "tts_entity required")
         msg = str(body["message"])
-        data["media_content_id"] = f"media-source://tts/{tts}?message={quote(msg)}"
-        if body.get("language"):
-            data["media_content_id"] += f"&language={quote(str(body['language']))}"
+        data["media_content_id"] = tts_media_id(tts, msg, body.get("language"), body.get("voice"))
         name = msg[:30]
     else:
         raise _json_error(400, "give 'item' or 'message'")
@@ -405,10 +443,7 @@ async def announce(body):
                 raise _json_error(400, "no tts entity available in Home Assistant")
             tts = ents[0]
         msg = str(body["message"])
-        mcid = f"media-source://tts/{tts}?message={quote(msg)}"
-        if body.get("language"):
-            mcid += f"&language={quote(str(body['language']))}"
-        play["media_content_id"] = mcid
+        play["media_content_id"] = tts_media_id(tts, msg, body.get("language"), body.get("voice"))
         duration = 2 + len(msg) * 0.075
     else:
         raise _json_error(400, "give 'item'/'sound' or 'message'")
@@ -502,8 +537,7 @@ async def h_state(request):
     states = await ha_get("/states")
     return web.json_response({
         "players": players_list(states),
-        "tts": [{"entity_id": s["entity_id"], "name": s["attributes"].get("friendly_name", s["entity_id"])}
-                for s in states if s["entity_id"].startswith("tts.")],
+        "tts": await tts_engines(states),
         "library": [public(i) for i in library],
         "generators": GENERATORS,
         "base_url": await base_url(),
@@ -514,6 +548,59 @@ async def h_state(request):
 
 async def h_sounds(request):
     return web.json_response([public(i) for i in library])
+
+
+async def convert_to_item(src, name, kind, saved):
+    item = register(name, kind, "mp3", saved, 0)
+    dest = item_path(item)
+    rc, _, err = await run("ffmpeg", "-y", "-i", str(src), "-vn", "-map_metadata", "-1",
+                           "-codec:a", "libmp3lame", "-q:a", "4", str(dest))
+    if rc != 0:
+        log.warning("ffmpeg failed: %s", err[-300:])
+        raise _json_error(400, "cannot decode this audio file")
+    item["duration"] = round(await probe_duration(dest), 2)
+    commit(item)
+    return item
+
+
+async def h_tts_item(request):
+    """Render a TTS message with a Home Assistant engine into a sound (preview or library)."""
+    body = await request.json()
+    msg, tts = str(body.get("message") or "").strip(), body.get("tts_entity")
+    if not msg or not tts:
+        raise _json_error(400, "message and tts_entity required")
+    req = {"engine_id": tts, "message": msg}
+    if body.get("language"):
+        req["language"] = body["language"]
+    if body.get("voice"):
+        req["options"] = {"voice": body["voice"]}
+    async with session.post(f"{HA}/tts_get_url", headers=ha_headers(), json=req) as r:
+        if r.status >= 400:
+            raise _json_error(502, f"tts_get_url: {r.status} {await r.text()}")
+        path = (await r.json()).get("path", "")
+    core = HA[:-4] if HA.endswith("/api") else HA
+    tmp = ONCE / f"tts_{uuid.uuid4().hex}"
+    try:
+        async with session.get(core + path, headers=ha_headers()) as r:
+            if r.status >= 400:
+                raise _json_error(502, f"tts download failed: {r.status}")
+            tmp.write_bytes(await r.read())
+        item = await convert_to_item(tmp, (body.get("name") or "").strip() or msg[:40],
+                                     "tts", bool(body.get("save")))
+    finally:
+        tmp.unlink(missing_ok=True)
+    return web.json_response(public(item))
+
+
+async def h_tts_voices(request):
+    q = request.query
+    try:
+        res = await ws_call({"type": "tts/engine/voices", "engine_id": q.get("engine", ""),
+                             "language": q.get("language", "")})
+    except web.HTTPException:
+        res = None
+    voices = (res or {}).get("voices") or []
+    return web.json_response([{"id": v["voice_id"], "name": v.get("name", v["voice_id"])} for v in voices])
 
 
 async def h_upload(request):
@@ -535,17 +622,9 @@ async def h_upload(request):
                 fields[part.name] = await part.text()
         if tmp is None:
             raise _json_error(400, "no file")
-        saved = fields.get("save") == "1"
-        item = register((fields.get("name") or "").strip() or time.strftime("Recording %Y-%m-%d %H:%M"),
-                        fields.get("kind") or "upload", "mp3", saved, 0)
-        dest = item_path(item)
-        rc, _, err = await run("ffmpeg", "-y", "-i", str(tmp), "-vn", "-map_metadata", "-1",
-                               "-codec:a", "libmp3lame", "-q:a", "4", str(dest))
-        if rc != 0:
-            log.warning("ffmpeg failed: %s", err[-300:])
-            raise _json_error(400, "cannot decode this audio file")
-        item["duration"] = round(await probe_duration(dest), 2)
-        commit(item)
+        item = await convert_to_item(
+            tmp, (fields.get("name") or "").strip() or time.strftime("Recording %Y-%m-%d %H:%M"),
+            fields.get("kind") or "upload", fields.get("save") == "1")
         return web.json_response(public(item))
     finally:
         if tmp:
@@ -627,6 +706,8 @@ def routes(with_index=True):
         web.get("/api/state", h_state),
         web.get("/api/sounds", h_sounds),
         web.post("/api/upload", h_upload),
+        web.post("/api/tts/item", h_tts_item),
+        web.get("/api/tts/voices", h_tts_voices),
         web.post("/api/generate", h_generate),
         web.post("/api/announce", h_announce),
         web.post("/api/script", h_script),

@@ -3,7 +3,7 @@
 Panel **HAnnounce** pojawia się w bocznym menu Home Assistanta (ingress).
 
 ## Co potrafi
-- **Mów (TTS)** – dowolny tekst przez wybrany silnik TTS, w trybie *announce* (przerywa i wznawia odtwarzanie).
+- **Mów (TTS)** – używa silników TTS **już dodanych w Home Assistancie** (Piper, Google, Nabu Casa, …): wybierasz silnik, język i głos (listy pobierane z HA), ogłaszasz w trybie *announce*, robisz podgląd albo zapisujesz wygenerowaną wypowiedź w bibliotece.
 - **Nagraj** – własne nagranie z mikrofonu przeglądarki (wymaga HTTPS) lub z nagrywarki telefonu.
 - **Wgraj** – dowolny plik audio (mp3, wav, ogg, m4a, webm…), konwertowany do mp3.
 - **Generuj** – ton, piski, dzwonek „ding-dong”, gong, powiadomienie, syrena, alarm (częstotliwość, czas, powtórzenia).
@@ -42,7 +42,7 @@ Wymaga ustawionego `api_key`. Nagłówek `Authorization: Bearer <klucz>` (lub `?
 GET  http://<ha>:8765/api/sounds
 POST http://<ha>:8765/api/announce
 {"targets": ["media_player.kuchnia"], "sound": "Dzwonek", "volume": 0.6}
-{"targets": ["media_player.kuchnia"], "message": "Obiad gotowy", "language": "pl", "tts_entity": "tts.google_translate_en_com"}
+{"targets": ["media_player.kuchnia"], "message": "Obiad gotowy", "language": "pl", "tts_entity": "tts.google_translate_en_com", "voice": "opcjonalnie"}
 ```
 `sound` to nazwa lub id z biblioteki.
 

@@ -15,7 +15,7 @@ Ogłaszaj na głośnikach: TTS, własne nagrania, wgrane pliki i generowane dźw
 Details & API: [hannounce_enhanced/DOCS.md](hannounce_enhanced/DOCS.md)
 
 ## Features
-- 🗣 TTS announce (any HA TTS engine)
+- 🗣 TTS announce using the engines already set up in HA (engine, language, voice, preview, save)
 - 🎙 Record in browser / device recorder
 - 📤 Upload any audio file (auto-converted to mp3 via ffmpeg)
 - 🔔 Generator: tone, beeps, chime, gong, notification, siren, alarm

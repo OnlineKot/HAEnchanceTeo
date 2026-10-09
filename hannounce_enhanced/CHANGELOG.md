@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.0
+- TTS uses the engines configured in Home Assistant: engine, language and voice pickers, preview, save TTS to library.
+
 ## 1.2.0
 - Standalone interface on port 8765 (API-key protected), installable on iPhone home screen (PWA).
 
