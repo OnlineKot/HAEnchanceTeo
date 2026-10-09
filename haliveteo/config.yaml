@@ -1,0 +1,27 @@
+name: HALiveTeo
+version: "1.0.0"
+slug: haliveteo
+description: Live actions from many devices - customizable buttons, toggles, sliders and live states for Home Assistant. By TeodorTeo.com
+url: https://teodorteo.com
+arch:
+  - amd64
+  - aarch64
+init: false
+startup: application
+boot: auto
+homeassistant_api: true
+hassio_api: true
+ingress: true
+ingress_port: 8099
+panel_icon: mdi:lightning-bolt-circle
+panel_title: HALiveTeo
+ports:
+  8766/tcp: 8766
+ports_description:
+  8766/tcp: "Device interface (phones, tablets, wall panels) + device API"
+options:
+  event_prefix: haliveteo
+  log_level: info
+schema:
+  event_prefix: str
+  log_level: list(debug|info|warning)

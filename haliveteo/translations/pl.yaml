@@ -1,0 +1,7 @@
+configuration:
+  event_prefix:
+    name: Prefiks nazw zdarzeń
+    description: "Zdarzenia w Home Assistant nazywają się <prefiks>_action i <prefiks>_event (domyślnie haliveteo_action / haliveteo_event)."
+  log_level:
+    name: Poziom logów
+    description: Szczegółowość logów dodatku.

@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HALiveTeo</title>
+<link rel="stylesheet" href="static/common.css">
+<style>
+main{max-width:1000px;margin:0 auto;padding:14px 14px 30px}
+header{display:flex;align-items:center;gap:10px;margin:2px 0 12px}
+header .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#26a69a,#00695c);display:grid;place-items:center;font-size:20px;box-shadow:var(--sh)}
+header h1{font-size:19px;margin:0;line-height:1.1}header small{color:var(--mut)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--bd);margin-bottom:14px}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;color:var(--mut);padding:9px 14px;cursor:pointer;font:inherit;font-weight:600}
+.tabs button.on{color:var(--acc);border-bottom-color:var(--acc)}
+.view{display:none}.view.on{display:block}
+.sec{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:0 0 10px;display:flex;align-items:center;gap:8px;font-weight:700}
+.sec .sp{flex:1}
+label.f{display:block;margin:10px 0 4px;color:var(--mut);font-size:13px}
+label.chk{display:flex;gap:8px;align-items:center;margin:9px 0;font-size:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:10px}.row>.grow{flex:1;min-width:110px}
+.dev{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--bd)}.dev:first-child{border:0}
+.dev .ic{font-size:28px}.dev .n{flex:1;min-width:150px}
+.badge{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--bg);border:1px solid var(--bd);color:var(--mut)}
+.tl{display:flex;gap:6px;align-items:center;padding:8px 0;border-top:1px solid var(--bd);flex-wrap:wrap}.tl:first-child{border:0}
+.tl .n{flex:1;min-width:130px}.tl .n b{font-size:14px}
+.split{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:860px){.split{grid-template-columns:1fr 360px;align-items:start}.split .sticky{position:sticky;top:10px}}
+.icons{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}.icons button{background:var(--bg);border:1px solid var(--bd);border-radius:8px;font-size:18px;cursor:pointer;padding:2px 6px}
+.fe{display:flex;gap:8px;align-items:baseline;padding:7px 0;border-top:1px solid var(--bd);font-size:14px}.fe:first-child{border:0}
+.fe small{color:var(--mut)}.fe .bad{color:var(--err)}
+.ent{display:flex;gap:8px;align-items:center;padding:4px 0;font-size:14px}.ent small{color:var(--mut)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips label{display:flex;gap:5px;align-items:center;border:1.5px solid var(--bd);border-radius:18px;padding:4px 10px;font-size:13px;cursor:pointer}
+pre{background:var(--bg);padding:10px;border-radius:10px;overflow:auto;font-size:12px}code{background:var(--bg);padding:1px 5px;border-radius:5px;word-break:break-all}
+.copy{display:flex;gap:6px;margin-top:6px}.copy input{flex:1}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;max-width:90%;z-index:9}
+#toast.on{opacity:1}
+footer{text-align:center;color:var(--mut);font-size:13px;margin:18px 0 6px}footer a{color:var(--acc);text-decoration:none;font-weight:700}
+</style>
+</head>
+<body>
+<main>
+<header><div class="logo">⚡</div><div><h1>HALiveTeo</h1><small id="tag"></small></div></header>
+<div class="tabs" id="tabs"></div>
+
+<div class="view" id="v-devices">
+  <div class="card">
+    <div class="sec"><span id="tDevices"></span><span class="sp"></span><button class="b sm" id="newBtn"></button></div>
+    <div id="newForm" hidden>
+      <div class="row"><div class="grow"><label class="f" id="lName"></label><input type="text" id="nName"></div>
+        <div><label class="f" id="lIcon"></label><select id="nIcon"></select></div></div>
+      <div class="row"><button class="b" id="nCreate"></button><button class="b alt" id="nCancel"></button></div>
+    </div>
+    <div id="created"></div>
+    <div id="devList"></div>
+  </div>
+</div>
+
+<div class="view" id="v-edit">
+  <div class="card">
+    <div class="sec"><button class="b alt sm" id="back"></button><span class="sp"></span><span class="badge" id="dirty" hidden></span><button class="b" id="save"></button></div>
+    <div class="row">
+      <div class="grow"><label class="f" id="eName"></label><input type="text" id="eNameIn"></div>
+      <div><label class="f" id="eIcon"></label><select id="eIconIn"></select></div>
+      <div><label class="f" id="eCols"></label><select id="eColsIn"></select></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="eFeed"> <span id="eFeedT"></span></label>
+    <label class="chk"><input type="checkbox" id="eOn"> <span id="eOnT"></span></label>
+  </div>
+  <div class="split">
+    <div>
+      <div class="card">
+        <div class="sec"><span id="tTiles"></span><span class="sp"></span>
+          <button class="b alt sm" id="addAuto"></button><button class="b alt sm" id="addJson">JSON</button><button class="b sm" id="addTile"></button></div>
+        <div id="tileForm" hidden></div>
+        <div id="auto" hidden></div>
+        <div id="jsonBox" hidden><textarea id="jsonTa" style="min-height:240px;font-family:monospace;font-size:12px"></textarea>
+          <div class="row"><button class="b sm" id="jsonApply"></button></div></div>
+        <div id="tileList"></div>
+      </div>
+    </div>
+    <div class="sticky"><div class="card"><div class="sec" id="tPrev"></div><div class="grid inert" id="prev"></div></div></div>
+  </div>
+</div>
+
+<div class="view" id="v-feed">
+  <div class="card"><div class="sec"><span id="tFeed"></span><span class="sp"></span><button class="b alt sm" id="feedClear"></button></div><div id="feedList"></div></div>
+</div>
+
+<div class="view" id="v-help"><div class="card" id="helpBox"></div></div>
+
+<footer><span id="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
+</main>
+<datalist id="dlEnt"></datalist><datalist id="dlSvc"></datalist>
+<div id="toast"></div>
+<script src="static/common.js"></script>
+<script>
+const tr = HL.tr, esc = HL.esc, $ = id => document.getElementById(id);
+let toastT; const toast = (m,bad)=>{const e=$("toast");e.textContent=m;e.style.background=bad?"var(--err)":"";e.style.color=bad?"#fff":"";e.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),3200)};
+async function api(p, o = {}){
+  const r = await fetch("api/admin/" + p, {...o, headers:{"Content-Type":"application/json"}});
+  const j = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+const post = (p, b) => api(p, {method:"POST", body:JSON.stringify(b)});
+const ICONS = ["📱","📟","🖥️","💻","⌚","🏠","🛋️","🛏️","🍳","🚪","🚗","🎮","🔔","🎛️","📺","💡"];
+const TILE_ICONS = ["💡","🔆","🔌","🌡️","🎵","🔊","🔒","🚪","🪟","🌀","▶️","⏹️","⏭️","🏠","🌙","☀️","🔥","❄️","🔔","🚨","📺","🎬","🎮","🧹","☕","🛏️"];
+
+// ---------- state
+let B = {devices:[],entities:[],services:[],feed:[],prefix:"haliveteo",public_port:8766};
+let cur = null, W = null, dirty = false, prevEls = {}, liveStates = {}, live;
+$("tag").textContent = tr("Akcje na żywo z Twoich urządzeń","Live actions from your devices");
+$("by").textContent = tr("Stworzone przez","Created by");
+$("tDevices").textContent = tr("Urządzenia","Devices"); $("newBtn").textContent = tr("+ Nowe urządzenie","+ New device");
+$("lName").textContent = tr("Nazwa (np. Tablet w kuchni)","Name (e.g. Kitchen tablet)"); $("lIcon").textContent = tr("Ikona","Icon");
+$("nCreate").textContent = tr("Utwórz","Create"); $("nCancel").textContent = tr("Anuluj","Cancel");
+$("back").textContent = "← " + tr("Urządzenia","Devices"); $("save").textContent = tr("Zapisz","Save");
+$("eName").textContent = tr("Nazwa","Name"); $("eIcon").textContent = tr("Ikona","Icon"); $("eCols").textContent = tr("Kolumny","Columns");
+$("eFeedT").textContent = tr("Pokazuj na tym urządzeniu feed akcji na żywo","Show the live action feed on this device");
+$("eOnT").textContent = tr("Urządzenie włączone","Device enabled");
+$("tTiles").textContent = tr("Kafelki","Tiles"); $("addTile").textContent = tr("+ Kafelek","+ Tile"); $("addAuto").textContent = tr("Auto z encji","Auto from entities");
+$("jsonApply").textContent = tr("Zastosuj JSON","Apply JSON"); $("tPrev").textContent = tr("Podgląd na żywo","Live preview");
+$("tFeed").textContent = tr("Akcje na żywo","Live actions"); $("feedClear").textContent = tr("Wyczyść","Clear");
+[$("nIcon"), $("eIconIn")].forEach(s => s.innerHTML = ICONS.map(i => `<option>${i}</option>`).join(""));
+$("eColsIn").innerHTML = [1,2,3,4,5,6].map(i => `<option>${i}</option>`).join("");
+
+// ---------- tabs
+[["devices",tr("Urządzenia","Devices")],["feed","📡 " + tr("Na żywo","Live")],["help",tr("Pomoc","Help")]].forEach(([id,l]) => {
+  const b = document.createElement("button"); b.textContent = l; b.dataset.id = id; b.onclick = () => show(id); $("tabs").append(b);
+});
+function show(id){
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.id === id));
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + id));
+  if(id === "feed") renderFeed(); if(id === "help") renderHelp();
+}
+function showEdit(){ document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-edit")); document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("on")); }
+
+// ---------- bootstrap + live
+async function load(){
+  B = await api("bootstrap");
+  $("dlEnt").innerHTML = B.entities.map(e => `<option value="${esc(e.id)}">${esc(e.name)}</option>`).join("");
+  $("dlSvc").innerHTML = B.services.map(s => `<option value="${esc(s)}">`).join("");
+  renderDevices();
+}
+live = HL.live({
+  onMsg: m => {
+    if(m.t === "hello"){ B.feed = m.feed || B.feed; }
+    else if(m.t === "states"){ liveStates = {...liveStates, ...m.states}; refreshPrev(); }
+    else if(m.t === "state"){ liveStates[m.e] = m.st; (prevEls[m.e] || []).forEach(([t, el]) => el.update(m.st)); }
+    else if(m.t === "feed"){ B.feed.push(m.entry); B.feed = B.feed.slice(-200); if($("v-feed").classList.contains("on")) renderFeed(); }
+  },
+  onStatus: ok => { if(ok && cur) watchPrev(); }
+});
+
+// ---------- devices
+const linkFor = tok => `http://${location.hostname}:${B.public_port}/?t=${tok}`;
+function copyRow(label, value){
+  const w = document.createElement("div"); w.innerHTML = `<label class="f"></label><div class="copy"><input type="text" readonly><button class="b alt sm">${tr("Kopiuj","Copy")}</button></div>`;
+  w.querySelector("label").textContent = label; const i = w.querySelector("input"); i.value = value;
+  w.querySelector("button").onclick = async () => { try{ await navigator.clipboard.writeText(value); }catch{ i.select(); document.execCommand("copy"); } toast(tr("Skopiowano ✓","Copied ✓")); };
+  return w;
+}
+function showCreated(d){
+  const box = $("created"); box.innerHTML = "";
+  const c = document.createElement("div"); c.className = "card"; c.style.border = "1.5px solid var(--warn)";
+  c.innerHTML = `<b>⚠ ${tr("Skopiuj teraz - token pokazuje się tylko raz!","Copy now - the token is shown only once!")}</b>
+    <div class="hint">${tr("Otwórz link na urządzeniu (telefon, tablet, panel ścienny) i dodaj go do ekranu głównego. Zmień IP w linku, jeśli to inny adres niż HA.","Open the link on the device (phone, tablet, wall panel) and add it to the home screen. Replace the host in the link if the device reaches HA under another address.")}</div>`;
+  c.append(copyRow(tr("Link do urządzenia","Device link"), linkFor(d.token)), copyRow("Token", d.token));
+  box.append(c); c.scrollIntoView({behavior:"smooth"});
+}
+function renderDevices(){
+  const box = $("devList");
+  box.innerHTML = B.devices.length ? "" : `<div class="hint">${tr("Brak urządzeń. Utwórz pierwsze.","No devices yet. Create the first one.")}</div>`;
+  B.devices.forEach(d => {
+    const el = document.createElement("div"); el.className = "dev";
+    el.innerHTML = `<div class="ic">${esc(d.icon)}</div><div class="n"><span class="dot ${d.online ? "on" : ""}"></span> <b></b>
+      <div class="hint">${d.layout.tiles.length} ${tr("kafelków","tiles")} · ${esc(d.prefix)}… · ${d.last_seen ? tr("ostatnio","last seen") + " " + new Date(d.last_seen*1000).toLocaleString() : tr("jeszcze nie połączone","never connected")}
+      ${d.enabled ? "" : ` · <span class="badge">${tr("wyłączone","disabled")}</span>`}</div></div>
+      <button class="b sm ed">${tr("Edytuj","Edit")}</button><button class="b alt sm tk">${tr("Nowy token / link","New token / link")}</button>
+      <button class="b red sm dl">${tr("Usuń","Delete")}</button>`;
+    el.querySelector("b").textContent = d.name;
+    el.querySelector(".ed").onclick = () => edit(d.id);
+    el.querySelector(".tk").onclick = async () => { if(!confirm(tr("Wygenerować nowy token? Stary przestanie działać.","Generate a new token? The old one stops working."))) return;
+      try{ const r = await post(`devices/${d.id}/token`, {}); showCreated(r); await load(); }catch(e){ toast(e.message,true); } };
+    el.querySelector(".dl").onclick = async () => { if(!confirm(tr("Usunąć urządzenie?","Delete this device?"))) return;
+      try{ await api("devices/" + d.id, {method:"DELETE"}); await load(); }catch(e){ toast(e.message,true); } };
+    box.append(el);
+  });
+}
+$("newBtn").onclick = () => { $("newForm").hidden = !$("newForm").hidden; };
+$("nCancel").onclick = () => { $("newForm").hidden = true; };
+$("nCreate").onclick = async () => {
+  const name = $("nName").value.trim(); if(!name) return toast(tr("Wpisz nazwę","Enter a name"), true);
+  try{ const r = await post("devices", {name, icon:$("nIcon").value, layout:{cols:2,tiles:[]}}); $("nName").value = ""; $("newForm").hidden = true; showCreated(r); await load(); }
+  catch(e){ toast(e.message,true); }
+};
+
+// ---------- editor
+function setDirty(v = true){ dirty = v; $("dirty").hidden = !v; $("dirty").textContent = tr("niezapisane zmiany","unsaved changes"); }
+function edit(id){
+  cur = B.devices.find(d => d.id === id); W = JSON.parse(JSON.stringify(cur.layout));
+  $("eNameIn").value = cur.name; $("eIconIn").value = cur.icon; $("eColsIn").value = W.cols;
+  $("eFeed").checked = cur.show_feed; $("eOn").checked = cur.enabled;
+  ["tileForm","auto","jsonBox"].forEach(x => $(x).hidden = true);
+  setDirty(false); renderTiles(); showEdit(); watchPrev();
+}
+$("back").onclick = () => { if(dirty && !confirm(tr("Porzucić niezapisane zmiany?","Discard unsaved changes?"))) return; cur = null; show("devices"); };
+["eNameIn","eIconIn","eFeed","eOn"].forEach(i => $(i).onchange = () => setDirty());
+$("eColsIn").onchange = () => { W.cols = +$("eColsIn").value; setDirty(); refreshPrev(); };
+$("save").onclick = async () => {
+  try{
+    const want = W.tiles.length;
+    const r = await post("devices/" + cur.id, {name:$("eNameIn").value, icon:$("eIconIn").value, show_feed:$("eFeed").checked, enabled:$("eOn").checked, layout:W});
+    if(r.layout.tiles.length < want) toast(tr(`${want - r.layout.tiles.length} nieprawidłowych kafelków pominięto`, `${want - r.layout.tiles.length} invalid tile(s) were dropped`), true);
+    else toast(tr("Zapisano ✓","Saved ✓"));
+    W = r.layout; await load(); cur = B.devices.find(d => d.id === r.id); setDirty(false); renderTiles(); watchPrev();
+  }catch(e){ toast(e.message,true); }
+};
+const typeName = t => ({button:tr("przycisk","button"),toggle:tr("przełącznik","toggle"),slider:tr("suwak","slider"),state:tr("stan","state")}[t]);
+function tileSummary(t){
+  if(t.type === "button"){ const a = t.action; return a.kind === "service" ? a.service + (a.entity_id ? " → " + a.entity_id : "") : a.kind === "event" ? "event " + a.event_type : a.kind + " " + a.entity_id; }
+  return t.entity_id + (t.type === "slider" ? " · " + t.mode : "") + (t.attribute ? " · " + t.attribute : "");
+}
+function renderTiles(){
+  const box = $("tileList"); box.innerHTML = W.tiles.length ? "" : `<div class="hint">${tr("Brak kafelków. Dodaj ręcznie albo „Auto z encji”.","No tiles yet. Add one or use “Auto from entities”.")}</div>`;
+  W.tiles.forEach((t, i) => {
+    const el = document.createElement("div"); el.className = "tl";
+    el.innerHTML = `<span style="font-size:20px">${esc(t.icon || "•")}</span><div class="n"><b></b><div class="hint"></div></div>
+      <button class="b alt sm" data-a="up">↑</button><button class="b alt sm" data-a="dn">↓</button><button class="b alt sm" data-a="ed">✎</button>
+      <button class="b alt sm" data-a="cp">⧉</button>${t.type === "slider" || t.type === "state" ? "" : `<button class="b alt sm" data-a="ts">▶</button>`}<button class="b red sm" data-a="rm">🗑</button>`;
+    el.querySelector("b").textContent = t.label || t.entity_id || "—"; el.querySelector(".hint").textContent = typeName(t.type) + " · " + tileSummary(t) + (t.width === 2 ? " · 2×" : "");
+    el.onclick = async e => {
+      const a = e.target.dataset.a; if(!a) return;
+      if(a === "up" && i > 0) [W.tiles[i-1], W.tiles[i]] = [W.tiles[i], W.tiles[i-1]];
+      else if(a === "dn" && i < W.tiles.length - 1) [W.tiles[i+1], W.tiles[i]] = [W.tiles[i], W.tiles[i+1]];
+      else if(a === "ed") return tileForm(t, i);
+      else if(a === "cp") W.tiles.splice(i+1, 0, {...JSON.parse(JSON.stringify(t)), id:"", label:(t.label||"") + " 2"});
+      else if(a === "rm") W.tiles.splice(i, 1);
+      else if(a === "ts"){
+        if(dirty){ toast(tr("Najpierw zapisz zmiany","Save your changes first"), true); return; }
+        if(!confirm(tr("Wykonać tę akcję teraz w Home Assistant?","Run this action in Home Assistant now?"))) return;
+        try{ const r = await post("test", {device_id:cur.id, tile:t.id}); toast(r.ok ? "▶ OK" : r.error, !r.ok); }catch(err){ toast(err.message,true); } return;
+      } else return;
+      setDirty(); renderTiles();
+    };
+    box.append(el);
+  });
+  refreshPrev();
+}
+
+// ---------- tile form
+function tileForm(tile, idx){
+  const T = tile ? JSON.parse(JSON.stringify(tile)) : {type:"button", label:"", icon:"", color:"", width:1, confirm:false, entity_id:"", action:{kind:"service", service:"", entity_id:"", data:{}, event_type:""}, mode:"light", min:0, max:100, step:1, attribute:"", unit:""};
+  if(!T.action) T.action = {kind:"service", service:"", entity_id:"", data:{}, event_type:""};
+  const box = $("tileForm"); box.hidden = false; $("auto").hidden = true; $("jsonBox").hidden = true;
+  const draw = () => {
+    box.innerHTML = `<div class="card" style="border-color:var(--acc)">
+      <div class="row"><div class="grow"><label class="f">${tr("Typ","Type")}</label><select id="fType">${["button","toggle","slider","state"].map(x => `<option value="${x}" ${T.type===x?"selected":""}>${typeName(x)}</option>`).join("")}</select></div>
+      <div class="grow"><label class="f">${tr("Nazwa","Label")}</label><input type="text" id="fLabel" value="${esc(T.label)}"></div></div>
+      <label class="f">${tr("Ikona (emoji)","Icon (emoji)")}</label><input type="text" id="fIcon" value="${esc(T.icon)}" style="max-width:120px">
+      <div class="icons">${TILE_ICONS.map(i => `<button type="button" data-i="${i}">${i}</button>`).join("")}</div>
+      <div class="row"><div><label class="f">${tr("Kolor","Color")}</label><input type="color" id="fColor" value="${T.color || "#009688"}"> <label class="chk" style="display:inline-flex"><input type="checkbox" id="fNoColor" ${T.color?"":"checked"}> ${tr("domyślny","default")}</label></div>
+      <div><label class="f">${tr("Szerokość","Width")}</label><select id="fWidth"><option value="1" ${T.width!==2?"selected":""}>1</option><option value="2" ${T.width===2?"selected":""}>2</option></select></div></div>
+      <label class="chk"><input type="checkbox" id="fConfirm" ${T.confirm?"checked":""}> ${tr("Pytaj o potwierdzenie przed wykonaniem","Ask for confirmation before running")}</label>
+      <div id="fType2"></div>
+      <div class="row"><button class="b" id="fOk">${tr("OK","OK")}</button><button class="b alt" id="fCancel">${tr("Anuluj","Cancel")}</button></div></div>`;
+    const ent = (id, val, ph) => `<input type="text" id="${id}" list="dlEnt" value="${esc(val)}" placeholder="${ph||"light.salon"}">`;
+    const sp = $("fType2");
+    if(T.type === "button"){
+      const a = T.action;
+      sp.innerHTML = `<label class="f">${tr("Co robi","What it does")}</label><select id="aKind">${[["service",tr("wywołaj usługę","call a service")],["script","script"],["scene","scene"],["event",tr("wyślij zdarzenie","fire an event")]].map(([v,l]) => `<option value="${v}" ${a.kind===v?"selected":""}>${l}</option>`).join("")}</select>
+        <div id="aBody"></div>`;
+      const body = () => { const k = $("aKind").value; a.kind = k;
+        $("aBody").innerHTML = k === "service" ? `<label class="f">${tr("Usługa","Service")}</label><input type="text" id="aSvc" list="dlSvc" value="${esc(a.service)}" placeholder="light.turn_on">
+            <label class="f">${tr("Encja (opcjonalnie)","Entity (optional)")}</label>${ent("aEnt", a.entity_id)}
+            <label class="f">${tr("Dane (JSON, opcjonalnie)","Data (JSON, optional)")}</label><textarea id="aData" style="min-height:60px;font-family:monospace">${esc(JSON.stringify(a.data || {}))}</textarea>`
+          : k === "event" ? `<label class="f">${tr("Nazwa zdarzenia","Event type")}</label><input type="text" id="aEvt" value="${esc(a.event_type)}" placeholder="my_event">`
+          : `<label class="f">${k}</label>${ent("aEnt", a.entity_id, k + ".nazwa")}`; };
+      $("aKind").onchange = body; body();
+    } else if(T.type === "toggle"){ sp.innerHTML = `<label class="f">${tr("Encja","Entity")}</label>${ent("tEnt", T.entity_id)}`; }
+    else if(T.type === "slider"){
+      sp.innerHTML = `<label class="f">${tr("Encja","Entity")}</label>${ent("tEnt", T.entity_id)}
+        <div class="row"><div class="grow"><label class="f">${tr("Tryb","Mode")}</label><select id="sMode"><option value="light" ${T.mode==="light"?"selected":""}>${tr("jasność światła %","light brightness %")}</option><option value="volume" ${T.mode==="volume"?"selected":""}>${tr("głośność odtwarzacza %","media player volume %")}</option><option value="number" ${T.mode==="number"?"selected":""}>input_number / number</option></select></div>
+        <div class="grow"><label class="f">min</label><input type="number" id="sMin" value="${T.min}"></div><div class="grow"><label class="f">max</label><input type="number" id="sMax" value="${T.max}"></div><div class="grow"><label class="f">${tr("krok","step")}</label><input type="number" id="sStep" value="${T.step}" step="any"></div></div>`;
+    } else { sp.innerHTML = `<label class="f">${tr("Encja","Entity")}</label>${ent("tEnt", T.entity_id, "sensor.temperatura")}
+        <div class="row"><div class="grow"><label class="f">${tr("Atrybut (opcjonalnie)","Attribute (optional)")}</label><input type="text" id="sAttr" value="${esc(T.attribute)}"></div>
+        <div class="grow"><label class="f">${tr("Jednostka","Unit")}</label><input type="text" id="sUnit" value="${esc(T.unit)}"></div></div>`; }
+    $("fType").onchange = () => { collect(); T.type = $("fType").value; draw(); };
+    box.querySelectorAll(".icons button").forEach(b => b.onclick = () => { $("fIcon").value = b.dataset.i; });
+    $("fCancel").onclick = () => { box.hidden = true; };
+    $("fOk").onclick = () => { collect(); if(!valid()) return; if(idx == null) W.tiles.push(T); else W.tiles[idx] = T; box.hidden = true; setDirty(); renderTiles(); };
+  };
+  const collect = () => {
+    T.label = $("fLabel").value.trim(); T.icon = $("fIcon").value.trim(); T.color = $("fNoColor").checked ? "" : $("fColor").value;
+    T.width = +$("fWidth").value; T.confirm = $("fConfirm").checked;
+    if(T.type === "button"){ const a = T.action;
+      if(a.kind === "service"){ a.service = $("aSvc").value.trim(); a.entity_id = $("aEnt").value.trim();
+        try{ a.data = JSON.parse($("aData").value || "{}"); }catch{ a.data = {}; T._badjson = true; } }
+      else if(a.kind === "event") a.event_type = $("aEvt").value.trim(); else a.entity_id = $("aEnt").value.trim(); }
+    else { T.entity_id = $("tEnt").value.trim();
+      if(T.type === "slider"){ T.mode = $("sMode").value; T.min = +$("sMin").value; T.max = +$("sMax").value; T.step = +$("sStep").value || 1; }
+      if(T.type === "state"){ T.attribute = $("sAttr").value.trim(); T.unit = $("sUnit").value.trim(); } }
+  };
+  const valid = () => {
+    if(T._badjson){ toast(tr("Nieprawidłowy JSON w danych","Invalid JSON in data"), true); delete T._badjson; return false; }
+    if(T.type === "button"){ const a = T.action;
+      if(a.kind === "service" && !/^[a-z0-9_]+\.[a-z0-9_]+$/.test(a.service)){ toast(tr("Podaj usługę, np. light.turn_on","Enter a service, e.g. light.turn_on"), true); return false; }
+      if((a.kind === "script" || a.kind === "scene") && !a.entity_id.startsWith(a.kind + ".")){ toast(tr(`Podaj encję ${a.kind}.…`, `Enter a ${a.kind}.… entity`), true); return false; }
+      if(a.kind === "event" && !a.event_type){ toast(tr("Podaj nazwę zdarzenia","Enter an event name"), true); return false; } }
+    else if(!/^[a-z0-9_]+\.[a-z0-9_]+$/.test(T.entity_id)){ toast(tr("Podaj encję, np. light.salon","Enter an entity, e.g. light.salon"), true); return false; }
+    return true;
+  };
+  draw(); box.scrollIntoView({behavior:"smooth"});
+}
+$("addTile").onclick = () => tileForm(null, null);
+
+// ---------- auto-generate from entities
+const AUTO = {light:"toggle",switch:"toggle",input_boolean:"toggle",fan:"toggle",cover:"toggle",lock:"toggle",scene:"scene",script:"script",media_player:"volume",sensor:"state",binary_sensor:"state",input_number:"number",number:"number"};
+$("addAuto").onclick = () => {
+  const box = $("auto"); box.hidden = !box.hidden; $("tileForm").hidden = true; $("jsonBox").hidden = true; if(box.hidden) return;
+  const doms = Object.keys(AUTO), on = new Set(["light","scene","script"]);
+  box.innerHTML = `<div class="card" style="border-color:var(--acc)"><div class="chips" id="aDoms">${doms.map(d => `<label><input type="checkbox" value="${d}" ${on.has(d)?"checked":""}> ${d}</label>`).join("")}</div>
+    <input type="text" id="aFilter" placeholder="${tr("Filtr (nazwa lub id)…","Filter (name or id)…")}" style="margin-top:10px"><div id="aList" style="max-height:260px;overflow:auto;margin-top:8px"></div>
+    <div class="row"><button class="b" id="aAdd">${tr("Dodaj zaznaczone","Add selected")}</button><button class="b alt" id="aAll">${tr("Zaznacz wszystkie","Select all")}</button></div></div>`;
+  const list = () => { const ds = new Set([...box.querySelectorAll("#aDoms input:checked")].map(i => i.value)), f = $("aFilter").value.toLowerCase();
+    const rows = B.entities.filter(e => ds.has(e.id.split(".")[0]) && (!f || e.id.includes(f) || e.name.toLowerCase().includes(f))).slice(0, 200);
+    $("aList").innerHTML = rows.map(e => `<label class="ent"><input type="checkbox" value="${esc(e.id)}"> <span>${esc(e.name)} <small>${esc(e.id)}</small></span></label>`).join("") || `<div class="hint">${tr("Brak encji.","No entities.")}</div>`; };
+  box.querySelectorAll("#aDoms input").forEach(i => i.onchange = list); $("aFilter").oninput = list; list();
+  $("aAll").onclick = () => $("aList").querySelectorAll("input").forEach(i => i.checked = true);
+  $("aAdd").onclick = () => {
+    const picked = [...$("aList").querySelectorAll("input:checked")].map(i => i.value); let n = 0;
+    picked.forEach(id => { const e = B.entities.find(x => x.id === id), d = id.split(".")[0], kind = AUTO[d], name = e.name;
+      const base = {id:"", label:name, icon:"", color:"", width:1, confirm:false};
+      if(kind === "toggle") W.tiles.push({...base, type:"toggle", entity_id:id});
+      else if(kind === "scene" || kind === "script") W.tiles.push({...base, type:"button", icon:kind==="scene"?"🎬":"▶️", entity_id:"", action:{kind, service:"", entity_id:id, data:{}, event_type:""}});
+      else if(kind === "volume") W.tiles.push({...base, type:"slider", entity_id:id, mode:"volume", min:0, max:100, step:1, icon:"🔊", width:2});
+      else if(kind === "number") W.tiles.push({...base, type:"slider", entity_id:id, mode:"number", min:0, max:100, step:1, width:2});
+      else W.tiles.push({...base, type:"state", entity_id:id, attribute:"", unit:""}); n++; });
+    if(n){ setDirty(); renderTiles(); toast(tr(`Dodano ${n}`, `Added ${n}`)); box.hidden = true; }
+  };
+};
+
+// ---------- JSON editor
+$("addJson").onclick = () => { const b = $("jsonBox"); b.hidden = !b.hidden; $("tileForm").hidden = true; $("auto").hidden = true; if(!b.hidden) $("jsonTa").value = JSON.stringify(W, null, 1); };
+$("jsonApply").onclick = () => { try{ const j = JSON.parse($("jsonTa").value); if(!j || !Array.isArray(j.tiles)) throw new Error("tiles[]"); W = {cols:j.cols || W.cols, tiles:j.tiles}; $("eColsIn").value = W.cols; setDirty(); renderTiles(); $("jsonBox").hidden = true; }catch(e){ toast("JSON: " + e.message, true); } };
+
+// ---------- live preview
+function watchPrev(){
+  if(!cur || !W) return;
+  const ents = new Set(); W.tiles.forEach(t => { const e = t.type === "button" ? ((t.action.kind === "script" || t.action.kind === "scene") ? t.action.entity_id : "") : t.entity_id; if(e) ents.add(e); });
+  live.send({t:"watch", entities:[...ents]});
+}
+function refreshPrev(){
+  if(!W) return;
+  prevEls = HL.renderGrid($("prev"), {cols:W.cols, tiles:W.tiles.map((t,i) => ({...t, id:t.id || "n"+i}))}, liveStates, {press(){}, slide(){}});
+  watchPrev();
+}
+
+// ---------- feed
+function renderFeed(){
+  const box = $("feedList"); const rows = B.feed.slice().reverse();
+  box.innerHTML = rows.length ? "" : `<div class="hint">${tr("Czekam na akcje z urządzeń…","Waiting for actions from your devices…")}</div>`;
+  rows.forEach(e => { const el = document.createElement("div"); el.className = "fe";
+    el.innerHTML = `<span style="font-size:18px">${esc(e.icon || "•")}</span><div><b></b> <small></small><div class="hint"></div></div>`;
+    el.querySelector("b").textContent = e.label || e.type; el.querySelector("small").textContent = `${e.device} · ${new Date(e.ts*1000).toLocaleTimeString()} · ${e.source}`;
+    el.querySelector(".hint").textContent = (e.entity_id || "") + (e.value != null ? " = " + JSON.stringify(e.value) : "") + (e.ok ? "" : " ✗ " + e.error);
+    if(!e.ok) el.querySelector(".hint").classList.add("bad"); box.append(el); });
+}
+$("feedClear").onclick = async () => { try{ await api("feed", {method:"DELETE"}); B.feed = []; renderFeed(); }catch(e){ toast(e.message,true); } };
+
+// ---------- help
+function renderHelp(){
+  const host = `http://${esc(location.hostname)}:${B.public_port}`, p = esc(B.prefix);
+  $("helpBox").innerHTML = tr(`
+  <div class="sec">Jak to działa</div>
+  <p>Każde urządzenie (telefon, tablet, panel ścienny, skrypt) dostaje własny <b>token</b> i własny <b>układ kafelków</b>. Kafelki działają na żywo: stan z Home Assistanta aktualizuje się natychmiast, a akcje wracają jako zdarzenia.</p>
+  <div class="sec">1. Urządzenie z ekranem</div>
+  <p>Utwórz urządzenie, skopiuj link i otwórz go na telefonie/tablecie. Safari: <b>Udostępnij → Do ekranu początkowego</b>. W menu ⋯ jest „Nie wygaszaj ekranu” i „Pełny ekran” (panel ścienny).</p>
+  <div class="sec">2. Urządzenia bez ekranu / skróty / ESP</div>
+  <pre>curl -X POST ${host}/api/device/action \\
+  -H "Authorization: Bearer TOKEN" -d '{"tile":"ID_KAFELKA"}'
+
+curl -X POST ${host}/api/device/event \\
+  -H "Authorization: Bearer TOKEN" -d '{"event":"dzwonek","data":{"pietro":1}}'</pre>
+  <p>Urządzenie może wywołać <b>tylko</b> akcje zdefiniowane w jego układzie – nie ma dostępu do reszty HA. Limit: 25 akcji / 10 s.</p>
+  <div class="sec">3. Reakcja w Home Assistant</div>
+  <p>Każda akcja wysyła zdarzenie <code>${p}_action</code>, a zdarzenia z urządzeń <code>${p}_event</code>:</p>
+  <pre>trigger:
+  - platform: event
+    event_type: ${p}_action
+    event_data: {device: "Tablet w kuchni", label: "Dzwonek"}
+action:
+  - service: notify.notify
+    data: {message: "Ktoś nacisnął dzwonek"}</pre>`, `
+  <div class="sec">How it works</div>
+  <p>Each device (phone, tablet, wall panel, script) gets its own <b>token</b> and its own <b>tile layout</b>. Tiles are live: Home Assistant states update instantly, and actions come back as events.</p>
+  <div class="sec">1. Devices with a screen</div>
+  <p>Create a device, copy the link and open it on the phone/tablet. Safari: <b>Share → Add to Home Screen</b>. The ⋯ menu has “Keep screen on” and “Fullscreen” (wall panel).</p>
+  <div class="sec">2. Screenless devices / Shortcuts / ESP</div>
+  <pre>curl -X POST ${host}/api/device/action \\
+  -H "Authorization: Bearer TOKEN" -d '{"tile":"TILE_ID"}'
+
+curl -X POST ${host}/api/device/event \\
+  -H "Authorization: Bearer TOKEN" -d '{"event":"doorbell","data":{"floor":1}}'</pre>
+  <p>A device can <b>only</b> trigger actions defined in its own layout – it has no access to the rest of HA. Limit: 25 actions / 10 s.</p>
+  <div class="sec">3. React in Home Assistant</div>
+  <p>Every action fires the event <code>${p}_action</code>; events sent by devices fire <code>${p}_event</code>:</p>
+  <pre>trigger:
+  - platform: event
+    event_type: ${p}_action
+    event_data: {device: "Kitchen tablet", label: "Doorbell"}
+action:
+  - service: notify.notify
+    data: {message: "Someone pressed the bell"}</pre>`);
+}
+
+load().catch(e => toast(e.message, true));
+show("devices");
+</script>
+</body>
+</html>

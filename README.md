@@ -1,29 +1,22 @@
-# HAnnounce Enhanced – Home Assistant add-on
+# TeodorTeo.com – Home Assistant Add-ons
 
-**Announce on your speakers** with TTS, your own recordings, uploaded files or generated sounds –
-one-time (played and discarded) or saved in a library. Includes a mobile-friendly panel and an optional API.
-
-Ogłaszaj na głośnikach: TTS, własne nagrania, wgrane pliki i generowane dźwięki – jednorazowo lub zapisane w bibliotece.
-
-**Created by [TeodorTeo.com](https://teodorteo.com)**
+A repository of Home Assistant add-ons by **[TeodorTeo.com](https://teodorteo.com)**.
 
 ## Install / Instalacja
 1. Home Assistant → *Settings → Add-ons → Add-on Store → ⋮ → Repositories*
-2. Add: `https://github.com/onlinekot/hannounceenchanced`
-3. Install **HAnnounce Enhanced**, start it, open **HAnnounce** in the sidebar.
+2. Add: `https://github.com/OnlineKot/HAnnounceEnchanced#claude/hannounce-enhanced`
+3. Pick an add-on from the list below, install and start it.
 
-Details & API: [hannounce_enhanced/DOCS.md](hannounce_enhanced/DOCS.md)
+## Add-ons
 
-## Features
-- 🗣 TTS announce using the engines already set up in HA (engine, language, voice, preview, save)
-- 🎙 Record in browser / device recorder
-- 📤 Upload any audio file (auto-converted to mp3 via ffmpeg)
-- 🔔 Generator: tone, beeps, chime, gong, notification, siren, alarm
-- ⚡ One-time or saved library (rename, preview, delete)
-- ★ Favorites, speaker detection + calibration, duplicate removal, manual hide/restore
-- 🧠 Per-speaker memory: volume, resume what was playing, delays, power on/off, quiet hours
-- 🖥 Standalone web interface (port 8765, installable as iPhone app)
-- 🔑 Tokens for Shortcuts (revocable, limited) + supervised tokens with an announcement log
-- 🔌 External API with key for automations
+### 📣 [HAnnounce Enhanced](hannounce_enhanced/DOCS.md)
+Announce on your speakers with TTS (any HA TTS engine), your own recordings, uploads and generated sounds –
+one-time or saved. Per-speaker memory (resume playback, volume, delays, quiet hours), favorites, calibration,
+duplicate removal, API tokens for Shortcuts with a supervised log, full-screen quick interface.
+
+### ⚡ [HALiveTeo](haliveteo/DOCS.md)
+**Live actions from many devices.** Every phone, tablet or wall panel gets its own token and its own customizable
+layout of live tiles (buttons, toggles, sliders, states), a real-time action feed, Home Assistant events for
+automations, and a REST API for screenless devices (Shortcuts, ESP).
 
 MIT License © TeodorTeo.com

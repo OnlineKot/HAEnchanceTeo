@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>HALiveTeo</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="HALiveTeo">
+<meta name="theme-color" content="#009688">
+<link rel="stylesheet" href="static/common.css">
+<style>
+main{max-width:900px;margin:0 auto;padding:12px 12px 80px}
+header{display:flex;align-items:center;gap:10px;margin:2px 0 12px}
+header .ic{font-size:26px}header h1{font-size:18px;margin:0;flex:1;line-height:1.1}
+header button{background:none;border:0;font-size:20px;cursor:pointer;color:var(--fg);padding:4px 6px}
+#banner{display:none;background:var(--warn);color:#fff;border-radius:12px;padding:8px 12px;margin-bottom:10px;font-size:14px}
+#drawer{position:fixed;left:0;right:0;bottom:0;max-height:55vh;overflow:auto;background:var(--card);border-top:1px solid var(--bd);box-shadow:0 -8px 24px rgba(0,0,0,.18);padding:12px 14px calc(14px + env(safe-area-inset-bottom));transform:translateY(105%);transition:.25s;z-index:5;border-radius:18px 18px 0 0}
+#drawer.on{transform:none}
+.fe{display:flex;gap:8px;align-items:baseline;padding:5px 0;border-top:1px solid var(--bd);font-size:14px}.fe:first-of-type{border:0}
+.fe small{color:var(--mut)}.fe .bad{color:var(--err)}
+#setup{max-width:380px;margin:18vh auto 0;text-align:center}
+#toast{position:fixed;left:50%;top:14px;transform:translateX(-50%) translateY(-80px);background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:12px;transition:.25s;z-index:9;max-width:90%}
+#toast.on{transform:translateX(-50%)}
+.menu{position:fixed;right:10px;top:50px;background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:6px;display:none;z-index:6;min-width:210px}
+.menu.on{display:block}.menu button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--fg);padding:10px 12px;font:inherit;border-radius:8px;cursor:pointer}
+.menu button:hover{background:var(--bg)}
+footer{text-align:center;color:var(--mut);font-size:12px;margin-top:20px}footer a{color:var(--acc);text-decoration:none;font-weight:700}
+</style>
+</head>
+<body>
+<main>
+  <div id="setup" class="card" hidden>
+    <div style="font-size:42px">⚡</div><h2>HALiveTeo</h2>
+    <p class="hint" id="setupTxt"></p>
+    <input type="password" id="tokIn" placeholder="hl_…" autocomplete="off">
+    <p><button class="b" id="tokGo"></button></p>
+  </div>
+  <div id="app" hidden>
+    <header><span class="ic" id="devIcon">📱</span><h1 id="devName"></h1><span class="dot" id="conn"></span>
+      <button id="feedBtn" title="Live">📡</button><button id="menuBtn">⋯</button></header>
+    <div class="menu" id="menu">
+      <button id="mWake"></button><button id="mFull"></button><button id="mTok"></button>
+    </div>
+    <div id="banner"></div>
+    <div class="grid" id="grid"></div>
+    <footer><span id="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
+  </div>
+</main>
+<div id="drawer"></div>
+<div id="toast"></div>
+<script src="static/common.js"></script>
+<script>
+const tr = HL.tr, $ = id => document.getElementById(id);
+const store = {get:k=>{try{return localStorage.getItem(k)}catch{return null}}, set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}, del:k=>{try{localStorage.removeItem(k)}catch{}}};
+let toastT; const toast = (m,bad)=>{const e=$("toast");e.textContent=m;e.style.background=bad?"var(--err)":"";e.style.color=bad?"#fff":"";e.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),2600)};
+$("by").textContent = tr("Stworzone przez","Created by");
+$("setupTxt").textContent = tr("Wklej token urządzenia z panelu HALiveTeo (lub otwórz link z tokenem).","Paste the device token from the HALiveTeo panel (or open the link that contains it).");
+$("tokGo").textContent = tr("Połącz","Connect");
+$("mWake").textContent = "🔆 " + tr("Nie wygaszaj ekranu","Keep screen on");
+$("mFull").textContent = "⛶ " + tr("Pełny ekran","Fullscreen");
+$("mTok").textContent = "🔑 " + tr("Zmień token","Change token");
+
+// token from ?t=… link is stored, then removed from the address bar
+const q = new URLSearchParams(location.search);
+if(q.get("t")){ store.set("hl_token", q.get("t")); history.replaceState(null, "", location.pathname); }
+const token = store.get("hl_token");
+if(!token){ $("setup").hidden = false;
+  $("tokGo").onclick = () => { const v = $("tokIn").value.trim(); if(v){ store.set("hl_token", v); location.reload(); } };
+} else start();
+
+function start(){
+  $("app").hidden = false;
+  let layout = {cols:2,tiles:[]}, st = {}, els = {}, pending = {}, seq = 0, live;
+  const handlers = {
+    press:(tile, el) => act({tile:tile.id}, el),
+    slide:(tile, value, el) => act({tile:tile.id, value}, el)
+  };
+  function act(body, el){
+    navigator.vibrate && navigator.vibrate(12);
+    const id = ++seq; pending[id] = el;
+    if(!live.send({t:"action", id, ...body})){ delete pending[id]; HL.flash(el,false); toast(tr("Brak połączenia","Not connected"),true); }
+  }
+  function build(msg){
+    layout = msg.device.layout; st = msg.states || {};
+    $("devName").textContent = msg.device.name; $("devIcon").textContent = msg.device.icon || "📱"; document.title = msg.device.name;
+    els = HL.renderGrid($("grid"), layout, st, handlers);
+    $("feedBtn").style.display = msg.device.show_feed ? "" : "none";
+    if(msg.feed) renderFeed(msg.feed);
+  }
+  let feedRows = [];
+  function renderFeed(rows){ feedRows = rows.slice(-40); drawFeed(); }
+  function drawFeed(){
+    const d = $("drawer");
+    d.innerHTML = `<b>📡 Live</b>` + (feedRows.length ? "" : `<div class="hint">${tr("Brak akcji.","No actions yet.")}</div>`) +
+      feedRows.slice().reverse().map(e => `<div class="fe"><span>${HL.esc(e.icon||"•")}</span><span><b>${HL.esc(e.label||e.type)}</b> <small>${HL.esc(e.device)} · ${HL.time(e.ts)}</small>${e.ok?"":` <span class="bad">${HL.esc(e.error)}</span>`}</span></div>`).join("");
+  }
+  live = HL.live({
+    query: "?t=" + encodeURIComponent(token),
+    onStatus: (ok, everOpen, retry) => {
+      $("conn").classList.toggle("on", ok);
+      document.querySelectorAll(".tile").forEach(t => t.classList.toggle("off", !ok));
+      const b = $("banner");
+      if(ok) b.style.display = "none";
+      else { b.style.display = "block";
+        b.innerHTML = (everOpen || retry < 2) ? tr("Łączenie…","Reconnecting…")
+          : tr("Nie można połączyć. Sprawdź token lub adres.","Cannot connect. Check the token or address.") + ` <a href="#" id="bTok" style="color:#fff;font-weight:700">${tr("Zmień token","Change token")}</a>`;
+        const l = $("bTok"); if(l) l.onclick = e => { e.preventDefault(); store.del("hl_token"); location.reload(); }; }
+    },
+    onMsg: msg => {
+      if(msg.t === "hello") build(msg);
+      else if(msg.t === "state"){ st[msg.e] = msg.st; (els[msg.e] || []).forEach(([t, el]) => el.update(msg.st)); }
+      else if(msg.t === "ack"){ const el = pending[msg.id]; delete pending[msg.id]; HL.flash(el, msg.ok); if(!msg.ok) toast(msg.error || "error", true); }
+      else if(msg.t === "feed"){ feedRows.push(msg.entry); feedRows = feedRows.slice(-40); drawFeed(); }
+    }
+  });
+  $("feedBtn").onclick = () => $("drawer").classList.toggle("on");
+  $("drawer").onclick = e => { if(e.target.id === "drawer") $("drawer").classList.remove("on"); };
+  $("menuBtn").onclick = () => $("menu").classList.toggle("on");
+  document.addEventListener("click", e => { if(!e.target.closest("#menu,#menuBtn")) $("menu").classList.remove("on"); });
+  $("mTok").onclick = () => { if(confirm(tr("Usunąć token z tego urządzenia?","Remove the token from this device?"))){ store.del("hl_token"); location.reload(); } };
+  $("mFull").onclick = () => { (document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen)?.call(document.documentElement); };
+  let wake = null;
+  $("mWake").onclick = async () => {
+    try{ if(wake){ await wake.release(); wake = null; toast(tr("Wygaszanie włączone","Screen may sleep")); }
+         else { wake = await navigator.wakeLock.request("screen"); toast(tr("Ekran zostaje włączony","Screen stays on")); } }
+    catch{ toast(tr("Niedostępne w tej przeglądarce","Not available in this browser"), true); }
+  };
+  document.addEventListener("visibilitychange", async () => { if(wake && document.visibilityState === "visible"){ try{ wake = await navigator.wakeLock.request("screen"); }catch{} } });
+}
+</script>
+</body>
+</html>
