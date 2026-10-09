@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.12.0
+- "Announcing now" bar (sessions) + /api/status + sensor.hannounce_status; configurable Live Activity (Dynamic Island) for announcements, per token and per announcement.
+
 ## 1.11.0
 - Home Assistant look (theme variables, Roboto, pill buttons, filled fields, switches, tabs).
 

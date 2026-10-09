@@ -66,6 +66,11 @@ audio{width:100%;margin-top:10px}
 .prof{background:var(--bg);border-radius:12px;padding:6px 12px 12px;margin-top:10px}
 .tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
 .tools input[type=search]{flex:1;min-width:150px}
+#nowBar .nrow{display:flex;gap:12px;align-items:center;padding:6px 0}#nowBar .nrow+.nrow{border-top:1px solid var(--divider-color)}
+#nowBar .pulse{width:12px;height:12px;border-radius:50%;background:var(--primary-color);flex:none;animation:np 1.2s infinite}
+#nowBar .pulse.q{background:var(--warning-color);animation:none}
+@keyframes np{0%{box-shadow:0 0 0 0 rgba(var(--rgb-primary-color),.5)}100%{box-shadow:0 0 0 10px transparent}}
+#nowBar .bar{height:4px;border-radius:2px;background:rgba(var(--rgb-primary-color),.2);overflow:hidden;margin-top:6px}#nowBar .bar i{display:block;height:100%;background:var(--primary-color);transition:width .3s linear}
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;max-width:90%;z-index:9;box-shadow:var(--sh)}
 #toast.on{opacity:1}
 footer{text-align:center;color:var(--mut);font-size:13px;margin:18px 0 6px}
@@ -117,6 +122,8 @@ label.chk{gap:12px}
 <body>
 <main>
 <header><div class="logo">📣</div><div><h1>HAnnounce Enhanced</h1><small data-i="tagline"></small></div></header>
+
+<div class="card" id="nowBar" hidden style="border-color:var(--primary-color);padding:12px 16px"></div>
 
 <div class="card" id="updBanner" hidden style="border-color:var(--warn)"></div>
 
@@ -213,6 +220,29 @@ label.chk{gap:12px}
     <div id="spkList"></div>
   </div>
 
+  <div class="pane" id="p-live">
+    <div class="sec"><span data-i="liveTitle"></span></div>
+    <div class="hint" data-i="liveInfo" style="margin:0 0 10px"></div>
+    <label class="chk"><input type="checkbox" id="lvOn"> <span data-i="lvOn"></span></label>
+    <label class="f" data-i="lvPhones"></label><div class="chips" id="lvPhones"></div>
+    <label class="f" data-i="lvOnly"></label><div class="chips" id="lvOnly"></div><div class="hint" data-i="lvOnlyHint"></div>
+    <div class="row"><div class="grow"><label class="f" data-i="lvTitle"></label><input type="text" id="lvTitle"></div>
+      <div class="grow"><label class="f" data-i="lvCrit"></label><input type="text" id="lvCrit"></div></div>
+    <label class="f" data-i="lvMsg"></label><input type="text" id="lvMsg"><div class="hint" data-i="lvMsgHint"></div>
+    <label class="chk"><input type="checkbox" id="lvHide"> <span data-i="lvHide"></span></label>
+    <label class="chk"><input type="checkbox" id="lvCount"> <span data-i="lvCount"></span></label>
+    <div class="row"><div class="grow"><label class="f" data-i="lvIcon"></label><select id="lvIconSel"></select></div>
+      <div class="grow"><label class="f">mdi:</label><input type="text" id="lvIcon"></div>
+      <div><label class="f" data-i="lvColor"></label><input type="color" id="lvColor"></div></div>
+    <details style="margin-top:10px"><summary class="hint" style="cursor:pointer" data-i="lvAdv"></summary>
+      <div class="row"><div class="grow"><label class="f">background_color</label><input type="text" id="lvBg" placeholder="#101820"></div>
+        <div class="grow"><label class="f">text_color</label><input type="text" id="lvTx" placeholder="#FFFFFF"></div>
+        <div class="grow"><label class="f">relevance_score 0–1</label><input type="number" id="lvRel" step="0.1" min="0" max="1"></div>
+        <div class="grow"><label class="f" data-i="lvEnd"></label><input type="number" id="lvEnd" step="1" min="0" max="60"></div></div>
+      <label class="f" data-i="lvUrl"></label><input type="text" id="lvUrl" placeholder="/lovelace/0"></details>
+    <div class="row"><button class="b" id="lvSave" data-i="dSave"></button><button class="b alt" id="lvTest" data-i="lvTest"></button></div>
+  </div>
+
   <div class="pane" id="p-tok">
     <div class="sec"><span data-i="tokTitle"></span><span class="sp"></span><button class="link" id="tokNew" data-i="tokNew"></button></div>
     <div class="hint" data-i="tokHint" style="margin:0 0 10px"></div>
@@ -220,6 +250,7 @@ label.chk{gap:12px}
       <label class="f" data-i="tokName"></label><input type="text" id="tkName" data-ph="tokNamePh">
       <label class="chk"><input type="checkbox" id="tkSup" checked> <span data-i="tokSup"></span></label>
       <label class="f" data-i="tokSpk"></label><div class="chips" id="tkSpk"></div>
+      <label class="f" data-i="tokLive"></label><div class="chips" id="tkLive"></div><div class="hint" data-i="tokLiveHint"></div>
       <label class="chk"><input type="checkbox" id="tkAll"> <span data-i="tokAll"></span></label>
       <label class="chk"><input type="checkbox" id="tkTts" checked> <span data-i="tokTts"></span></label>
       <label class="chk"><input type="checkbox" id="tkSnd" checked> <span data-i="tokSnd"></span></label>
@@ -247,7 +278,12 @@ label.chk{gap:12px}
 
 <script>
 const L = {
- en:{tagline:"Announcements for your speakers",tokens:"🔑 Tokens",tokTitle:"Tokens for shortcuts",tokNew:"+ New token",cancel:"Cancel",refresh:"Refresh",
+ en:{tagline:"Announcements for your speakers",tabLive:"🏝️ Live",nowPlaying:"Announcing now",nowQueued:"Queued",nowOn:"on",liveTitle:"Live Activity – Dynamic Island & Lock Screen",
+  liveInfo:"Shows the announcement in progress (what, where, countdown) on the iPhone Dynamic Island and Lock Screen (Android: Live Update) via the Home Assistant Companion app. Needs iOS 17.2+, Home Assistant Core 2026.7+ and Live Activities enabled in the app (Settings → Live Activities). The status is also published as sensor.hannounce_status. An admin can also give a person their own live status per token (Tokens tab) or per announcement (API field live).",
+  lvOn:"Show announcements as a Live Activity on the phones below",lvPhones:"Phones (Companion app)",lvOnly:"Only for announcements from (empty = all)",lvOnlyHint:"Sources: the panel/admin or a token name.",
+  lvTitle:"Title",lvCrit:"Island compact text",lvMsg:"Message",lvMsgHint:"Placeholders: {text} {speakers} {source} {user}",lvHide:"Hide the spoken text (privacy – show only that something is announced)",lvCount:"Countdown timer until the announcement ends",
+  lvIcon:"Icon",lvColor:"Color",lvAdv:"Advanced",lvEnd:"Keep after end (s)",lvUrl:"Open on tap",lvTest:"Test (6 s)",lvNoPhone:"No phone found (notify.mobile_app_*). Install the Home Assistant app on the phone.",lvSaved:"Saved ✓",lvTested:"Test sent to the phone",
+  tokLive:"Live status on these phones (gives them a Live Activity of this token's announcements)",tokLiveHint:"Optional. E.g. the person who owns the shortcut sees their announcement on their Dynamic Island.",tokens:"🔑 Tokens",tokTitle:"Tokens for shortcuts",tokNew:"+ New token",cancel:"Cancel",refresh:"Refresh",
   tokHint:"A token lets one shortcut (or app) announce without your admin key. It can be limited to chosen speakers and revoked any time.",
   tokName:"Name (e.g. the shortcut or person)",tokNamePh:"iPhone shortcut",tokSup:"Supervised: save everything this token says in the log",
   tokSpk:"Speakers (default targets)",tokAll:"Allow it to announce on other speakers too",tokTts:"May use text-to-speech",tokSnd:"May play library sounds",tokAct:"May run scripts / scenes",
@@ -275,7 +311,12 @@ const L = {
   dAuto:"Let the player handle it (announce)",dManual:"Restore what was playing (media + position)",dNone:"Do nothing",dBefore:"Wait before playing (s)",dAfter:"Wait after it ends, then restore (s)",
   dPower:"Turn on if off, turn off afterwards",dUnmute:"Unmute during announcement",dQuiet:"Quiet hours",dQFrom:"from",dQTo:"to",dQVol:"Quiet volume % (empty = skip speaker)",
   dSave:"Save",dReset:"Reset",dCopy:"Copy to all speakers",dSaved:"Settings saved ✓"},
- pl:{tagline:"Ogłoszenia na Twoich głośnikach",tokens:"🔑 Tokeny",tokTitle:"Tokeny dla skrótów",tokNew:"+ Nowy token",cancel:"Anuluj",refresh:"Odśwież",
+ pl:{tagline:"Ogłoszenia na Twoich głośnikach",tabLive:"🏝️ Live",nowPlaying:"Teraz ogłaszam",nowQueued:"W kolejce",nowOn:"na",liveTitle:"Live Activity – Dynamic Island i ekran blokady",
+  liveInfo:"Pokazuje trwające ogłoszenie (co, gdzie, odliczanie) na Dynamic Island i ekranie blokady iPhone'a (Android: Live Update) przez aplikację Home Assistant Companion. Wymaga iOS 17.2+, Home Assistant Core 2026.7+ i włączonych Live Activities w aplikacji (Ustawienia → Live Activities). Status jest też publikowany jako sensor.hannounce_status. Admin może dać komuś własny status na żywo: per token (zakładka Tokeny) lub per ogłoszenie (pole live w API).",
+  lvOn:"Pokazuj ogłoszenia jako Live Activity na poniższych telefonach",lvPhones:"Telefony (aplikacja Companion)",lvOnly:"Tylko dla ogłoszeń z (puste = wszystkie)",lvOnlyHint:"Źródła: panel/admin albo nazwa tokenu.",
+  lvTitle:"Tytuł",lvCrit:"Tekst na wyspie (compact)",lvMsg:"Treść",lvMsgHint:"Symbole: {text} {speakers} {source} {user}",lvHide:"Ukryj mówiony tekst (prywatność – widać tylko, że coś jest ogłaszane)",lvCount:"Licznik odliczający do końca ogłoszenia",
+  lvIcon:"Ikona",lvColor:"Kolor",lvAdv:"Zaawansowane",lvEnd:"Zostaw po końcu (s)",lvUrl:"Po dotknięciu otwórz",lvTest:"Test (6 s)",lvNoPhone:"Nie znaleziono telefonu (notify.mobile_app_*). Zainstaluj aplikację Home Assistant na telefonie.",lvSaved:"Zapisano ✓",lvTested:"Test wysłany na telefon",
+  tokLive:"Status na żywo na tych telefonach (daje im Live Activity z ogłoszeń tego tokenu)",tokLiveHint:"Opcjonalnie. Np. osoba, do której należy skrót, widzi swoje ogłoszenie na swojej Dynamic Island.",tokens:"🔑 Tokeny",tokTitle:"Tokeny dla skrótów",tokNew:"+ Nowy token",cancel:"Anuluj",refresh:"Odśwież",
   tokHint:"Token pozwala jednemu skrótowi (lub aplikacji) ogłaszać bez Twojego klucza administratora. Można go ograniczyć do wybranych głośników i w każdej chwili odwołać.",
   tokName:"Nazwa (np. skrót lub osoba)",tokNamePh:"Skrót na iPhone",tokSup:"Nadzorowany: zapisuj w dzienniku wszystko, co ten token mówi",
   tokSpk:"Głośniki (domyślne cele)",tokAll:"Pozwól ogłaszać także na innych głośnikach",tokTts:"Może używać mowy (TTS)",tokSnd:"Może odtwarzać dźwięki z biblioteki",tokAct:"Może uruchamiać skrypty / sceny",
@@ -329,7 +370,7 @@ document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i
 document.querySelectorAll("[data-ph]").forEach(e => e.placeholder = t(e.dataset.ph));
 
 // ---- tabs
-const TABS = [["quick","quick"],["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"],["spk","speakers"],["tok","tokens"],["help","app"]];
+const TABS = [["quick","quick"],["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"],["spk","speakers"],["tok","tokens"],["live","tabLive"],["help","app"]];
 TABS.forEach(([id, k]) => {
   const b = document.createElement("button"); b.textContent = t(k); b.dataset.id = id;
   b.onclick = () => showTab(id); $("tabs").append(b);
@@ -337,7 +378,7 @@ TABS.forEach(([id, k]) => {
 function showTab(id){
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.id===id));
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="p-"+id));
-  if(id==="lib") renderLib(); if(id==="spk") renderSpk(); if(id==="tok") renderTokens(); if(id==="help") renderHelp();
+  if(id==="lib") renderLib(); if(id==="spk") renderSpk(); if(id==="tok") renderTokens(); if(id==="live") renderLiveCfg(); if(id==="help") renderHelp();
 }
 
 // ---- state
@@ -576,6 +617,56 @@ $("qGo").onclick = async () => {
   if(ok){ store.set("recent",[m,...recent().filter(x=>x!==m)].slice(0,6)); renderQuick(); }
 };
 
+// ---- "is it announcing?" - live sessions bar (polls /api/status) ----
+let stat = {active:[], now:0}, clockOff = 0;
+async function pollStatus(){
+  if(document.hidden) return;
+  try{ const d = await api("status"); clockOff = d.now - Date.now()/1000; stat = d; drawNow(); }catch{}
+}
+function drawNow(){
+  const box = $("nowBar"), act = stat.active || [];
+  if(!act.length){ box.hidden = true; return; }
+  box.hidden = false; box.innerHTML = "";
+  const now = Date.now()/1000 + clockOff;
+  act.forEach(x => {
+    const row = document.createElement("div"); row.className = "nrow";
+    const left = x.ends ? Math.max(0, x.ends - now) : x.duration, pct = x.ends ? Math.min(100, 100 - left / x.duration * 100) : 0;
+    row.innerHTML = `<span class="pulse ${x.state==="queued"?"q":""}"></span><div style="flex:1;min-width:0"><div style="font-weight:500" class="tx"></div>
+      <div class="hint sub"></div><div class="bar"><i style="width:${pct}%"></i></div></div><button class="b red sm">${t("stop2")}</button>`;
+    row.querySelector(".tx").textContent = (x.state === "queued" ? "⏳ " + t("nowQueued") + ": " : "📣 ") + (x.hidden ? x.kind.toUpperCase() : x.said);
+    row.querySelector(".sub").textContent = `${t("nowOn")} ${x.names.join(", ")} · ${x.source}` + (x.state === "playing" ? ` · ${Math.ceil(left)} s` : "");
+    row.querySelector("button").onclick = async () => { try{ await post("stop", {targets:x.targets}); pollStatus(); }catch(e){ toast(e.message, true); } };
+    box.append(row);
+  });
+}
+setInterval(pollStatus, 1500); setInterval(drawNow, 400);
+
+// ---- Live Activity settings (Dynamic Island) ----
+const LIVE_ICONS = ["bullhorn","bullhorn-outline","bell-ring","speaker","speaker-wireless","volume-high","music","microphone","message","home","alarm-light","door"];
+$("lvIconSel").innerHTML = LIVE_ICONS.map(i => `<option value="mdi:${i}">${i}</option>`).join("");
+$("lvIconSel").onchange = () => { $("lvIcon").value = $("lvIconSel").value; };
+let LV = null;
+function chipSet(box, items, selected){
+  box.innerHTML = "";
+  items.forEach(v => { const c = document.createElement("button"); c.type = "button"; c.className = "chip" + (selected.includes(v) ? " on" : ""); c.dataset.id = v; c.textContent = v;
+    c.onclick = () => c.classList.toggle("on"); box.append(c); });
+}
+const chipVals = box => [...box.querySelectorAll(".chip.on")].map(c => c.dataset.id);
+async function renderLiveCfg(){
+  try{ LV = await api("live"); }catch(e){ return toast(e.message, true); }
+  const c = LV.settings;
+  $("lvOn").checked = c.enabled; $("lvTitle").value = c.title; $("lvCrit").value = c.critical_text; $("lvMsg").value = c.message;
+  $("lvHide").checked = c.hide_text; $("lvCount").checked = c.countdown; $("lvIcon").value = c.icon; $("lvColor").value = c.color;
+  $("lvBg").value = c.background_color; $("lvTx").value = c.text_color; $("lvRel").value = c.relevance ?? ""; $("lvEnd").value = c.end_delay; $("lvUrl").value = c.url;
+  if(LV.notify.length) chipSet($("lvPhones"), LV.notify, c.phones); else $("lvPhones").innerHTML = `<span class="hint">${t("lvNoPhone")}</span>`;
+  chipSet($("lvOnly"), LV.sources, c.only_sources);
+}
+const lvBody = () => ({enabled:$("lvOn").checked, phones:chipVals($("lvPhones")), only_sources:chipVals($("lvOnly")), title:$("lvTitle").value, critical_text:$("lvCrit").value, message:$("lvMsg").value,
+  hide_text:$("lvHide").checked, countdown:$("lvCount").checked, icon:$("lvIcon").value.trim(), color:$("lvColor").value, background_color:$("lvBg").value.trim(), text_color:$("lvTx").value.trim(),
+  relevance:$("lvRel").value, end_delay:$("lvEnd").value, url:$("lvUrl").value.trim()});
+$("lvSave").onclick = async () => { try{ await post("live", lvBody()); toast(t("lvSaved")); }catch(e){ toast(e.message, true); } };
+$("lvTest").onclick = async () => { try{ const b = lvBody(); await post("live", b); await post("live/test", {phones:b.phones}); toast(t("lvTested")); }catch(e){ toast(e.message, true); } };
+
 // ---- tokens (for shortcuts) + announcement log
 let TK = [];
 const ago = ts => ts ? new Date(ts*1000).toLocaleString() : t("tokNever");
@@ -624,11 +715,17 @@ $("logRefresh").onclick = renderTokens; $("logFilter").onchange = renderLog;
 $("logClear").onclick = async () => { if(!confirm(t("logConfirm"))) return; try{ await api("log",{method:"DELETE"}); renderLog(); }catch(e){toast(e.message,true)} };
 $("tokNew").onclick = () => {
   const f = $("tokForm"); f.hidden = !f.hidden; if(f.hidden) return;
-  $("tkSpk").innerHTML = "";
+  fillTokLive(); $("tkSpk").innerHTML = "";
   visible().forEach(p => { const c = document.createElement("button"); c.type="button"; c.className = "chip"; c.dataset.id = p.entity_id;
     c.innerHTML = `<span class="dot ${esc(p.state)}"></span><span></span>`; c.children[1].textContent = p.name;
     c.onclick = () => c.classList.toggle("on"); $("tkSpk").append(c); });
 };
+async function fillTokLive(){
+  const box = $("tkLive"); box.innerHTML = "";
+  let n = []; try{ n = (await api("live")).notify; }catch{}
+  n.forEach(p => { const c = document.createElement("button"); c.type = "button"; c.className = "chip"; c.dataset.id = p; c.textContent = p; c.onclick = () => c.classList.toggle("on"); box.append(c); });
+  if(!n.length) box.innerHTML = `<span class="hint">${t("lvNoPhone")}</span>`;
+}
 $("tkCancel").onclick = () => { $("tokForm").hidden = true; };
 $("tkCreate").onclick = async () => {
   const sel = [...document.querySelectorAll("#tkSpk .chip.on")].map(c=>c.dataset.id), name = $("tkName").value.trim();
@@ -637,7 +734,8 @@ $("tkCreate").onclick = async () => {
     const r = await post("tokens",{name,supervised:$("tkSup").checked,targets:sel,allow_all_speakers:$("tkAll").checked,
       allow_tts:$("tkTts").checked,allow_sounds:$("tkSnd").checked,allow_actions:$("tkAct").checked,
       max_volume:$("tkMax").value===""?null:+$("tkMax").value/100,
-      tts_entity:$("ttsEnt").value||"",language:$("ttsLang").value||"",voice:$("ttsVoice").value||""});
+      tts_entity:$("ttsEnt").value||"",language:$("ttsLang").value||"",voice:$("ttsVoice").value||"",
+      live_phones:[...document.querySelectorAll("#tkLive .chip.on")].map(c=>c.dataset.id)});
     $("tokForm").hidden = true; $("tkName").value = "";
     const box = $("tokResult"); box.innerHTML = "";
     const card = document.createElement("div"); card.className = "prof"; card.style.border = "1.5px solid var(--warn)";

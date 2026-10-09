@@ -274,6 +274,22 @@ TAG_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 HEX_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
+def act_phones(act):
+    out = set(act["phones"])
+    for d in devices:
+        if (d["id"] in act.get("devices", []) and d.get("phone") and d.get("enabled", True)
+                and act["id"] not in d.get("muted", [])):
+            out.add(d["phone"])
+    return out
+
+
+def safe_fmt(tpl, st):
+    """Placeholders only ({state} {name} {attr.x}) - no templates, so a device user cannot read arbitrary HA data."""
+    a = (st or {}).get("a") or {}
+    out = str(tpl or "").replace("{state}", str((st or {}).get("s", ""))).replace("{name}", str(a.get("friendly_name", "")))
+    return re.sub(r"\{attr\.([A-Za-z0-9_]{1,40})\}", lambda m: str(a.get(m.group(1), "")), re.sub(r"\{\{.*?\}\}|\{%.*?%\}", "", out))
+
+
 def hexc(v):
     v = s(v, 7)
     return v if HEX_RE.match(v) else ""
@@ -284,7 +300,7 @@ def csv_list(v):
     return [str(x).strip()[:60] for x in items if str(x).strip()][:20]
 
 
-def clean_activity(raw):
+def clean_activity(raw, owner=""):
     tag = s(raw.get("tag"), 64)
     lo, hi = num(raw.get("progress_min"), 0), num(raw.get("progress_max"), 100)
     icon = s(raw.get("icon"), 64)
@@ -294,6 +310,8 @@ def clean_activity(raw):
         "id": re.sub(r"[^a-z0-9]", "", s(raw.get("id"), 16).lower()) or uuid.uuid4().hex[:8],
         "name": s(raw.get("name"), 40).strip() or "Live Activity",
         "enabled": bool(raw.get("enabled", True)),
+        "owner": owner,                                   # device id when a user created it themselves
+        "devices": [d for d in (re.sub(r"[^a-z0-9]", "", str(x).lower())[:16] for x in (raw.get("devices") or [])) if d][:50],
         "phones": [p for p in (str(x).removeprefix("notify.") for x in (raw.get("phones") or [])) if PHONE_RE.match(p)][:6],
         "tag": tag if TAG_RE.match(tag) else "hl_" + uuid.uuid4().hex[:8],
         "title": s(raw.get("title"), 80), "message": s(raw.get("message"), 300),
@@ -339,6 +357,10 @@ def parse_ts(v):
         return None
 
 
+async def _async_const(value):
+    return value
+
+
 async def activity_payload(act, st, first):
     a = (st or {}).get("a") or {}
     data = {"tag": act["tag"], "live_update": True, "notification_icon": act["icon"],
@@ -354,7 +376,8 @@ async def activity_payload(act, st, first):
         ts = parse_ts(a.get(act["chrono_attr"]) if act["chrono_attr"] else (st or {}).get("s"))
         if ts and ts > time.time():
             data.update(chronometer=True, when=int(ts), when_relative=False)
-    crit = await render(act["critical_text"]) if act["critical_text"] else (f"{prog}%" if prog is not None else "")
+    rnd = (lambda t: _async_const(safe_fmt(t, st))) if act.get("owner") else render
+    crit = await rnd(act["critical_text"]) if act["critical_text"] else (f"{prog}%" if prog is not None else "")
     if crit:
         data["critical_text"] = crit
     for key in ("background_color", "text_color", "url"):
@@ -364,21 +387,23 @@ async def activity_payload(act, st, first):
         data["relevance_score"] = act["relevance"]
     if not first:
         data["silent"], data["alert_once"] = True, True
-    title = await render(act["title"]) or act["name"]
-    message = await render(act["message"]) or (st or {}).get("s", "")
+    title = await rnd(act["title"]) or act["name"]
+    message = await rnd(act["message"]) or (st or {}).get("s", "")
     return {"title": title, "message": message, "data": data}, prog
 
 
 async def live_send(act, st, first, force=False):
-    if not act["phones"]:
-        raise err(400, "pick at least one phone")
+    phones = act_phones(act)
+    if not phones:
+        raise err(400, "pick at least one phone (or give the activity to a device that has one)")
     payload, prog = await activity_payload(act, st, first)
     run = running.setdefault(act["id"], {"t": 0, "started": time.time(), "sig": None, "pending": None})
     sig = (payload["message"], prog, payload["data"].get("when"))
     if not first and not force and run["sig"] == sig:
         return False
-    for phone in act["phones"]:
+    for phone in phones:
         await ha_post(f"/services/notify/{phone}", payload)
+    run["phones"] = set(run.get("phones") or ()) | phones
     run.update(t=time.time(), sig=sig)
     if first:
         run["started"] = time.time()
@@ -392,7 +417,7 @@ async def live_end(act):
     run = running.pop(act["id"], None)
     if run and run.get("pending"):
         run["pending"].cancel()
-    for phone in act["phones"]:
+    for phone in act_phones(act) | set((run or {}).get("phones") or ()):
         try:
             await ha_post(f"/services/notify/{phone}", {"message": "clear_notification", "data": {"tag": act["tag"]}})
         except web.HTTPException as exc:
@@ -418,7 +443,7 @@ async def delayed_update(act, wait):
 async def live_eval(eid):
     """Decide from a state change whether a bound Live Activity starts, updates (throttled) or ends."""
     for act in list(activities):
-        if not act["enabled"] or act["entity_id"] != eid or not act["phones"]:
+        if not act["enabled"] or act["entity_id"] != eid or not act_phones(act):
             continue
         try:
             st = states.get(eid)
@@ -609,6 +634,83 @@ async def run_event(device, name, payload):
     return {"ok": True, "error": ""}
 
 
+
+# ---------------------------------------------------------------- Live Activities given to / created by devices
+def device_entities(device):
+    return layout_entities(device["layout"]) | set(device.get("live_entities") or [])
+
+
+def live_view(device):
+    mine = []
+    for a in activities:
+        own = a.get("owner") == device["id"]
+        if own or device["id"] in a.get("devices", []):
+            mine.append({"id": a["id"], "name": a["name"], "entity_id": a["entity_id"], "icon": a["icon"], "color": a["color"],
+                         "enabled": a["enabled"], "owner": own, "muted": a["id"] in device.get("muted", []),
+                         "running": a["id"] in running, "raw": a if own else None})
+    mode = device.get("live", "off")
+    ents = []
+    if mode == "create":
+        ents = [{"id": e, "name": ((states.get(e) or {}).get("a") or {}).get("friendly_name", e)} for e in sorted(device_entities(device))]
+    return {"t": "live_list", "phone": bool(device.get("phone")), "mode": mode, "activities": mine, "entities": ents}
+
+
+async def device_live(device, data):
+    """Handle live_follow / live_save / live_delete from a device - always limited to what the admin allowed."""
+    kind = data.get("t")
+    if kind == "live_follow":
+        act = next((a for a in activities if a["id"] == data.get("id") and device["id"] in a.get("devices", [])), None)
+        if not act:
+            return {"ok": False, "error": "not given to this device"}
+        muted = set(device.get("muted", []))
+        if data.get("on"):
+            muted.discard(act["id"])
+        else:
+            muted.add(act["id"])
+            if act["id"] in running and device.get("phone"):
+                try:
+                    await ha_post(f"/services/notify/{device['phone']}", {"message": "clear_notification", "data": {"tag": act["tag"]}})
+                except web.HTTPException:
+                    pass
+        device["muted"] = sorted(muted)
+        save_devices()
+        asyncio.create_task(live_eval(act["entity_id"]))
+        return {"ok": True}
+    if device.get("live") != "create":
+        return {"ok": False, "error": "creating Live Activities is not allowed for this device"}
+    if not device.get("phone"):
+        return {"ok": False, "error": "ask the admin to assign your phone to this device first"}
+    if kind == "live_save":
+        raw = data.get("activity") if isinstance(data.get("activity"), dict) else {}
+        raw_id = re.sub(r"[^a-z0-9]", "", str(raw.get("id") or "").lower())
+        old = next((a for a in activities if a["id"] == raw_id), None) if raw_id else None
+        if old and old.get("owner") != device["id"]:
+            return {"ok": False, "error": "not your activity"}
+        if not old and sum(1 for a in activities if a.get("owner") == device["id"]) >= 10:
+            return {"ok": False, "error": "limit of 10 own activities reached"}
+        act = clean_activity({**raw, "phones": [], "devices": [device["id"]], "tag": (old or {}).get("tag", "")}, owner=device["id"])
+        if act["entity_id"] not in device_entities(device):
+            return {"ok": False, "error": "this entity is not allowed for your device"}
+        if old:
+            if old["id"] in running and old["tag"] != act["tag"]:
+                await live_end(old)
+            activities[activities.index(old)] = act
+        else:
+            activities.append(act)
+        save_activities()
+        asyncio.create_task(live_eval(act["entity_id"]))
+        return {"ok": True}
+    if kind == "live_delete":
+        act = next((a for a in activities if a["id"] == data.get("id") and a.get("owner") == device["id"]), None)
+        if not act:
+            return {"ok": False, "error": "not your activity"}
+        if act["id"] in running:
+            await live_end(act)
+        activities.remove(act)
+        save_activities()
+        return {"ok": True}
+    return {"ok": False, "error": "unknown request"}
+
 # ---------------------------------------------------------------- websocket
 def hello_for(device):
     watch = layout_entities(device["layout"])
@@ -648,6 +750,12 @@ async def ws_handler(request):
             elif kind == "event" and device:
                 result = await run_event(device, data.get("event"), data.get("data"))
                 await ws.send_json({"t": "ack", "id": data.get("id"), **result})
+            elif kind == "live_list" and device:
+                await ws.send_json(live_view(device))
+            elif kind in ("live_follow", "live_save", "live_delete") and device:
+                result = await device_live(device, data)
+                await ws.send_json({"t": "ack", "id": data.get("id"), **result})
+                await ws.send_json(live_view(device))
             elif kind == "watch" and admin:
                 wanted = {e for e in (entity(x) for x in (data.get("entities") or [])[:300]) if e}
                 if wanted != client.watch:
@@ -727,7 +835,7 @@ async def h_dev_create(request):
         raise err(400, "name required")
     raw, digest, prefix = new_token()
     dev = {"id": uuid.uuid4().hex[:8], "name": name, "icon": s(body.get("icon"), 40) or "mdi:cellphone", "hash": digest,
-           "prefix": prefix, "created": int(time.time()), "last_seen": None, "enabled": True, "user": s(body.get("user"), 40).strip(),
+           "prefix": prefix, "created": int(time.time()), "last_seen": None, "enabled": True, "user": s(body.get("user"), 40).strip(), "phone": "", "live": "off", "live_entities": [], "muted": [],
            "show_feed": bool(body.get("show_feed", True)), "layout": clean_layout(body.get("layout"))}
     devices.append(dev)
     save_devices()
@@ -747,6 +855,13 @@ async def h_dev_update(request):
         dev["name"] = s(body["name"], 40).strip()
     if "user" in body:
         dev["user"] = s(body["user"], 40).strip()
+    if "phone" in body:
+        ph = str(body["phone"] or "").removeprefix("notify.")
+        dev["phone"] = ph if PHONE_RE.match(ph) else ""
+    if "live" in body:
+        dev["live"] = body["live"] if body["live"] in ("off", "follow", "create") else "off"
+    if "live_entities" in body:
+        dev["live_entities"] = [e for e in (entity(x) for x in (body["live_entities"] or [])[:100]) if e]
     if "icon" in body:
         dev["icon"] = s(body["icon"], 40) or "mdi:cellphone"
     for key in ("enabled", "show_feed"):
@@ -801,10 +916,11 @@ def get_act(request):
 
 
 async def h_act_save(request):
-    act = clean_activity(await request.json())
+    raw = await request.json()
+    old = next((a for a in activities if a["id"] == re.sub(r"[^a-z0-9]", "", str(raw.get("id") or "").lower())), None)
+    act = clean_activity(raw, owner=(old or {}).get("owner", ""))
     if not act["entity_id"]:
         raise err(400, "pick the entity that drives this Live Activity")
-    old = next((a for a in activities if a["id"] == act["id"]), None)
     if old:
         if old["id"] in running and old["tag"] != act["tag"]:
             await live_end(old)
@@ -839,7 +955,7 @@ async def h_act_end(request):
 async def h_act_preview(request):
     act = clean_activity(await request.json())
     payload, _ = await activity_payload(act, states.get(act["entity_id"]), True)
-    return web.json_response({"service": [f"notify.{p}" for p in act["phones"]], "payload": payload})
+    return web.json_response({"service": [f"notify.{p}" for p in sorted(act_phones(act))], "payload": payload})
 
 
 async def h_usage(request):

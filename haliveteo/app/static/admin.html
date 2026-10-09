@@ -69,6 +69,11 @@ footer{text-align:center;color:var(--mut);font-size:13px;margin:18px 0 6px}foote
       <div><label class="f" id="eIcon"></label><select id="eIconIn"></select></div>
       <div><label class="f" id="eCols"></label><select id="eColsIn"></select></div>
     </div>
+    <div class="sec" style="margin-top:14px" id="eLiveSec"></div>
+    <div class="row"><div class="grow"><label class="f" id="ePhoneL"></label><select id="ePhone"></select></div>
+      <div class="grow"><label class="f" id="eLiveL"></label><select id="eLive"></select></div></div>
+    <label class="f" id="eLiveEntL"></label><input type="text" id="eLiveEnt" list="dlEnt" placeholder="sensor.pralka, sensor.auto">
+    <div class="hint" id="eLiveHint"></div>
     <label class="chk"><input type="checkbox" id="eFeed"> <span id="eFeedT"></span></label>
     <label class="chk"><input type="checkbox" id="eOn"> <span id="eOnT"></span></label>
   </div>
@@ -138,6 +143,12 @@ $("back").textContent = "← " + tr("Urządzenia","Devices"); $("save").textCont
 $("eName").textContent = tr("Nazwa","Name"); $("eIcon").textContent = tr("Ikona","Icon"); $("eCols").textContent = tr("Kolumny","Columns");
 $("eFeedT").textContent = tr("Pokazuj na tym urządzeniu feed akcji na żywo","Show the live action feed on this device");
 $("eOnT").textContent = tr("Urządzenie włączone","Device enabled");
+$("eLiveSec").textContent = tr("🏝️ Live Activities tego urządzenia / użytkownika","🏝️ Live Activities of this device / user");
+$("ePhoneL").textContent = tr("Telefon użytkownika (Dynamic Island)","User's phone (Dynamic Island)");
+$("eLiveL").textContent = tr("Uprawnienia do Live Activities","Live Activity permissions");
+$("eLive").innerHTML = `<option value="off">${tr("brak – tylko to, co da admin","none – only what the admin gives")}</option><option value="follow">${tr("może włączać/wyłączać przydzielone","can turn given ones on/off")}</option><option value="create">${tr("może tworzyć własne z dozwolonych encji","can create own from allowed entities")}</option>`;
+$("eLiveEntL").textContent = tr("Dodatkowe encje dozwolone dla własnych Live Activities (poza kafelkami urządzenia)","Extra entities allowed for own Live Activities (besides this device's tiles)");
+$("eLiveHint").textContent = tr("Własne aktywności użytkownika mogą dotyczyć tylko encji z kafelków tego urządzenia i z tej listy; szablony HA są dla nich wyłączone (tylko {state} {name} {attr.x}).","Own activities may only use entities from this device's tiles and this list; HA templates are disabled for them (only {state} {name} {attr.x}).");
 $("tTiles").textContent = tr("Kafelki","Tiles"); $("addTile").textContent = tr("+ Kafelek","+ Tile"); $("addAuto").textContent = tr("Auto z encji","Auto from entities");
 $("jsonApply").textContent = tr("Zastosuj JSON","Apply JSON"); $("tPrev").textContent = tr("Podgląd na żywo","Live preview");
 $("tFeed").textContent = tr("Akcje na żywo","Live actions"); $("feedClear").textContent = tr("Wyczyść","Clear");
@@ -221,18 +232,20 @@ const closeTile = () => { const d = $("tileDlg"); if(d.open) d.close(); };
 function setDirty(v = true){ dirty = v; $("dirty").hidden = !v; $("dirty").textContent = tr("niezapisane zmiany","unsaved changes"); }
 function edit(id){
   cur = B.devices.find(d => d.id === id); W = JSON.parse(JSON.stringify(cur.layout));
-  $("eNameIn").value = cur.name; $("eUserIn").value = cur.user || ""; if(![...$("eIconIn").options].some(o => o.value === cur.icon)) $("eIconIn").add(new Option(cur.icon, cur.icon)); $("eIconIn").value = cur.icon; $("eColsIn").value = W.cols;
+  $("eNameIn").value = cur.name; $("eUserIn").value = cur.user || "";
+  $("ePhone").innerHTML = `<option value="">—</option>` + [...new Set([...B.notify, cur.phone].filter(Boolean))].map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("");
+  $("ePhone").value = cur.phone || ""; $("eLive").value = cur.live || "off"; $("eLiveEnt").value = (cur.live_entities || []).join(", "); if(![...$("eIconIn").options].some(o => o.value === cur.icon)) $("eIconIn").add(new Option(cur.icon, cur.icon)); $("eIconIn").value = cur.icon; $("eColsIn").value = W.cols;
   $("eFeed").checked = cur.show_feed; $("eOn").checked = cur.enabled;
   ["auto","jsonBox"].forEach(x => $(x).hidden = true); closeTile();
   setDirty(false); renderTiles(); showEdit(); watchPrev();
 }
 $("back").onclick = () => { if(dirty && !confirm(tr("Porzucić niezapisane zmiany?","Discard unsaved changes?"))) return; cur = null; show("devices"); };
-["eNameIn","eUserIn","eIconIn","eFeed","eOn"].forEach(i => $(i).onchange = () => setDirty());
+["eNameIn","eUserIn","eIconIn","eFeed","eOn","ePhone","eLive","eLiveEnt"].forEach(i => $(i).onchange = () => setDirty());
 $("eColsIn").onchange = () => { W.cols = +$("eColsIn").value; setDirty(); refreshPrev(); };
 $("save").onclick = async () => {
   try{
     const want = W.tiles.length;
-    const r = await post("devices/" + cur.id, {name:$("eNameIn").value, user:$("eUserIn").value, icon:$("eIconIn").value, show_feed:$("eFeed").checked, enabled:$("eOn").checked, layout:W});
+    const r = await post("devices/" + cur.id, {name:$("eNameIn").value, user:$("eUserIn").value, phone:$("ePhone").value, live:$("eLive").value, live_entities:$("eLiveEnt").value.split(",").map(x => x.trim()).filter(Boolean), icon:$("eIconIn").value, show_feed:$("eFeed").checked, enabled:$("eOn").checked, layout:W});
     if(r.layout.tiles.length < want) toast(tr(`${want - r.layout.tiles.length} nieprawidłowych kafelków pominięto`, `${want - r.layout.tiles.length} invalid tile(s) were dropped`), true);
     else toast(tr("Zapisano ✓","Saved ✓"));
     W = r.layout; await load(); cur = B.devices.find(d => d.id === r.id); setDirty(false); renderTiles(); watchPrev();
@@ -417,7 +430,8 @@ function renderActs(){
       <div class="n"><span class="dot ${a.running ? "on" : ""}"></span> <b></b><div class="hint"></div></div>
       <button class="b sm st">${tr("Start","Start")}</button><button class="b alt sm en">${tr("Zakończ","End")}</button><button class="b alt sm ed">${tr("Edytuj","Edit")}</button><button class="b red sm dl">${tr("Usuń","Delete")}</button>`;
     el.querySelector("b").textContent = a.name + (a.enabled ? "" : " (" + tr("wyłączona","disabled") + ")");
-    el.querySelector(".hint").textContent = a.entity_id + " → " + (a.phones.join(", ") || tr("brak telefonu","no phone"));
+    const who = B.devices.filter(d => (a.devices || []).includes(d.id)).map(d => d.user || d.name);
+    el.querySelector(".hint").textContent = a.entity_id + " → " + ([...a.phones, ...who].join(", ") || tr("nikt","nobody")) + (a.owner ? " · " + tr("własna, utworzona przez użytkownika","own, created by the user") : "");
     el.querySelector(".st").onclick = async () => { try{ await post(`activities/${a.id}/start`, {}); toast(tr("Wysłano start do telefonu","Start sent to the phone")); await load(); renderActs(); }catch(e){ toast(e.message,true); } };
     el.querySelector(".en").onclick = async () => { try{ await post(`activities/${a.id}/end`, {}); await load(); renderActs(); }catch(e){ toast(e.message,true); } };
     el.querySelector(".ed").onclick = () => actForm(a);
@@ -434,6 +448,9 @@ function actForm(act){
     <label class="f">${tr("Nazwa","Name")}</label><input type="text" id="aName" value="${esc(A.name)}">
     <label class="f">${tr("Telefony (aplikacja Companion)","Phones (Companion app)")}</label>
     <div class="chips" id="aPhones" style="display:flex;flex-wrap:wrap;gap:6px">${[...new Set([...B.notify, ...A.phones])].map(n => `<label><input type="checkbox" value="${esc(n)}" ${A.phones.includes(n) ? "checked" : ""}> ${esc(n)}</label>`).join("") || `<span class="hint">${tr("Nie znaleziono telefonu (notify.mobile_app_*). Zainstaluj aplikację Home Assistant na telefonie.","No phone found (notify.mobile_app_*). Install the Home Assistant app on the phone.")}</span>`}</div>
+    <label class="f">${tr("Dla kogo – urządzenia/użytkownicy, którym dajesz tę aktywność na ich telefon","Given to – devices/users who get this activity on their phone")}</label>
+    <div class="chips" id="aDevs" style="display:flex;flex-wrap:wrap;gap:6px">${B.devices.map(d => `<label><input type="checkbox" value="${esc(d.id)}" ${(A.devices || []).includes(d.id) ? "checked" : ""}> ${esc((d.user ? d.user + " – " : "") + d.name)}${d.phone ? "" : " ⚠"}</label>`).join("") || `<span class="hint">${tr("Brak urządzeń.","No devices.")}</span>`}</div>
+    <div class="hint">${tr("⚠ = urządzenie nie ma przypisanego telefonu (ustaw w edytorze urządzenia). Użytkownik z uprawnieniami może wyłączyć daną aktywność u siebie.","⚠ = the device has no phone assigned (set it in the device editor). A user with permission can turn the activity off for themselves.")}</div>
     <label class="f">${tr("Encja, która steruje aktywnością","Entity that drives the activity")}</label><input type="text" id="aEnt" list="dlEnt" value="${esc(A.entity_id)}" placeholder="sensor.pralka">
     <label class="f">${tr("Szablon (wypełnia pola)","Preset (fills the fields)")}</label>
     <div class="row" style="margin-top:0">${PRESETS.map(([id, l]) => `<button type="button" class="b alt sm" data-p="${id}">${esc(l)}</button>`).join("")}</div>
@@ -459,7 +476,7 @@ function actForm(act){
     <label class="chk"><input type="checkbox" id="aOn" ${A.enabled?"checked":""}> ${tr("Włączona (reaguje na zmiany stanu)","Enabled (reacts to state changes)")}</label>
     <pre id="aPrev" hidden></pre>
     <div class="row" style="justify-content:flex-end"><button class="b alt" id="aCancel">${tr("Anuluj","Cancel")}</button><button class="b alt" id="aPreview">${tr("Podgląd ładunku","Preview payload")}</button><button class="b" id="aSave">${tr("Zapisz","Save")}</button></div>`;
-  const val = () => ({id:A.id, name:$("aName").value, enabled:$("aOn").checked, phones:[...document.querySelectorAll("#aPhones input:checked")].map(i => i.value),
+  const val = () => ({id:A.id, name:$("aName").value, enabled:$("aOn").checked, devices:[...document.querySelectorAll("#aDevs input:checked")].map(i => i.value), phones:[...document.querySelectorAll("#aPhones input:checked")].map(i => i.value),
     entity_id:$("aEnt").value.trim(), start_states:$("aStart").value, end_states:$("aEnd").value, title:$("aTitle").value, message:$("aMsg").value, critical_text:$("aCrit").value,
     progress_mode:$("aPm").value, progress_attr:$("aPa").value, progress_min:+$("aPmin").value, progress_max:+$("aPmax").value, chrono_attr:$("aCh").value.trim(), chrono_state:$("aChS").checked,
     icon:$("aIcon").value.trim(), color:$("aColor").value, tag:$("aTag").value.trim(), min_interval:+$("aInt").value || 30, relevance:$("aRel").value, background_color:$("aBg").value.trim(), text_color:$("aTx").value.trim(), url:$("aUrl").value.trim()});
@@ -475,7 +492,7 @@ function actForm(act){
   $("aCancel").onclick = () => $("actDlg").close();
   $("aPreview").onclick = async () => { try{ const r = await post("activities/preview", val()); $("aPrev").hidden = false; $("aPrev").textContent = JSON.stringify(r, null, 1); }catch(e){ toast(e.message,true); } };
   $("aSave").onclick = async () => {
-    try{ const v = val(); if(!v.phones.length) return toast(tr("Wybierz co najmniej jeden telefon","Pick at least one phone"), true);
+    try{ const v = val(); if(!v.phones.length && !v.devices.length) return toast(tr("Wybierz telefon albo urządzenie, któremu dajesz aktywność","Pick a phone or a device to give the activity to"), true);
       await post("activities", v); $("actDlg").close(); toast(tr("Zapisano ✓","Saved ✓")); await load(); renderActs(); }catch(e){ toast(e.message,true); } };
 }
 

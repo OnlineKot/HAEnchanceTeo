@@ -71,6 +71,23 @@ Zakładka **🔑 Tokeny**: dla każdego skrótu / osoby tworzysz osobny token �
 - Po utworzeniu dostajesz gotowe pola do skopiowania do aplikacji **Skróty**: adres, nagłówki i treść JSON.
 Uwaga: adres `http://<IP>:8765` jest nieszyfrowany – token wysyłany w sieci domowej jest widoczny dla urządzeń w tej sieci. Do dostępu spoza domu użyj HTTPS (Nabu Casa / reverse proxy).
 
+## Czy się ogłasza? Sesje i Live Activity na Dynamic Island
+- **Pasek „Teraz ogłaszam”** u góry panelu: co jest ogłaszane (albo „w kolejce”), na których głośnikach, skąd (panel / token), odliczanie
+  i przycisk **■ Stop**. Każde ogłoszenie to **sesja** od żądania do końca odtwarzania. Stan zwraca też `GET /api/status`.
+- **Sensor** `sensor.hannounce_status` (`idle` / `announcing` + atrybuty: tekst, głośniki, źródło, `ends_at`) – do automatyzacji i historii
+  (opcja `status_sensor`).
+- **Live Activity (iPhone: Dynamic Island + ekran blokady, Android: Live Update)** przez aplikację Home Assistant Companion
+  (`notify.mobile_app_*` z `live_update` i `tag`, koniec przez `clear_notification`). Wymaga iOS 17.2+, Home Assistant Core 2026.7+
+  i włączonych Live Activities w aplikacji. Zakładka **🏝️ Live**: włącz, wybierz telefony, ewentualnie „tylko dla ogłoszeń z…” (panel albo token),
+  tytuł/treść z symbolami `{text}` `{speakers}` `{source}` `{user}`, ikona, kolory, licznik odliczający, **ukrycie mówionego tekstu**
+  (prywatność), czas zostawienia po końcu, przycisk **Test (6 s)**.
+- **Dostosowanie na sesję / komuś:** admin może dać Live Activity konkretnej osobie
+  - **per token** (zakładka Tokeny → „Status na żywo na tych telefonach”) – osoba widzi na swojej wyspie ogłoszenia ze swojego skrótu,
+  - **per ogłoszenie** (tylko panel/administrator): pole `live` w `POST /api/announce`, np.
+    `{"message":"…","targets":[…],"live":{"phones":["mobile_app_kasia"],"title":"Dla Kasi","hide_text":true,"icon":"mdi:bell","color":"#ff5722"}}`.
+  Tokeny nie mogą same ustawiać pola `live`, a pola wewnętrzne (zaczynające się od `_`) są ignorowane.
+- Kilka równoległych ogłoszeń = jedna aktywność pokazująca najnowsze; kończy się po ostatnim.
+
 ## Opóźnienia, kolejka i Stop
 - **TTS jest przygotowywany z góry** (silnikiem z HA) i dopiero wtedy wysyłany na głośnik jako gotowy plik – dzięki temu nie ma
   niespodziewanego opóźnienia przy odtwarzaniu. Panel pokazuje „Przygotowuję głos…” a potem „Gra ♪”. Ta sama wiadomość

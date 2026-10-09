@@ -40,7 +40,7 @@ footer{text-align:center;color:var(--secondary-text-color);font-size:12px;margin
   </div>
   <div id="app" hidden>
     <div class="menu" id="menu">
-      <button id="mInst"></button><button id="mWake"></button><button id="mFull"></button><button id="mTok"></button>
+      <button id="mLive"></button><button id="mInst"></button><button id="mWake"></button><button id="mFull"></button><button id="mTok"></button>
     </div>
     <div id="banner"></div>
     <div class="card" id="hint" hidden style="display:none;align-items:center;gap:10px;flex-wrap:wrap"><span id="hintTxt" style="flex:1;min-width:180px"></span><button class="b sm" id="hintHow"></button><button class="b alt sm" id="hintOk"></button></div>
@@ -60,6 +60,7 @@ $("by").textContent = tr("Stworzone przez","Created by");
 $("feedBtn").innerHTML = HL.icon("mdi:lightning-bolt-circle"); $("menuBtn").innerHTML = HL.icon("mdi:dots-vertical");
 $("setupTxt").textContent = tr("Wklej token urządzenia z panelu HALiveTeo (lub otwórz link z tokenem).","Paste the device token from the HALiveTeo panel (or open the link that contains it).");
 $("tokGo").textContent = tr("Połącz","Connect");
+$("mLive").innerHTML = HL.icon("mdi:lightning-bolt-circle") + "<span>" + tr("Live Activities (Dynamic Island)","Live Activities (Dynamic Island)") + "</span>";
 $("mInst").innerHTML = HL.icon("mdi:cellphone") + "<span>" + tr("Dodaj do ekranu głównego","Add to Home Screen") + "</span>";
 $("mWake").innerHTML = HL.icon("mdi:brightness-6") + "<span>" + tr("Nie wygaszaj ekranu","Keep screen on") + "</span>";
 $("mFull").innerHTML = HL.icon("mdi:monitor") + "<span>" + tr("Pełny ekran","Fullscreen") + "</span>";
@@ -136,10 +137,67 @@ function start(){
     onMsg: msg => {
       if(msg.t === "hello") build(msg);
       else if(msg.t === "state"){ st[msg.e] = msg.st; (els[msg.e] || []).forEach(([t, el]) => el.update(msg.st)); }
+      else if(msg.t === "live_list"){ LIVE = msg; drawLive(); }
       else if(msg.t === "ack"){ const el = pending[msg.id]; delete pending[msg.id]; HL.flash(el, msg.ok); if(!msg.ok) toast(msg.error || "error", true); }
       else if(msg.t === "feed"){ feedRows.push(msg.entry); feedRows = feedRows.slice(-40); drawFeed(); }
     }
   });
+  // ---- Live Activities: what the admin gave me (switch on/off) + my own (if allowed)
+  let LIVE = null, liveDlg = null, liveForm = null;
+  const PRE = {
+    status:[tr("Status urządzenia","Device status"), {start_states:"", end_states:"off,idle,standby,finished,done", message:"{state}", progress_mode:"none", chrono_attr:""}],
+    progress:[tr("Pasek postępu (%)","Progress bar (%)"), {start_states:"", end_states:"", message:"{state}%", progress_mode:"range", chrono_attr:""}],
+    timer:[tr("Odliczanie (timer.*)","Countdown (timer.*)"), {start_states:"active", end_states:"idle,paused", message:tr("Odliczanie","Countdown"), progress_mode:"none", chrono_attr:"finishes_at"}],
+    media:[tr("Odtwarzacz (tytuł)","Media player (title)"), {start_states:"playing", end_states:"idle,off,paused,standby", message:"{attr.media_title} – {attr.media_artist}", progress_mode:"none", chrono_attr:""}]
+  };
+  const ICONS = ["lightbulb","washing-machine","ev-station","timer-outline","music","door","thermometer","bell","home","fire","water","lock"];
+  function openLive(){ liveDlg = document.createElement("dialog"); liveDlg.className = "hd"; document.body.append(liveDlg); liveDlg.onclose = () => { liveDlg.remove(); liveDlg = null; liveForm = null; };
+    liveDlg.showModal(); liveDlg.innerHTML = `<div class="hd-card"><h2>Live Activities</h2><div class="hint">…</div></div>`; live.send({t:"live_list"}); }
+  function drawLive(){
+    if(!liveDlg || !LIVE) return;
+    const card = liveDlg.querySelector(".hd-card"); card.innerHTML = `<h2>🏝️ Live Activities</h2>`;
+    if(liveForm) return drawLiveForm(card);
+    const hint = document.createElement("div"); hint.className = "hint"; hint.style.marginBottom = "8px";
+    hint.textContent = LIVE.phone ? tr("Pokazują się na Dynamic Island i ekranie blokady Twojego iPhone'a (aplikacja Home Assistant).","They appear on your iPhone's Dynamic Island and Lock Screen (Home Assistant app).")
+      : tr("⚠ Ten użytkownik nie ma przypisanego telefonu – poproś admina, żeby ustawił go w edytorze urządzenia.","⚠ This user has no phone assigned – ask the admin to set it in the device editor.");
+    card.append(hint);
+    if(!LIVE.activities.length){ const e = document.createElement("div"); e.className = "hint"; e.textContent = tr("Nic nie zostało Ci przydzielone.","Nothing has been given to you yet."); card.append(e); }
+    LIVE.activities.forEach(a => {
+      const row = document.createElement("div"); row.style.cssText = "display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--divider-color)";
+      row.innerHTML = `<div style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none;color:${HL.esc(a.color)};background:color-mix(in srgb,${HL.esc(a.color)} 20%,transparent)">${HL.icon(a.icon)}</div>
+        <div style="flex:1;min-width:0"><div style="font-weight:500" class="nm"></div><div class="hint sb"></div></div>`;
+      row.querySelector(".nm").textContent = a.name; row.querySelector(".sb").textContent = a.entity_id + (a.owner ? " · " + tr("moja","mine") : tr(" · od admina"," · from admin")) + (a.running ? " · ●" : "");
+      if(!a.owner){ const sw = document.createElement("input"); sw.type = "checkbox"; sw.checked = !a.muted;
+        sw.onchange = () => live.send({t:"live_follow", id:a.id, on:sw.checked}); row.append(sw); }
+      else { const ed = document.createElement("button"); ed.className = "b alt sm"; ed.textContent = tr("Edytuj","Edit"); ed.onclick = () => { liveForm = a.raw; drawLive(); };
+        const dl = document.createElement("button"); dl.className = "b red sm"; dl.textContent = tr("Usuń","Delete"); dl.onclick = () => { if(confirm(tr("Usunąć?","Delete?"))) live.send({t:"live_delete", id:a.id}); };
+        row.append(ed, dl); }
+      card.append(row);
+    });
+    const bar = document.createElement("div"); bar.style.cssText = "display:flex;gap:8px;justify-content:flex-end;margin-top:16px";
+    if(LIVE.mode === "create"){ const nb = document.createElement("button"); nb.className = "b alt"; nb.textContent = tr("+ Nowa","+ New"); nb.onclick = () => { liveForm = {}; drawLive(); }; bar.append(nb); }
+    const cl = document.createElement("button"); cl.className = "b"; cl.textContent = tr("Zamknij","Close"); cl.onclick = () => liveDlg.close(); bar.append(cl); card.append(bar);
+  }
+  function drawLiveForm(card){
+    const A = liveForm, ents = LIVE.entities;
+    card.insertAdjacentHTML("beforeend", `<label class="f">${tr("Nazwa","Name")}</label><input type="text" id="lfName">
+      <label class="f">${tr("Encja (tylko dozwolone)","Entity (allowed only)")}</label><select id="lfEnt">${ents.map(e => `<option value="${HL.esc(e.id)}">${HL.esc(e.name)} (${HL.esc(e.id)})</option>`).join("")}</select>
+      <label class="f">${tr("Szablon","Preset")}</label><select id="lfPre">${Object.entries(PRE).map(([k, v]) => `<option value="${k}">${HL.esc(v[0])}</option>`).join("")}</select>
+      <label class="f">${tr("Treść ({state} {name} {attr.nazwa})","Message ({state} {name} {attr.name})")}</label><input type="text" id="lfMsg">
+      <div style="display:flex;gap:8px"><div style="flex:1"><label class="f">${tr("Start gdy stan ∈","Start when state ∈")}</label><input type="text" id="lfStart"></div><div style="flex:1"><label class="f">${tr("Koniec gdy stan ∈","End when state ∈")}</label><input type="text" id="lfEnd"></div></div>
+      <div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:1"><label class="f">${tr("Ikona","Icon")}</label><select id="lfIcon">${ICONS.map(i => `<option value="mdi:${i}">${i}</option>`).join("")}</select></div><input type="color" id="lfColor" value="#03A9F4"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button class="b alt" id="lfCancel">${tr("Anuluj","Cancel")}</button><button class="b" id="lfSave">${tr("Zapisz","Save")}</button></div>`);
+    const $$ = id => card.querySelector("#" + id), fillPre = k => { const p = PRE[k][1]; $$("lfMsg").value = p.message; $$("lfStart").value = p.start_states; $$("lfEnd").value = p.end_states; };
+    $$("lfName").value = A.name || ""; if(A.entity_id) $$("lfEnt").value = A.entity_id; $$("lfPre").onchange = () => fillPre($$("lfPre").value);
+    if(A.id){ $$("lfMsg").value = A.message || ""; $$("lfStart").value = (A.start_states || []).join(","); $$("lfEnd").value = (A.end_states || []).join(","); $$("lfIcon").value = A.icon || "mdi:lightbulb"; $$("lfColor").value = A.color || "#03A9F4";
+      const k = A.chrono_attr ? "timer" : A.progress_mode === "range" ? "progress" : "status"; $$("lfPre").value = k; } else fillPre("status");
+    $$("lfCancel").onclick = () => { liveForm = null; drawLive(); };
+    $$("lfSave").onclick = () => { const k = $$("lfPre").value, p = PRE[k][1];
+      const act = {id:A.id || "", name:$$("lfName").value, entity_id:$$("lfEnt").value, title:$$("lfName").value, message:$$("lfMsg").value, start_states:$$("lfStart").value, end_states:$$("lfEnd").value,
+        progress_mode:p.progress_mode, chrono_attr:p.chrono_attr, icon:$$("lfIcon").value, color:$$("lfColor").value, min_interval:30};
+      live.send({t:"live_save", id:"L" + (++seq), activity:act}); liveForm = null; };
+  }
+  $("mLive").onclick = openLive;
   $("mInst").onclick = installDialog;
   if(isStandalone()) $("mInst").style.display = "none";
   else if(/iPhone|iPad|iPod/.test(navigator.userAgent) && !store.get("hl_hint")){   // one-time hint on iOS

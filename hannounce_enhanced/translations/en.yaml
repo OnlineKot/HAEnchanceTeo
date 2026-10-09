@@ -8,6 +8,9 @@ configuration:
   max_upload_mb:
     name: Max upload size (MB)
     description: Maximum size of an uploaded or recorded file.
+  status_sensor:
+    name: Publish status sensor
+    description: "Creates sensor.hannounce_status (idle / announcing + details) so you can see and automate on live announcements."
   log_level:
     name: Log level
     description: Verbosity of the add-on log.

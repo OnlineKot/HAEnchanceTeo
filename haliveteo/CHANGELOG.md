@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.0
+- Live Activities can be given to devices/users (audience + per-device phone), users can switch them on/off and (with permission) create their own from allowed entities with safe placeholder templates.
+
 ## 1.2.0
 - Pin to the home screen: per-device manifest (name + start_url with token, needed because iOS home-screen apps have isolated storage), install dialog/hint, Lock Screen steps.
 - Who used what: device "user", every action written to the HA Logbook + sensor.haliveteo_*_last_action sensors, "Usage" tab with per-entity counters; options logbook/sensors.

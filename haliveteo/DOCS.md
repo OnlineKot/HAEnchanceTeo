@@ -37,6 +37,17 @@ Zgodnie z zaleceniami Apple/Companion HALiveTeo **ogranicza częstotliwość**: 
 najnowszej wartości w minimalnym odstępie (domyślnie 30 s) i wysyłane tylko gdy treść/postęp się zmienią. Aktywność
 jest odnawiana przed limitem ~8 h. Nie testuj w kółko start/stop – iOS ma budżet na uruchamianie nowych aktywności.
 
+### Komu i jak dać Live Activity (admin / użytkownik)
+- **Admin daje komuś aktywność:** w formularzu aktywności zaznacz **Dla kogo** (urządzenia/użytkownicy). Każde urządzenie ma w edytorze pole
+  **Telefon użytkownika** (`notify.mobile_app_*`) – tam trafia jego Live Activity. Aktywność może mieć też telefony „na sztywno”.
+- **Użytkownik sam:** w edytorze urządzenia ustawiasz **uprawnienia**: *brak*, *może włączać/wyłączać przydzielone* albo
+  *może tworzyć własne z dozwolonych encji*. Na stronie urządzenia, menu ⋯ → **Live Activities**: przełączniki dla aktywności od admina
+  oraz (przy uprawnieniu „tworzyć”) formularz „+ Nowa” z gotowymi szablonami.
+- **Bezpieczeństwo własnych aktywności:** tylko encje z kafelków tego urządzenia + lista „dodatkowe encje” od admina, maks. 10 na urządzenie,
+  **szablony HA są wyłączone** (tylko `{state}` `{name}` `{attr.x}`), więc użytkownik nie odczyta niczego spoza dozwolonych encji.
+  Admin widzi i może edytować/usunąć każdą aktywność (oznaczone jako „własna, utworzona przez użytkownika”).
+- Wyłączenie aktywności przez użytkownika kończy ją od razu na jego telefonie (`clear_notification`).
+
 ## Wygląd 1:1 jak Home Assistant
 Interfejs używa zmiennych motywu Home Assistanta (kolory, tryb jasny/ciemny), kart „tile” z okrągłą ikoną i kolorami
 stanów (żółte światła, niebieskie odtwarzacze…), suwaka w stylu `ha-control-slider`, przełączników i okien dialogowych Material 3,

@@ -775,12 +775,188 @@ async def announce_on(entity, cfg, snap, media, volume, estimate):
     return queued
 
 
+# ---------------------------------------------------------------- sessions + Live Activity (Dynamic Island)
+# A "session" is one announcement from request to the end of playback. Sessions are visible in the panel / API, mirrored in
+# sensor.hannounce_status and (optionally) shown as a Live Activity on iPhone (Dynamic Island + Lock Screen) through the
+# Home Assistant Companion app (notify.mobile_app_* with live_update + tag, ended with clear_notification).
+LIVE_FILE = DATA / "live.json"
+PHONE_RE = re.compile(r"^mobile_app_[a-z0-9_]{1,60}$")
+HEX_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
+LIVE_DEFAULT = {
+    "enabled": False, "phones": [], "only_sources": [], "title": "Ogłoszenie", "message": "{text}",
+    "critical_text": "📣", "hide_text": False, "countdown": True, "end_delay": 3.0,
+    "icon": "mdi:bullhorn", "color": "#03A9F4", "background_color": "", "text_color": "", "relevance": 1.0, "url": "",
+}
+live_cfg: dict = dict(LIVE_DEFAULT)
+sessions: dict = {}
+recent_sessions = collections.deque(maxlen=10)
+live_run = {"phones": set(), "active": False, "clear": None}
+STATUS_SENSOR = bool(OPTIONS.get("status_sensor", True))
+
+
+def clean_phones(v):
+    return [p for p in (str(x).removeprefix("notify.") for x in (v or [])) if PHONE_RE.match(p)][:8]
+
+
+def clean_live(raw, base=None):
+    out = dict(base or LIVE_DEFAULT)
+    raw = raw if isinstance(raw, dict) else {}
+    def txt(k, n): 
+        if k in raw: out[k] = str(raw[k] or "")[:n]
+    for k, n in (("title", 80), ("message", 200), ("critical_text", 20), ("url", 200)):
+        txt(k, n)
+    for k in ("enabled", "hide_text", "countdown"):
+        if k in raw: out[k] = bool(raw[k])
+    if "phones" in raw: out["phones"] = clean_phones(raw["phones"])
+    if "only_sources" in raw: out["only_sources"] = [str(x)[:60] for x in (raw["only_sources"] or [])][:30]
+    for k in ("color", "background_color", "text_color"):
+        if k in raw: out[k] = str(raw[k]) if HEX_RE.match(str(raw[k] or "")) else ("" if k != "color" else out[k])
+    if "icon" in raw: out["icon"] = str(raw["icon"]) if re.match(r"^mdi:[a-z0-9-]{1,60}$", str(raw["icon"])) else out["icon"]
+    if "relevance" in raw:
+        try: out["relevance"] = max(0.0, min(1.0, float(raw["relevance"])))
+        except (TypeError, ValueError): out["relevance"] = None
+    if "end_delay" in raw:
+        try: out["end_delay"] = max(0.0, min(60.0, float(raw["end_delay"])))
+        except (TypeError, ValueError): pass
+    return out
+
+
+def load_live():
+    global live_cfg
+    try:
+        live_cfg = clean_live(json.loads(LIVE_FILE.read_text()))
+    except (OSError, ValueError):
+        live_cfg = dict(LIVE_DEFAULT)
+
+
+def save_live():
+    tmp = LIVE_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(live_cfg, indent=1))
+    tmp.replace(LIVE_FILE)
+
+
+def public_session(x):
+    return {k: x[k] for k in ("id", "kind", "said", "targets", "names", "source", "user", "state", "created",
+                              "started", "ends", "duration", "hidden")}
+
+
+def fill(tpl, sess, hide):
+    names = ", ".join(sess["names"]) or "—"
+    text = "" if hide else sess["said"]
+    return (str(tpl).replace("{text}", text or sess["kind"].upper()).replace("{speakers}", names)
+            .replace("{source}", sess["source"]).replace("{user}", sess["user"]))
+
+
+async def publish_status():
+    if not STATUS_SENSOR:
+        return
+    from datetime import datetime, timezone
+    act = [x for x in sessions.values() if x["state"] in ("queued", "playing")]
+    head = max((x for x in act if x["state"] == "playing"), key=lambda x: x["started"], default=None)
+    attrs = {"friendly_name": "HAnnounce status", "icon": "mdi:bullhorn", "active": len(act),
+             "queued": sum(1 for x in act if x["state"] == "queued")}
+    if head:
+        attrs.update(text="" if head["hidden"] else head["said"], speakers=head["names"], source=head["source"],
+                     user=head["user"], duration=head["duration"],
+                     ends_at=datetime.fromtimestamp(head["ends"], timezone.utc).isoformat())
+    try:
+        async with session.post(f"{HA}/states/sensor.hannounce_status", headers=ha_headers(),
+                                json={"state": "announcing" if head else "idle", "attributes": attrs}) as r:
+            if r.status >= 400:
+                log.warning("status sensor failed: %s", r.status)
+    except Exception as exc:  # noqa: BLE001
+        log.warning("status sensor failed: %s", exc)
+
+
+def session_style(sess):
+    return clean_live(sess.get("live") or {}, dict(live_cfg))
+
+
+async def live_refresh():
+    """One Live Activity ('hannounce_live') mirrors the newest playing session; it ends shortly after the last one."""
+    active = [x for x in sessions.values() if x["state"] == "playing" and x["phones"]]
+    task = live_run["clear"]
+    if not active:
+        if live_run["active"] and not task:
+            live_run["clear"] = asyncio.create_task(live_end_later())
+        return
+    if task:
+        task.cancel(); live_run["clear"] = None
+    head = max(active, key=lambda x: x["started"])
+    st = session_style(head)
+    phones = set().union(*(x["phones"] for x in active))
+    hide = st["hide_text"] or head["hidden"]
+    data = {"tag": "hannounce_live", "live_update": True, "notification_icon": st["icon"],
+            "notification_icon_color": st["color"], "color": st["color"]}
+    if st["countdown"]:
+        data.update(chronometer=True, when=int(head["ends"]), when_relative=False)
+    if st["critical_text"]:
+        data["critical_text"] = st["critical_text"]
+    for k in ("background_color", "text_color", "url"):
+        if st[k]: data[k] = st[k]
+    if st["relevance"] is not None:
+        data["relevance_score"] = st["relevance"]
+    if live_run["active"]:
+        data["silent"], data["alert_once"] = True, True
+    payload = {"title": fill(st["title"], head, hide), "message": fill(st["message"], head, hide), "data": data}
+    for phone in phones:
+        await safe_service("notify", phone, payload)
+    live_run["phones"] |= phones
+    live_run["active"] = True
+
+
+async def live_end_now():
+    for phone in list(live_run["phones"]):
+        await safe_service("notify", phone, {"message": "clear_notification", "data": {"tag": "hannounce_live"}})
+    live_run.update(phones=set(), active=False, clear=None)
+
+
+async def live_end_later():
+    await asyncio.sleep(max(0.0, live_cfg["end_delay"]))
+    live_run["clear"] = None
+    if not any(x["state"] == "playing" and x["phones"] for x in sessions.values()):
+        await live_end_now()
+
+
+async def finish_session(sess, wait):
+    await asyncio.sleep(max(0.2, wait))
+    if sess["state"] == "playing":
+        sess["state"] = "done"
+    sessions.pop(sess["id"], None)
+    recent_sessions.append(public_session(sess))
+    await live_refresh()
+    await publish_status()
+
+
+def phones_for(source, token_phones, override):
+    phones = set(clean_phones(token_phones))
+    if live_cfg["enabled"] and (not live_cfg["only_sources"] or source in live_cfg["only_sources"]):
+        phones |= set(live_cfg["phones"])
+    if isinstance(override, dict):
+        if override.get("enabled") is False:
+            return set()
+        phones |= set(clean_phones(override.get("phones")))
+    return phones
+
+
+async def stop_sessions(targets):
+    for sess in list(sessions.values()):
+        if not targets or set(targets) & set(sess["targets"]):
+            sess["state"] = "done"
+            sessions.pop(sess["id"], None)
+            recent_sessions.append(public_session(sess))
+    await live_refresh()
+    await publish_status()
+
+
 async def announce(body):
     targets = body.get("targets") or body.get("target") or []
     if isinstance(targets, str):
         targets = [t.strip() for t in targets.split(",") if t.strip()]
     if not targets or not all(str(t).startswith("media_player.") for t in targets):
         raise _json_error(400, "targets must be a list of media_player entities")
+    source, user_name = str(body.get("_source") or "api"), str(body.get("_user") or "")
+    token_phones, live_override = body.get("_live_phones") or [], body.get("live")
 
     item = None
     media = {}
@@ -833,8 +1009,29 @@ async def announce(body):
         await run_action(before)
         await asyncio.sleep(max(0.0, min(30.0, float(body.get("before_wait", 1)))))
     queued = 0.0
+    sess = None
     if jobs:
-        queued = max(await asyncio.gather(*jobs))
+        said = str(body["message"]) if body.get("message") else (item["name"] if item else "")
+        playing = [t for t in targets if t not in skipped]
+        players = {p["entity_id"]: p["name"] for p in await build_players(await ha_get("/states"))}
+        sess = {"id": uuid.uuid4().hex[:8], "kind": "tts" if body.get("message") else "sound", "said": said,
+                "targets": playing, "names": [players.get(t, t) for t in playing], "source": source, "user": user_name,
+                "state": "queued", "created": time.time(), "started": None, "ends": None, "duration": round(duration, 2),
+                "hidden": False, "phones": phones_for(source, token_phones, live_override),
+                "live": live_override if isinstance(live_override, dict) else None}
+        sessions[sess["id"]] = sess
+        await publish_status()
+    if jobs:
+        try:
+            queued = max(await asyncio.gather(*jobs))
+        except BaseException:
+            sessions.pop(sess["id"], None)
+            await publish_status()
+            raise
+        sess.update(state="playing", started=time.time(), ends=time.time() + duration)
+        asyncio.create_task(finish_session(sess, duration + 1.0))
+        await live_refresh()
+        await publish_status()
     if after and jobs:
         extra = max(profile_for(t)["after_delay"] for t in targets if t not in skipped)
         asyncio.create_task(run_after(after, duration + 2.5 + extra))
@@ -843,7 +1040,7 @@ async def announce(body):
     if item and not item["saved"] and not item.get("cache"):
         asyncio.create_task(drop_later(item, duration + 40 + queued))
     return {"ok": True, "duration": round(duration, 2), "skipped": skipped,
-            "queued": round(queued, 1), "prepared": prepared}
+            "queued": round(queued, 1), "prepared": prepared, "session": sess["id"] if sess else None}
 
 
 # ---------------------------------------------------------------- tokens + audit log
@@ -1098,6 +1295,46 @@ async def h_tts_item(request):
     return web.json_response(public(item))
 
 
+async def h_status(request):
+    act = sorted((public_session(x) for x in sessions.values()), key=lambda x: x["created"])
+    return web.json_response({"active": act, "recent": list(recent_sessions)[-5:], "now": time.time()})
+
+
+async def notify_services():
+    try:
+        return sorted(n for d in await ha_get("/services") if d["domain"] == "notify" for n in d["services"] if PHONE_RE.match(n))
+    except web.HTTPException:
+        return []
+
+
+async def h_live_get(request):
+    return web.json_response({"settings": live_cfg, "notify": await notify_services(),
+                              "sources": ["panel/admin"] + [t["name"] for t in tokens]})
+
+
+async def h_live_set(request):
+    global live_cfg
+    live_cfg = clean_live(await request.json(), dict(live_cfg))
+    save_live()
+    return web.json_response(live_cfg)
+
+
+async def h_live_test(request):
+    """Show the configured Live Activity for ~6 seconds without playing anything."""
+    body = await request.json() if request.can_read_body else {}
+    phones = set(clean_phones(body.get("phones"))) or set(live_cfg["phones"])
+    if not phones:
+        raise _json_error(400, "pick at least one phone")
+    sess = {"id": "test" + uuid.uuid4().hex[:4], "kind": "tts", "said": "Test ogłoszenia / test announcement",
+            "targets": [], "names": ["Test"], "source": "panel/admin", "user": "", "state": "playing", "created": time.time(),
+            "started": time.time(), "ends": time.time() + 6, "duration": 6, "hidden": False, "phones": phones,
+            "live": body.get("live") if isinstance(body.get("live"), dict) else None}
+    sessions[sess["id"]] = sess
+    asyncio.create_task(finish_session(sess, 6.0))
+    await live_refresh()
+    return web.json_response({"ok": True})
+
+
 async def h_stop(request):
     """Stop playback right now on the given speakers (or on everything that is playing)."""
     try:
@@ -1118,6 +1355,7 @@ async def h_stop(request):
         await safe_service("media_player", "media_stop", {"entity_id": targets})
         for t in targets:
             slots.pop(t, None)
+        await stop_sessions(targets)
     return web.json_response({"ok": True, "stopped": targets})
 
 
@@ -1182,9 +1420,14 @@ async def h_announce(request):
     except ValueError:
         raise _json_error(400, "invalid JSON")
     tok = request.get("token")
+    body = {k: v for k, v in body.items() if not str(k).startswith("_")}   # internal keys cannot be set from outside
     try:
         if tok:
             body = apply_token(tok, body)
+            body.pop("live", None)                                         # per-announcement Live Activity override: admin only
+            body["_source"], body["_user"], body["_live_phones"] = tok["name"], tok["name"], tok.get("live_phones") or []
+        else:
+            body["_source"], body["_user"] = "panel/admin", ""
         result = await announce(body)
     except web.HTTPException as exc:
         try:
@@ -1221,6 +1464,7 @@ async def h_token_create(request):
         "allow_tts": bool(body.get("allow_tts", True)), "allow_sounds": bool(body.get("allow_sounds", True)),
         "allow_actions": bool(body.get("allow_actions")),
         "max_volume": None if mv in (None, "") else max(0.0, min(1.0, float(mv))),
+        "live_phones": clean_phones(body.get("live_phones")),
         "tts_entity": body.get("tts_entity") or "", "language": body.get("language") or "",
         "voice": body.get("voice") or ""}
     tokens.append(tok)
@@ -1451,7 +1695,7 @@ async def ingress_guard(request, handler):
     return await handler(request)
 
 
-SCOPED_PATHS = {"/api/announce", "/api/sounds", "/api/stop"}
+SCOPED_PATHS = {"/api/announce", "/api/sounds", "/api/stop", "/api/status"}
 
 
 @web.middleware
@@ -1483,6 +1727,10 @@ def routes(with_index=True):
         web.post("/api/upload", h_upload),
         web.post("/api/tts/item", h_tts_item),
         web.post("/api/stop", h_stop),
+        web.get("/api/status", h_status),
+        web.get("/api/live", h_live_get),
+        web.post("/api/live", h_live_set),
+        web.post("/api/live/test", h_live_test),
         web.get("/api/tokens", h_tokens),
         web.post("/api/tokens", h_token_create),
         web.delete("/api/tokens/{id}", h_token_delete),
@@ -1527,6 +1775,7 @@ async def main():
     load_devices()
     load_speakers()
     load_tokens()
+    load_live()
     session = ClientSession(timeout=ClientTimeout(total=30))
     ui, ext = build_apps()
     for app, port in ((ui, INGRESS_PORT), (ext, MEDIA_PORT)):

@@ -8,6 +8,9 @@ configuration:
   max_upload_mb:
     name: Maks. rozmiar pliku (MB)
     description: Maksymalny rozmiar wgrywanego lub nagranego pliku.
+  status_sensor:
+    name: Publikuj sensor statusu
+    description: "Tworzy sensor.hannounce_status (idle / announcing + szczegóły), żeby widzieć ogłoszenia na żywo i budować automatyzacje."
   log_level:
     name: Poziom logów
     description: Szczegółowość logów dodatku.
