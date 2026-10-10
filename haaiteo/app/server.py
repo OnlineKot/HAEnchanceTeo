@@ -582,7 +582,7 @@ async def h_shortcut_info(request):
     opts.reload()
     return web.json_response({"enabled": bool(opts.shortcut_enabled), "port": SHORTCUT_PORT, "mode": ShortcutOpts(opts).mode,
                               "notify": bool(str(opts.notify_service or "").strip()),
-                              "tokens": [{"id": t["id"], "name": t["name"], "created": t["created"], "last": t.get("last", 0)} for t in tokens]})
+                              "tokens": [{"id": t["id"], "name": t["name"], "created": t["created"], "last": t.get("last", 0), "can_copy": bool(t.get("secret"))} for t in tokens]})
 
 
 async def h_token_new(request):
@@ -590,13 +590,20 @@ async def h_token_new(request):
     if len(tokens) >= 10:
         return jerr(400, "max 10 tokens")
     raw = "haai_" + secrets.token_urlsafe(32)
-    tokens.append({"id": uuid.uuid4().hex[:8], "name": name, "hash": hashlib.sha256(raw.encode()).hexdigest(), "created": int(time.time()), "last": 0})
+    tokens.append({"id": uuid.uuid4().hex[:8], "name": name, "hash": hashlib.sha256(raw.encode()).hexdigest(), "secret": raw, "created": int(time.time()), "last": 0})
     save_json(TOK_FILE, tokens)
     try:
         os.chmod(TOK_FILE, 0o600)
     except OSError:
         pass
     return web.json_response({"token": raw})
+
+
+async def h_token_secret(request):
+    tok = next((t for t in tokens if t["id"] == request.match_info["id"]), None)
+    if not tok or not tok.get("secret"):
+        return jerr(404, "token was created before copying was possible - delete it and create a new one")
+    return web.json_response({"token": tok["secret"]})
 
 
 async def h_token_del(request):
@@ -617,7 +624,7 @@ def build_app():
                     web.post("/api/convs", h_new), web.get("/api/conv/{id}", h_conv), web.delete("/api/conv/{id}", h_del),
                     web.post("/api/conv/{id}/chat", h_chat), web.post("/api/conv/{id}/cancel", h_cancel),
                     web.post("/api/pending/{pid}/{act}", h_pending), web.get("/api/log", h_log),
-                    web.get("/api/shortcut", h_shortcut_info), web.post("/api/tokens", h_token_new), web.delete("/api/tokens/{id}", h_token_del)])
+                    web.get("/api/shortcut", h_shortcut_info), web.post("/api/tokens", h_token_new), web.get("/api/tokens/{id}/secret", h_token_secret), web.delete("/api/tokens/{id}", h_token_del)])
     return app
 
 

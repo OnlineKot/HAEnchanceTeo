@@ -1,5 +1,5 @@
 name: HAAITeo
-version: "1.1.0"
+version: "1.1.1"
 slug: haaiteo
 description: AI assistant panel for Home Assistant - ask Claude (Anthropic) or Gemini (Google) to understand, control and modify your smart home. Changes need your approval. Private by default - panel only through Home Assistant; optional token-protected lock-screen / Siri endpoint. By TeodorTeo.com
 url: https://teodorteo.com

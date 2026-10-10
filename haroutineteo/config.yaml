@@ -1,5 +1,5 @@
 name: HARoutineTeo
-version: "1.0.0"
+version: "1.0.1"
 slug: haroutineteo
 description: Routines with steps (announce, fade lights, scenes, waits, conditions) triggered from your phone, by time or by an entity, with live step progress on the Dynamic Island. By TeodorTeo.com
 url: https://teodorteo.com

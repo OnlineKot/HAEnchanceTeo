@@ -634,7 +634,7 @@ async def h_state(request):
     return web.json_response({"routines": [r | {"running": any(x["routine_id"] == r["id"] for x in runs.values())} for r in routines],
                               "runs": [public_run(x) for x in runs.values()], "history": list(reversed(history))[:25], "settings": settings, "now": time.time(),
                               "tz": str(tz), "notify": notify, "speakers": pick("media_player"), "tts": pick("tts"), "entities": ents, "services": svc,
-                              "tokens": [{k: v for k, v in t.items() if k != "hash"} for t in tokens], "public_port": PUBLIC_PORT,
+                              "tokens": [{k: v for k, v in t.items() if k not in ("hash", "secret")} | {"can_copy": bool(t.get("secret"))} for t in tokens], "public_port": PUBLIC_PORT,
                               "credit": {"name": CREDIT, "url": CREDIT_URL}})
 
 
@@ -714,11 +714,18 @@ async def h_token_create(request):
     if not name:
         raise err(400, "name required")
     raw = "hrt_" + secrets.token_urlsafe(24)
-    tok = {"id": uuid.uuid4().hex[:10], "name": name, "hash": token_hash(raw), "prefix": raw[:8], "created": int(time.time()), "last_used": None,
+    tok = {"id": uuid.uuid4().hex[:10], "name": name, "hash": token_hash(raw), "secret": raw, "prefix": raw[:8], "created": int(time.time()), "last_used": None,
            "routines": [x for x in (body.get("routines") or []) if any(r["id"] == x for r in routines)]}
     tokens.append(tok)
     write_json(TOK_FILE, tokens)
-    return web.json_response({**{k: v for k, v in tok.items() if k != "hash"}, "token": raw})
+    return web.json_response({**{k: v for k, v in tok.items() if k not in ("hash", "secret")}, "token": raw})
+
+
+async def h_token_secret(request):
+    tok = next((t for t in tokens if t["id"] == request.match_info["id"]), None)
+    if not tok or not tok.get("secret"):
+        raise err(404, "token was created before copying was possible - revoke it and create a new one")
+    return web.json_response({"token": tok["secret"]})
 
 
 async def h_token_delete(request):
@@ -765,7 +772,7 @@ def build_apps():
     ui.add_routes([web.get("/", h_index), web.static("/static", STATIC), web.get("/api/state", h_state), web.post("/api/routines", h_save),
                    web.delete("/api/routines/{id}", h_delete), web.post("/api/routines/{id}/run", h_run), web.post("/api/routines/{id}/stop", h_stop),
                    web.post("/api/step/test", h_step_test), web.post("/api/settings", h_settings), web.post("/api/tokens", h_token_create),
-                   web.delete("/api/tokens/{id}", h_token_delete), web.post("/api/templates", h_template)])
+                   web.get("/api/tokens/{id}/secret", h_token_secret), web.delete("/api/tokens/{id}", h_token_delete), web.post("/api/templates", h_template)])
     pub = web.Application(middlewares=[token_guard], client_max_size=64 * 1024)
     pub.add_routes([web.post("/api/run", api_run), web.post("/api/stop", api_stop), web.get("/api/routines", api_list)])
     return ui, pub

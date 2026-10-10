@@ -296,7 +296,7 @@ const L = {
   tokMax:"Max volume % (empty = no limit)",tokTtsHint:"The TTS engine, language and voice currently chosen in the Say tab become this token's defaults, so the shortcut only needs to send the message.",
   tokCreate:"Create token",tokShown:"Copy the token now - it is shown only once!",tokSteps:"Shortcuts app → + → “Get Contents of URL”: paste the URL, Show More → Method POST → add the two headers → Request Body: JSON with a “message” text field (use “Ask for Input” or “Dictate Text” as its value). Name it and add it to the lock screen / Siri.",
   tokURL:"URL",tokAuth:"Header Authorization",tokCT:"Header Content-Type",tokBody:"JSON body (text)",tokBody2:"JSON body (library sound)",tokRevoke:"Revoke",tokConfirm:"Revoke this token? Shortcuts using it will stop working.",
-  tokNone:"No tokens yet.",tokUsed:"last used",tokNever:"never used",tokUses:"uses",tokSupB:"👁 supervised",tokLimited:"limited speakers",tokNeed:"Enter a name and select at least one speaker.",
+  tokNone:"No tokens yet.",tokCopy:"Copy token",tokCopyAny:"Token and ready-to-paste values",tokOld:"Created before copying was possible - revoke and create a new one",tokUsed:"last used",tokNever:"never used",tokUses:"uses",tokSupB:"👁 supervised",tokLimited:"limited speakers",tokNeed:"Enter a name and select at least one speaker.",
   logTitle:"Announcement log",logClear:"Clear log",logAll:"All sources",logConfirm:"Clear the whole log?",logNoText:"(text not recorded)",logEmpty:"Nothing logged yet.",logViewTok:"Log",stop2:"■ Stop",stopped:"Stopped ■",preparing:"Preparing voice…",playing:"Playing ♪",queued:"Queued - plays in {s} s",updNew:"New version available",updHave:"you have",updHow:"Open the add-on page and tap Update.",updOpen:"Open add-on page",updAuto:"auto-update on",updManual:"auto-update off (enable it on the add-on page)",copy:"Copy",copied:"Copied ✓",allThree:"All three ways to open it:",w1:"① Script in HA",w2:"② iOS shortcut (Open URL)",w3:"③ Standalone app (Add to Home Screen)",quick:"⚡ Quick",qSounds:"Favorite sounds - tap to announce",qMsg:"Say something",qNoFav:"No favorite sounds yet. Mark sounds with ★ in the Library.",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
   setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",speakers:"Speakers",app:"📱 App",
   actBefore:"Run before (script / scene)",actAfter:"Run after (script / scene)",actNone:"— none —",
@@ -329,7 +329,7 @@ const L = {
   tokMax:"Maks. głośność % (puste = bez limitu)",tokTtsHint:"Silnik TTS, język i głos wybrane teraz w zakładce Mów staną się domyślnymi dla tego tokenu, więc skrót wysyła tylko wiadomość.",
   tokCreate:"Utwórz token",tokShown:"Skopiuj token teraz - pokazuje się tylko raz!",tokSteps:"Aplikacja Skróty → + → „Pobierz zawartość URL”: wklej adres, Pokaż więcej → Metoda POST → dodaj oba nagłówki → Treść żądania: JSON z polem tekstowym „message” (jako wartość użyj „Zapytaj o dane” lub „Dyktuj tekst”). Nazwij skrót i dodaj go do ekranu blokady / Siri.",
   tokURL:"Adres URL",tokAuth:"Nagłówek Authorization",tokCT:"Nagłówek Content-Type",tokBody:"Treść JSON (tekst)",tokBody2:"Treść JSON (dźwięk z biblioteki)",tokRevoke:"Odwołaj",tokConfirm:"Odwołać ten token? Skróty, które go używają, przestaną działać.",
-  tokNone:"Brak tokenów.",tokUsed:"ostatnio użyty",tokNever:"nieużywany",tokUses:"użyć",tokSupB:"👁 nadzorowany",tokLimited:"ograniczone głośniki",tokNeed:"Wpisz nazwę i zaznacz co najmniej jeden głośnik.",
+  tokNone:"Brak tokenów.",tokCopy:"Kopiuj token",tokCopyAny:"Token i gotowe wartości do wklejenia",tokOld:"Utworzony zanim kopiowanie było możliwe - usuń i utwórz nowy",tokUsed:"ostatnio użyty",tokNever:"nieużywany",tokUses:"użyć",tokSupB:"👁 nadzorowany",tokLimited:"ograniczone głośniki",tokNeed:"Wpisz nazwę i zaznacz co najmniej jeden głośnik.",
   logTitle:"Dziennik ogłoszeń",logClear:"Wyczyść dziennik",logAll:"Wszystkie źródła",logConfirm:"Wyczyścić cały dziennik?",logNoText:"(tekst niezapisany)",logEmpty:"Nic jeszcze nie zapisano.",logViewTok:"Dziennik",stop2:"■ Stop",stopped:"Zatrzymano ■",preparing:"Przygotowuję głos…",playing:"Gra ♪",queued:"W kolejce - zagra za {s} s",updNew:"Dostępna nowa wersja",updHave:"masz",updHow:"Otwórz stronę dodatku i kliknij Aktualizuj.",updOpen:"Otwórz stronę dodatku",updAuto:"automatyczna aktualizacja włączona",updManual:"automatyczna aktualizacja wyłączona (włącz na stronie dodatku)",copy:"Kopiuj",copied:"Skopiowano ✓",allThree:"Wszystkie trzy sposoby otwierania:",w1:"① Skrypt w HA",w2:"② Skrót iOS (Otwórz URL)",w3:"③ Osobna aplikacja (Do ekranu początkowego)",quick:"⚡ Szybkie",qSounds:"Ulubione dźwięki - dotknij, by ogłosić",qMsg:"Powiedz coś",qNoFav:"Brak ulubionych dźwięków. Oznacz dźwięki ★ w Bibliotece.",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
   setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",speakers:"Głośniki",app:"📱 Aplikacja",
   actBefore:"Uruchom przed (skrypt / scena)",actAfter:"Uruchom po (skrypt / scena)",actNone:"— brak —",
@@ -689,6 +689,20 @@ async function renderNet(force){
 // ---- tokens (for shortcuts) + announcement log
 let TK = [];
 const ago = ts => ts ? new Date(ts*1000).toLocaleString() : t("tokNever");
+function showTokenCard(token, fresh = true){
+    const box = $("tokResult"); box.innerHTML = "";
+    const card = document.createElement("div"); card.className = "prof"; card.style.border = "1.5px solid var(--warn)";
+    const h = document.createElement("div"); h.innerHTML = `<b>${fresh ? "⚠ " + t("tokShown") : t("tokCopyAny")}</b>`; card.append(h);
+    card.append(copyRow("Token", token));
+    const hint = document.createElement("div"); hint.className = "hint"; hint.style.marginTop = "10px"; hint.textContent = t("tokSteps"); card.append(hint);
+    card.append(copyRow(t("tokURL"), S.base_url + "/api/announce"));
+    if(NET && NET.external_base) card.append(copyRow(t("tokURLext"), NET.external_base + "/api/announce"));
+    card.append(copyRow(t("tokAuth"), "Bearer " + token));
+    card.append(copyRow(t("tokCT"), "application/json"));
+    card.append(copyRow(t("tokBody"), JSON.stringify({message:lang==="pl"?"Obiad gotowy":"Dinner is ready"})));
+    card.append(copyRow(t("tokBody2"), JSON.stringify({sound:(S.library[0]||{name:"Gong"}).name})));
+    box.append(card); card.scrollIntoView({behavior:"smooth"});
+}
 async function renderTokens(){
   renderNet();
   try{ TK = await api("tokens"); }catch(e){ return toast(e.message,true); }
@@ -701,8 +715,9 @@ async function renderTokens(){
       ${k.allow_all_speakers?"":`<span class="badge">${t("tokLimited")}</span>`}
       <span class="badge">${t("tokUses")}: ${k.uses||0}</span><span class="badge">${t("tokUsed")}: ${esc(k.last_used?ago(k.last_used):t("tokNever"))}</span></div>
       <small class="hint spk"></small></div>
-      <button class="b alt sm lg">${t("logViewTok")}</button><button class="b red sm rv">${t("tokRevoke")}</button>`;
+      <button class="b alt sm cp"${k.can_copy?"":" disabled"} title="${k.can_copy?"":t("tokOld")}">${t("tokCopy")}</button><button class="b alt sm lg">${t("logViewTok")}</button><button class="b red sm rv">${t("tokRevoke")}</button>`;
     d.querySelector("b").textContent = k.name; d.querySelector(".spk").textContent = spk;
+    d.querySelector(".cp").onclick = async () => { try{ showTokenCard((await api("tokens/"+k.id+"/secret")).token, false); }catch(e){ toast(e.message,true); } };
     d.querySelector(".lg").onclick = () => { $("logFilter").value = k.id; renderLog(); $("logList").scrollIntoView({behavior:"smooth"}); };
     d.querySelector(".rv").onclick = async () => { if(!confirm(t("tokConfirm"))) return;
       try{ await api("tokens/"+k.id,{method:"DELETE"}); renderTokens(); }catch(e){toast(e.message,true)} };
@@ -757,18 +772,7 @@ $("tkCreate").onclick = async () => {
       tts_entity:$("ttsEnt").value||"",language:$("ttsLang").value||"",voice:$("ttsVoice").value||"",
       live_phones:[...document.querySelectorAll("#tkLive .chip.on")].map(c=>c.dataset.id)});
     $("tokForm").hidden = true; $("tkName").value = "";
-    const box = $("tokResult"); box.innerHTML = "";
-    const card = document.createElement("div"); card.className = "prof"; card.style.border = "1.5px solid var(--warn)";
-    const h = document.createElement("div"); h.innerHTML = `<b>⚠ ${t("tokShown")}</b>`; card.append(h);
-    card.append(copyRow("Token", r.token));
-    const hint = document.createElement("div"); hint.className = "hint"; hint.style.marginTop = "10px"; hint.textContent = t("tokSteps"); card.append(hint);
-    card.append(copyRow(t("tokURL"), S.base_url + "/api/announce"));
-    if(NET && NET.external_base) card.append(copyRow(t("tokURLext"), NET.external_base + "/api/announce"));
-    card.append(copyRow(t("tokAuth"), "Bearer " + r.token));
-    card.append(copyRow(t("tokCT"), "application/json"));
-    card.append(copyRow(t("tokBody"), JSON.stringify({message:lang==="pl"?"Obiad gotowy":"Dinner is ready"})));
-    card.append(copyRow(t("tokBody2"), JSON.stringify({sound:(S.library[0]||{name:"Gong"}).name})));
-    box.append(card); card.scrollIntoView({behavior:"smooth"}); renderTokens();
+    showTokenCard(r.token); renderTokens();
   }catch(e){ toast(e.message,true); }
 };
 

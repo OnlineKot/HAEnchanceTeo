@@ -1177,7 +1177,7 @@ def find_token(raw):
 
 
 def public_token(tok):
-    return {k: v for k, v in tok.items() if k != "hash"}
+    return {k: v for k, v in tok.items() if k not in ("hash", "secret")} | {"can_copy": bool(tok.get("secret"))}
 
 
 def write_log(entry):
@@ -1547,7 +1547,7 @@ async def h_token_create(request):
     raw = "hae_" + secrets.token_urlsafe(24)
     mv = body.get("max_volume")
     tok = {
-        "id": uuid.uuid4().hex[:12], "name": name, "hash": token_hash(raw), "prefix": raw[:8],
+        "id": uuid.uuid4().hex[:12], "name": name, "hash": token_hash(raw), "secret": raw, "prefix": raw[:8],
         "created": int(time.time()), "last_used": None, "uses": 0,
         "supervised": bool(body.get("supervised", True)),
         "targets": speakers_, "allow_all_speakers": bool(body.get("allow_all_speakers")),
@@ -1560,6 +1560,13 @@ async def h_token_create(request):
     tokens.append(tok)
     save_tokens()
     return web.json_response({**public_token(tok), "token": raw})
+
+
+async def h_token_secret(request):
+    tok = next((t for t in tokens if t["id"] == request.match_info["id"]), None)
+    if not tok or not tok.get("secret"):
+        raise _json_error(404, "token was created before copying was possible - revoke it and create a new one")
+    return web.json_response({"token": tok["secret"]})
 
 
 async def h_token_delete(request):
@@ -1833,6 +1840,7 @@ def routes(with_index=True):
         web.post("/api/live/test", h_live_test),
         web.get("/api/tokens", h_tokens),
         web.post("/api/tokens", h_token_create),
+        web.get("/api/tokens/{id}/secret", h_token_secret),
         web.delete("/api/tokens/{id}", h_token_delete),
         web.get("/api/log", h_log),
         web.delete("/api/log", h_log_clear),

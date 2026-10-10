@@ -82,7 +82,7 @@ na karcie **Urządzenia**. Zewnętrzny adres jest też w generowanych linkach (�
 - Informacja o sieci jest dostępna tylko dla administratora (panel / klucz API), nie dla tokenów.
 
 ## Szybki start
-1. Panel HALiveTeo → **+ Nowe urządzenie** → skopiuj **link** (token pokazuje się tylko raz).
+1. Panel HALiveTeo → **+ Nowe urządzenie** → skopiuj **link** (token możesz skopiować ponownie w każdej chwili przyciskiem „Kopiuj token / link”).
 2. Otwórz link na telefonie/tablecie → Safari: *Udostępnij → Do ekranu początkowego* (działa jak aplikacja, pełny ekran).
    Menu ⋯: „Nie wygaszaj ekranu” i „Pełny ekran” (idealne na panel ścienny).
 3. **Edytuj** urządzenie: dodaj kafelki ręcznie, **Auto z encji** (zaznacz światła, sceny, skrypty…) albo edytuj **JSON**.

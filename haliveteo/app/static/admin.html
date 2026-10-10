@@ -213,10 +213,10 @@ function copyRow(label, value){
   w.querySelector("button").onclick = async () => { try{ await navigator.clipboard.writeText(value); }catch{ i.select(); document.execCommand("copy"); } toast(tr("Skopiowano ✓","Copied ✓")); };
   return w;
 }
-function showCreated(d){
+function showCreated(d, fresh = true){
   const box = $("created"); box.innerHTML = "";
   const c = document.createElement("div"); c.className = "card"; c.style.border = "1.5px solid var(--warn)";
-  c.innerHTML = `<b>⚠ ${tr("Skopiuj teraz - token pokazuje się tylko raz!","Copy now - the token is shown only once!")}</b>
+  c.innerHTML = `<b>${fresh ? "⚠ " + tr("Skopiuj teraz - ale token możesz skopiować też później.","Copy now - you can also copy the token later.") : tr("Link i token urządzenia","Device link and token")}</b>
     <div class="hint">${tr("Otwórz link na urządzeniu (telefon, tablet, panel ścienny) i dodaj go do ekranu głównego. Zmień IP w linku, jeśli to inny adres niż HA.","Open the link on the device (phone, tablet, wall panel) and add it to the home screen. Replace the host in the link if the device reaches HA under another address.")}</div>`;
   c.append(copyRow(tr("Link do urządzenia","Device link"), linkFor(d.token)));
   if(NET && NET.external_base) c.append(copyRow(NT.extLink, NET.external_base + "/?t=" + d.token));
@@ -231,10 +231,11 @@ function renderDevices(){
     el.innerHTML = `<div class="shape" style="background:color-mix(in srgb,var(--primary-color) 20%,transparent);color:var(--primary-color)">${HL.icon(d.icon)}</div><div class="n"><span class="dot ${d.online ? "on" : ""}"></span> <b></b>
       <div class="hint">${d.user ? "👤 " + esc(d.user) + " · " : ""}${d.layout.tiles.length} ${tr("kafelków","tiles")} · ${esc(d.prefix)}… · ${d.last_seen ? tr("ostatnio","last seen") + " " + new Date(d.last_seen*1000).toLocaleString() : tr("jeszcze nie połączone","never connected")}
       ${d.enabled ? "" : ` · <span class="badge">${tr("wyłączone","disabled")}</span>`}</div></div>
-      <button class="b sm ed">${tr("Edytuj","Edit")}</button><button class="b alt sm tk">${tr("Nowy token / link","New token / link")}</button>
+      <button class="b sm ed">${tr("Edytuj","Edit")}</button><button class="b alt sm cp"${d.can_copy ? "" : " disabled"} title="${d.can_copy ? "" : tr("Utworzony przed aktualizacją - wygeneruj nowy token raz","Created before the update - generate a new token once")}">${tr("Kopiuj token / link","Copy token / link")}</button><button class="b alt sm tk">${tr("Nowy token / link","New token / link")}</button>
       <button class="b red sm dl">${tr("Usuń","Delete")}</button>`;
     el.querySelector("b").textContent = d.name;
     el.querySelector(".ed").onclick = () => edit(d.id);
+    el.querySelector(".cp").onclick = async () => { try{ const r = await api(`devices/${d.id}/secret`); showCreated({token: r.token}, false); }catch(e){ toast(e.message,true); } };
     el.querySelector(".tk").onclick = async () => { if(!confirm(tr("Wygenerować nowy token? Stary przestanie działać.","Generate a new token? The old one stops working."))) return;
       try{ const r = await post(`devices/${d.id}/token`, {}); showCreated(r); await load(); }catch(e){ toast(e.message,true); } };
     el.querySelector(".dl").onclick = async () => { if(!confirm(tr("Usunąć urządzenie?","Delete this device?"))) return;

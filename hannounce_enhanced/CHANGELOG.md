@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.13.2
+- Tokens can be copied again at any time (new "Copy token" button). Tokens created before this update can't be recovered - regenerate them once. Note: the token is now stored in the add-on's private data folder (tokens.json) instead of only as a hash.
+
 ## 1.13.1
 - UI: "Use device recorder" is now a real button; when the browser microphone is unavailable (no HTTPS) the dead Record button is hidden and the device recorder is the primary action; duplicate header hidden inside HA ingress.
 

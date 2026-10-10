@@ -112,7 +112,7 @@ def find_device(raw):
 
 
 def public_device(dev):
-    return {k: v for k, v in dev.items() if k != "hash"}
+    return {k: v for k, v in dev.items() if k not in ("hash", "secret")} | {"can_copy": bool(dev.get("secret"))}
 
 
 # ---------------------------------------------------------------- layout validation
@@ -834,7 +834,7 @@ async def h_dev_create(request):
     if not name:
         raise err(400, "name required")
     raw, digest, prefix = new_token()
-    dev = {"id": uuid.uuid4().hex[:8], "name": name, "icon": s(body.get("icon"), 40) or "mdi:cellphone", "hash": digest,
+    dev = {"id": uuid.uuid4().hex[:8], "name": name, "icon": s(body.get("icon"), 40) or "mdi:cellphone", "hash": digest, "secret": raw,
            "prefix": prefix, "created": int(time.time()), "last_seen": None, "enabled": True, "user": s(body.get("user"), 40).strip(), "phone": "", "live": "off", "live_entities": [], "muted": [],
            "show_feed": bool(body.get("show_feed", True)), "layout": clean_layout(body.get("layout"))}
     devices.append(dev)
@@ -877,11 +877,19 @@ async def h_dev_update(request):
 async def h_dev_token(request):
     dev = get_dev(request)
     raw, dev["hash"], dev["prefix"] = new_token()
+    dev["secret"] = raw
     save_devices()
     for c in list(clients):
         if c.device and c.device["id"] == dev["id"]:
             asyncio.create_task(c.ws.close())
     return web.json_response({**public_device(dev), "token": raw})
+
+
+async def h_dev_secret(request):
+    dev = get_dev(request)
+    if not dev.get("secret"):
+        raise err(404, "token was created before copying was possible - generate a new token once")
+    return web.json_response({"token": dev["secret"]})
 
 
 async def h_dev_delete(request):
@@ -1141,6 +1149,7 @@ def build_apps():
         web.post("/api/admin/devices", h_dev_create),
         web.post("/api/admin/devices/{id}", h_dev_update),
         web.post("/api/admin/devices/{id}/token", h_dev_token),
+        web.get("/api/admin/devices/{id}/secret", h_dev_secret),
         web.delete("/api/admin/devices/{id}", h_dev_delete),
         web.post("/api/admin/test", h_admin_test),
         web.post("/api/admin/activities", h_act_save),

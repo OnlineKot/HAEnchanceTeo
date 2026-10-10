@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.1
+- Tokens can be copied again at any time (new "Copy token" button). Tokens created before this update can't be recovered - regenerate them once. Note: the token is now stored in the add-on's private data folder (tokens.json) instead of only as a hash.
+
 ## 1.4.0
 - External (public) IP check, external device links, sensor.haliveteo_external_ip with change detection; options check_external_ip, external_host.
 
