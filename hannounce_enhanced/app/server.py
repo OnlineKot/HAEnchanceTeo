@@ -1317,6 +1317,7 @@ async def h_state(request):
         "generators": GENERATORS,
         "base_url": await base_url(),
         "api_enabled": bool(OPTIONS.get("api_key") or tokens),
+        "admin": is_admin_panel(request),
         "credit": {"name": CREDIT, "url": CREDIT_URL},
     })
 
@@ -1618,8 +1619,14 @@ async def h_log_clear(request):
     return web.json_response({"ok": True})
 
 
+def is_admin_panel(request):
+    return not request.app.get("public")
+
+
 async def h_version(request):
-    """Installed vs. latest add-on version, as reported by the Supervisor."""
+    """Installed vs. latest add-on version, as reported by the Supervisor. Only for the admin panel (HA ingress)."""
+    if not is_admin_panel(request):
+        return web.json_response({"version": None, "update_available": False})
     info = {}
     try:
         async with session.get(f"{SUPERVISOR}/addons/self/info",
@@ -1633,6 +1640,26 @@ async def h_version(request):
         "update_available": bool(info.get("update_available")),
         "auto_update": bool(info.get("auto_update")),
         "addon_path": f"/hassio/addon/{slug}/info" if slug else ""})
+
+
+async def h_addon_log(request):
+    """Last lines of this add-on's own log (Supervisor), admin panel only."""
+    if not is_admin_panel(request):
+        raise _json_error(403, "admin panel only")
+    try:
+        async with session.get(f"{SUPERVISOR}/addons/self/logs", headers={"Authorization": f"Bearer {TOKEN}", "Accept": "text/plain"},
+                               timeout=ClientTimeout(total=15)) as r:
+            buf = bytearray()
+            async for chunk in r.content.iter_chunked(16384):
+                buf += chunk
+                if len(buf) > 2 * 1024 * 1024:
+                    del buf[:len(buf) - 1024 * 1024]
+            text = buf.decode("utf-8", "replace")
+    except Exception as exc:  # noqa: BLE001
+        raise _json_error(502, f"Supervisor log unavailable: {type(exc).__name__}")
+    text = re.sub(r"\x1b\[[0-9;]*m", "", text)
+    lines = text.splitlines()[-300:]
+    return web.json_response({"lines": [l[:400] for l in lines]})
 
 
 async def h_network(request):
@@ -1877,6 +1904,7 @@ def routes(with_index=True):
         web.post("/api/record", h_record),
         web.post("/api/script", h_script),
         web.get("/api/version", h_version),
+        web.get("/api/addonlog", h_addon_log),
         web.get("/api/network", h_network),
         web.post("/api/network/refresh", h_network_refresh),
         web.get("/api/launcher", h_launcher_info),
@@ -1898,6 +1926,7 @@ def build_apps():
     ui.add_routes(routes())
     # Standalone interface on the public port: same UI, API protected by api_key
     ext = web.Application(middlewares=[key_guard], client_max_size=2 * 1024 * 1024)
+    ext["public"] = True   # not the admin panel: no version / update / add-on log information
     ext.add_routes(routes())
     return ui, ext
 

@@ -280,6 +280,7 @@ html.embedded header{display:none}
     <div class="sec" style="margin-top:20px"><span data-i="logTitle"></span><span class="sp"></span>
       <button class="link" id="logRefresh" data-i="refresh"></button><button class="link" id="logClear" style="color:var(--err)" data-i="logClear"></button></div>
     <select id="logFilter" style="margin-bottom:8px"></select>
+    <div id="addonLogBox" hidden><button class="link" id="addonLogBtn" data-i="addonLog"></button><pre id="addonLog" class="hint" style="white-space:pre-wrap;max-height:320px;overflow:auto;font:12px/18px ui-monospace,monospace" hidden></pre></div>
     <div id="logList"></div>
   </div>
 
@@ -307,7 +308,7 @@ const L = {
   tokCreate:"Create token",tokShown:"Copy the token now - it is shown only once!",tokSteps:"Shortcuts app → + → “Get Contents of URL”: paste the URL, Show More → Method POST → add the two headers → Request Body: JSON with a “message” text field (use “Ask for Input” or “Dictate Text” as its value). Name it and add it to the lock screen / Siri.",
   tokURL:"URL",tokAuth:"Header Authorization",tokCT:"Header Content-Type",tokBody:"JSON body (text)",tokBody2:"JSON body (library sound)",tokRevoke:"Revoke",tokConfirm:"Revoke this token? Shortcuts using it will stop working.",
   tokNone:"No tokens yet.",tokCopy:"Copy token",tokRecURL:"Voice URL (record from the lock screen)",tokRecSteps:"Voice shortcut: “Record Audio” → “Get Contents of URL” with this Voice URL, method POST, Request Body = File → Recorded Audio, same Authorization header (the token's speakers are used; optional ?targets=media_player.x). It is announced once and not saved.",tokCopyAny:"Token and ready-to-paste values",tokOld:"Created before copying was possible - revoke and create a new one",tokUsed:"last used",tokNever:"never used",tokUses:"uses",tokSupB:"👁 supervised",tokLimited:"limited speakers",tokNeed:"Enter a name and select at least one speaker.",
-  logTitle:"Announcement log",logClear:"Clear log",logAll:"All sources",logConfirm:"Clear the whole log?",logNoText:"(text not recorded)",logEmpty:"Nothing logged yet.",logViewTok:"Log",stop2:"■ Stop",stopped:"Stopped ■",preparing:"Preparing voice…",playing:"Playing ♪",queued:"Queued - plays in {s} s",updNew:"New version available",updHave:"you have",updHow:"Open the add-on page and tap Update.",updOpen:"Open add-on page",updAuto:"auto-update on",updManual:"auto-update off (enable it on the add-on page)",copy:"Copy",copied:"Copied ✓",allThree:"All three ways to open it:",w1:"① Script in HA",w2:"② iOS shortcut (Open URL)",w3:"③ Standalone app (Add to Home Screen)",quick:"⚡ Quick",qSounds:"Favorite sounds - tap to announce",qMsg:"Say something",qNoFav:"No favorite sounds yet. Mark sounds with ★ in the Library.",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
+  logTitle:"Announcement log",addonLog:"Show add-on system log (admin)",logClear:"Clear log",logAll:"All sources",logConfirm:"Clear the whole log?",logNoText:"(text not recorded)",logEmpty:"Nothing logged yet.",logViewTok:"Log",stop2:"■ Stop",stopped:"Stopped ■",preparing:"Preparing voice…",playing:"Playing ♪",queued:"Queued - plays in {s} s",updNew:"New version available",updHave:"you have",updHow:"Open the add-on page and tap Update.",updOpen:"Open add-on page",updAuto:"auto-update on",updManual:"auto-update off (enable it on the add-on page)",copy:"Copy",copied:"Copied ✓",allThree:"All three ways to open it:",w1:"① Script in HA",w2:"② iOS shortcut (Open URL)",w3:"③ Standalone app (Add to Home Screen)",quick:"⚡ Quick",qSounds:"Favorite sounds - tap to announce",qMsg:"Say something",qNoFav:"No favorite sounds yet. Mark sounds with ★ in the Library.",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
   setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",speakers:"Speakers",app:"📱 App",
   actBefore:"Run before (script / scene)",actAfter:"Run after (script / scene)",actNone:"— none —",
   ttsent:"TTS engine",message:"Message",lang:"Language",voice:"Voice",deflt:"(default)",ttsnone:"No TTS engine found in Home Assistant",
@@ -340,7 +341,7 @@ const L = {
   tokCreate:"Utwórz token",tokShown:"Skopiuj token teraz - pokazuje się tylko raz!",tokSteps:"Aplikacja Skróty → + → „Pobierz zawartość URL”: wklej adres, Pokaż więcej → Metoda POST → dodaj oba nagłówki → Treść żądania: JSON z polem tekstowym „message” (jako wartość użyj „Zapytaj o dane” lub „Dyktuj tekst”). Nazwij skrót i dodaj go do ekranu blokady / Siri.",
   tokURL:"Adres URL",tokAuth:"Nagłówek Authorization",tokCT:"Nagłówek Content-Type",tokBody:"Treść JSON (tekst)",tokBody2:"Treść JSON (dźwięk z biblioteki)",tokRevoke:"Odwołaj",tokConfirm:"Odwołać ten token? Skróty, które go używają, przestaną działać.",
   tokNone:"Brak tokenów.",tokCopy:"Kopiuj token",tokRecURL:"Adres głosowy (nagrywanie z ekranu blokady)",tokRecSteps:"Skrót głosowy: „Nagraj dźwięk” → „Pobierz zawartość URL” z tym adresem, metoda POST, Treść żądania = Plik → Nagrany dźwięk, ten sam nagłówek Authorization (używa głośników tokenu; opcjonalnie ?targets=media_player.x). Ogłoszenie leci raz i nie jest zapisywane.",tokCopyAny:"Token i gotowe wartości do wklejenia",tokOld:"Utworzony zanim kopiowanie było możliwe - usuń i utwórz nowy",tokUsed:"ostatnio użyty",tokNever:"nieużywany",tokUses:"użyć",tokSupB:"👁 nadzorowany",tokLimited:"ograniczone głośniki",tokNeed:"Wpisz nazwę i zaznacz co najmniej jeden głośnik.",
-  logTitle:"Dziennik ogłoszeń",logClear:"Wyczyść dziennik",logAll:"Wszystkie źródła",logConfirm:"Wyczyścić cały dziennik?",logNoText:"(tekst niezapisany)",logEmpty:"Nic jeszcze nie zapisano.",logViewTok:"Dziennik",stop2:"■ Stop",stopped:"Zatrzymano ■",preparing:"Przygotowuję głos…",playing:"Gra ♪",queued:"W kolejce - zagra za {s} s",updNew:"Dostępna nowa wersja",updHave:"masz",updHow:"Otwórz stronę dodatku i kliknij Aktualizuj.",updOpen:"Otwórz stronę dodatku",updAuto:"automatyczna aktualizacja włączona",updManual:"automatyczna aktualizacja wyłączona (włącz na stronie dodatku)",copy:"Kopiuj",copied:"Skopiowano ✓",allThree:"Wszystkie trzy sposoby otwierania:",w1:"① Skrypt w HA",w2:"② Skrót iOS (Otwórz URL)",w3:"③ Osobna aplikacja (Do ekranu początkowego)",quick:"⚡ Szybkie",qSounds:"Ulubione dźwięki - dotknij, by ogłosić",qMsg:"Powiedz coś",qNoFav:"Brak ulubionych dźwięków. Oznacz dźwięki ★ w Bibliotece.",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
+  logTitle:"Dziennik ogłoszeń",addonLog:"Pokaż log systemowy dodatku (admin)",logClear:"Wyczyść dziennik",logAll:"Wszystkie źródła",logConfirm:"Wyczyścić cały dziennik?",logNoText:"(tekst niezapisany)",logEmpty:"Nic jeszcze nie zapisano.",logViewTok:"Dziennik",stop2:"■ Stop",stopped:"Zatrzymano ■",preparing:"Przygotowuję głos…",playing:"Gra ♪",queued:"W kolejce - zagra za {s} s",updNew:"Dostępna nowa wersja",updHave:"masz",updHow:"Otwórz stronę dodatku i kliknij Aktualizuj.",updOpen:"Otwórz stronę dodatku",updAuto:"automatyczna aktualizacja włączona",updManual:"automatyczna aktualizacja wyłączona (włącz na stronie dodatku)",copy:"Kopiuj",copied:"Skopiowano ✓",allThree:"Wszystkie trzy sposoby otwierania:",w1:"① Skrypt w HA",w2:"② Skrót iOS (Otwórz URL)",w3:"③ Osobna aplikacja (Do ekranu początkowego)",quick:"⚡ Szybkie",qSounds:"Ulubione dźwięki - dotknij, by ogłosić",qMsg:"Powiedz coś",qNoFav:"Brak ulubionych dźwięków. Oznacz dźwięki ★ w Bibliotece.",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
   setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",speakers:"Głośniki",app:"📱 Aplikacja",
   actBefore:"Uruchom przed (skrypt / scena)",actAfter:"Uruchom po (skrypt / scena)",actNone:"— brak —",
   ttsent:"Silnik TTS",message:"Wiadomość",lang:"Język",voice:"Głos",deflt:"(domyślny)",ttsnone:"Nie znaleziono silnika TTS w Home Assistant",
@@ -965,7 +966,9 @@ async function live(){
 }
 async function checkVersion(){
   try{
-    const v = await api("version"), box = $("updBanner"), pl = lang==="pl";
+    const box = $("updBanner"); $("addonLogBox").hidden = !(S.admin && !document.body.classList.contains("kiosk"));
+    if(!S.admin || document.body.classList.contains("kiosk")){ box.hidden = true; $("verInfo").textContent = ""; return; }   // only the HA admin sees version / update info
+    const v = await api("version"), pl = lang==="pl";
     $("verInfo").textContent = v.version ? `v${v.version} · ` + (v.auto_update ? t("updAuto") : t("updManual")) : "";
     if(v.update_available){
       box.hidden = false;
@@ -981,8 +984,8 @@ document.addEventListener("visibilitychange", () => { if(!document.hidden){ live
 
 if(new URLSearchParams(location.search).has("quick")) document.body.classList.add("kiosk");
 showTab((location.hash||"").slice(1) || "quick");
-refresh().then(()=>{ lastP=sigP(S); lastL=sigL(S); }).catch(e => toast(e.message,true));
-checkVersion();
+refresh().then(()=>{ lastP=sigP(S); lastL=sigL(S); checkVersion(); }).catch(e => toast(e.message,true));
+$("addonLogBtn").onclick = async () => { const pre = $("addonLog"); if(!pre.hidden){ pre.hidden = true; return; } try{ pre.textContent = (await api("addonlog")).lines.join("\n"); pre.hidden = false; pre.scrollTop = pre.scrollHeight; }catch(e){ toast(e.message,true); } };
 </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 name: HAnnounce Enhanced
-version: "1.14.0"
+version: "1.15.0"
 slug: hannounce_enhanced
 description: Announce on speakers - TTS, your own recordings, uploads, generated sounds, one-time or saved. By TeodorTeo.com
 url: https://teodorteo.com
@@ -16,6 +16,7 @@ homeassistant_api: true
 hassio_api: true
 ingress: true
 ingress_port: 8099
+panel_admin: true
 panel_icon: mdi:bullhorn
 panel_title: HAnnounce
 ports:

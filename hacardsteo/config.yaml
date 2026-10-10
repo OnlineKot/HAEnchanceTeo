@@ -1,5 +1,5 @@
 name: HACardsTeo
-version: "1.0.0"
+version: "1.0.1"
 slug: hacardsteo
 description: Beautiful dependency-free Lovelace cards (teo-card, teo-chips, teo-title, teo-room, teo-media, teo-stats) installed and registered automatically. By TeodorTeo.com
 url: https://teodorteo.com
@@ -13,6 +13,7 @@ homeassistant_api: true
 hassio_api: true
 ingress: true
 ingress_port: 8099
+panel_admin: true
 panel_icon: mdi:cards
 panel_title: TeoCards
 map:

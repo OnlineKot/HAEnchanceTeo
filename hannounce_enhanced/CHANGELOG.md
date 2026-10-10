@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.15.0
+- Admin vs. everyone else: the add-on panel is admin-only in Home Assistant (`panel_admin: true`). Version / "update available" information and the add-on system log are shown only in that admin panel - never on the public port or in the quick/kiosk view that other people use. New "Show add-on system log" button in the Log tab.
+
 ## 1.14.0
 - Recording: the file picker no longer uses `capture` (iPhone opened the camera = video). New recorder: level meter, 3-2-1 countdown, noise reduction, max length, best format per browser (m4a on Safari), clear permission errors, and a help card explaining why the mic is unavailable over http.
 - New `POST /api/record`: send raw audio (iPhone Shortcut: Record Audio -> Get Contents of URL, Request Body = File) and it is announced once on the token's speakers - record from the lock screen.
