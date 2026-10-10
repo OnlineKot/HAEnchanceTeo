@@ -461,6 +461,54 @@ async def h_delete_remote(request):
     return web.json_response({"ok": True})
 
 
+MOUNT = "qnap_media"
+
+
+async def sup_mount(method, path="", **kw):
+    async with session.request(method, f"{SUP}/mounts{path}", headers=ha_headers(), **kw) as r:
+        text = await r.text()
+        try:
+            data = json.loads(text)
+        except ValueError:
+            data = {}
+        if r.status >= 400:
+            msg = data.get("message") or text[:160]
+            if r.status == 403:
+                msg = "Supervisor refused (403) - the add-on needs the 'manager' role (re-install/update the add-on)."
+            raise err(502, msg)
+        return data.get("data", data)
+
+
+async def h_mount_get(request):
+    try:
+        data = await sup_mount("GET")
+    except web.HTTPException as exc:
+        return web.json_response({"error": json.loads(exc.text)["error"]})
+    m = next((x for x in data.get("mounts", []) if x.get("name") == MOUNT), None)
+    return web.json_response({"mount": m, "path": f"/media/{MOUNT}", "source": f"media-source://media_source/{MOUNT}"})
+
+
+async def h_mount_set(request):
+    load_options()
+    if not configured():
+        raise err(400, "QNAP is not configured")
+    body = {"usage": "media", "type": "cifs", "server": o("host"), "share": o("share"), "username": o("username"),
+            "password": o("password"), "read_only": True}
+    existing = (await h_mount_get(request)).text
+    if json.loads(existing).get("mount"):
+        await sup_mount("PUT", f"/{MOUNT}", json=body)
+    else:
+        await sup_mount("POST", json={"name": MOUNT, **body})
+    history("mount", True, f"QNAP share mounted as media source ({MOUNT}, read-only)")
+    return web.json_response({"ok": True})
+
+
+async def h_mount_delete(request):
+    await sup_mount("DELETE", f"/{MOUNT}")
+    history("mount", True, "QNAP media source removed")
+    return web.json_response({"ok": True})
+
+
 async def h_reset_media(request):
     state["media_index"] = {}
     write_state()
@@ -471,7 +519,8 @@ def build_app():
     app = web.Application(middlewares=[ingress_guard], client_max_size=64 * 1024)
     app.add_routes([web.get("/", h_index), web.static("/static", STATIC), web.get("/api/state", h_state), web.post("/api/test", h_test),
                     web.post("/api/run/{kind}", h_run), web.post("/api/cancel", h_cancel), web.get("/api/remote", h_remote),
-                    web.post("/api/fetch", h_fetch), web.post("/api/delete", h_delete_remote), web.post("/api/media/reset", h_reset_media)])
+                    web.post("/api/fetch", h_fetch), web.post("/api/delete", h_delete_remote), web.post("/api/media/reset", h_reset_media),
+                    web.get("/api/mount", h_mount_get), web.post("/api/mount", h_mount_set), web.delete("/api/mount", h_mount_delete)])
     return app
 
 

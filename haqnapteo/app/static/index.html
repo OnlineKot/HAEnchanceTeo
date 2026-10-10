@@ -45,6 +45,8 @@ main{max-width:860px;margin:0 auto;padding:16px}
 </div>
 
 <div class="view" id="v-md">
+  <div class="card"><div class="sec" id="sSrc"></div><div class="hint" id="srcTxt"></div><div class="kv" id="srcInfo" style="margin-top:10px"></div>
+    <div class="row"><button class="b" id="srcOn"></button><button class="b alt" id="srcOff" hidden></button></div></div>
   <div class="card"><div class="sec" id="sMd2"></div><div class="hint" id="mdTxt"></div><div class="row"><button class="b alt" id="mdReset"></button></div></div>
 </div>
 
@@ -62,7 +64,7 @@ let S = null;
 $("barIcon").innerHTML = HL.icon("mdi:nas"); $("tag").textContent = tr("Backup i multimedia z QNAP","QNAP backup & media"); $("by").textContent = tr("Stworzone przez","Created by");
 [["st",tr("Status","Status")],["rm",tr("Backupy na QNAP","Backups on QNAP")],["md",tr("Multimedia","Media")],["lg",tr("Historia","History")]].forEach(([id, l]) => {
   const b = document.createElement("button"); b.textContent = l; b.dataset.id = id; b.onclick = () => show(id); $("tabs").append(b); });
-function show(id){ document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.id === id)); document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + id)); if(id === "rm") loadRemote(); }
+function show(id){ document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.id === id)); document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + id)); if(id === "rm") loadRemote(); if(id === "md") loadMount(); }
 show("st");
 const T = {
   sBk: tr("Backup Home Assistanta","Home Assistant backup"), sMd: tr("Multimedia z QNAP","Media from QNAP"), sConn: tr("Połączenie","Connection"),
@@ -74,6 +76,8 @@ const T = {
              "This add-on opens no port on your network - the panel is reachable only through Home Assistant. It only connects outward to your QNAP over SMB. Use a dedicated QNAP user with access to a single share."),
   mdTxt: tr("Nowe i zmienione pliki z folderu QNAP są kopiowane do folderu media HA (jednokierunkowo, nic nie jest kasowane). Plik jest pobierany ponownie tylko, gdy zmieni się rozmiar lub data.",
             "New and changed files from the QNAP folder are copied into the HA media folder (one way, nothing is deleted). A file is downloaded again only when its size or date changes.")};
+Object.assign(T, {sSrc: tr("Źródło multimediów w HA (strumieniowanie z QNAP)","Media source in HA (stream from the QNAP)"), srcOn: tr("Podłącz QNAP jako źródło multimediów","Mount QNAP as media source"), srcOff: tr("Odłącz","Remove"),
+  srcTxt: tr("Montuje cały udział QNAP w HA tylko do odczytu (Supervisor, CIFS). Pojawia się w Multimediach HA i w kartach odtwarzacza bez kopiowania plików.","Mounts the whole QNAP share in HA read-only (Supervisor, CIFS). It appears in HA Media and in player cards with no file copying.")});
 for(const [k, v] of Object.entries(T)) if($(k)) $(k).textContent = v;
 
 async function refresh(){
@@ -122,6 +126,13 @@ async function loadRemote(){
     });
   }catch(e){ $("rmList").innerHTML = `<div class="hint" style="color:var(--error-color)">${HL.esc(e.message)}</div>`; }
 }
+async function loadMount(){
+  const r = await HL.api("mount"); const m = r.mount;
+  $("srcInfo").innerHTML = r.error ? `<span>${tr("Błąd","Error")}</span><span style="color:var(--error-color)">${HL.esc(r.error)}</span>` : m ? `<span>${tr("Stan","State")}</span><span>${HL.esc(m.state || "?")}</span><span>${tr("Ścieżka","Path")}</span><span>${HL.esc(r.path)}</span><span>media-source</span><span>${HL.esc(r.source)}</span>` : `<span>${tr("Stan","State")}</span><span>${tr("niepodłączone","not mounted")}</span>`;
+  $("srcOff").hidden = !m; $("srcOn").textContent = m ? tr("Zaktualizuj dane logowania","Update credentials") : T.srcOn;
+}
+$("srcOn").onclick = async () => { try{ await HL.post("mount"); HL.toast("✓"); }catch(e){ HL.toast(e.message, true); } loadMount(); };
+$("srcOff").onclick = async () => { if(!confirm(tr("Odłączyć QNAP od multimediów HA?","Remove the QNAP media source?"))) return; try{ await HL.api("mount", {method:"DELETE"}); }catch(e){ HL.toast(e.message, true); } loadMount(); };
 $("rmRefresh").onclick = loadRemote;
 $("mdReset").onclick = async () => { if(!confirm(tr("Następna synchronizacja pobierze wszystko od nowa. Kontynuować?","The next sync will download everything again. Continue?"))) return; await HL.post("media/reset"); HL.toast("✓"); refresh(); };
 refresh(); setInterval(refresh, 2500);
