@@ -55,12 +55,22 @@ def err(status, message):
     return cls(text=json.dumps({"error": message}), content_type="application/json")
 
 
+CONN_FILE = DATA / "connection.json"
+CONN_KEYS = ("host", "share", "username", "password", "domain", "smb_version", "backup_dir", "media_remote_dir")
+
+
 def load_options():
+    """Add-on options, overlaid with whatever was saved from the panel's Connect wizard (data/connection.json)."""
     global OPT
     try:
         OPT = json.loads(OPTIONS_FILE.read_text())
     except Exception:  # noqa: BLE001
         OPT = {}
+    try:
+        conn = json.loads(CONN_FILE.read_text())
+        OPT.update({k: v for k, v in conn.items() if k in CONN_KEYS and v not in (None, "")})
+    except Exception:  # noqa: BLE001
+        pass
     return OPT
 
 
@@ -102,15 +112,18 @@ def history(kind, ok, text, **extra):
 
 
 # ---------------------------------------------------------------- smbclient
-async def smb(*commands, check=True, timeout=None):
+async def smb(*commands, check=True, timeout=None, target=None, auth=None, version=None, list_shares=False):
     """Run smbclient commands (list of command strings) against the share. Returns stdout."""
     global current_proc
-    if not configured():
-        raise QnapError("QNAP is not configured - fill in host, share and username in the add-on Configuration tab.")
+    if target is None and not configured():
+        raise QnapError("QNAP is not configured - open the Connect tab and set up the connection.")
     for c in commands:
         if "\n" in c:
             raise QnapError("Invalid command")
-    cmd = [SMBCLIENT, f"//{o('host')}/{o('share')}", "-A", str(AUTH_FILE), "-m", "SMB" + str(o("smb_version", "3")), "-c", "; ".join(commands)]
+    tgt = target or f"//{o('host')}/{o('share')}"
+    cmd = [SMBCLIENT] + (["-L", tgt, "-g"] if list_shares else [tgt]) + ["-A", str(auth or AUTH_FILE), "-m", "SMB" + str(version or o("smb_version", "3"))]
+    if not list_shares:
+        cmd += ["-c", "; ".join(commands)]
     env = {**os.environ, "LC_ALL": "C"}
     proc = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=env)
     current_proc = proc
@@ -461,6 +474,145 @@ async def h_delete_remote(request):
     return web.json_response({"ok": True})
 
 
+# ---------------------------------------------------------------- connect wizard
+HOST_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,252}$")
+SHARE_RE = re.compile(r'^[^"\\;/\r\n\x00]{1,80}$')
+USER_RE = re.compile(r"^[^\r\n\x00]{1,80}$")
+
+
+def read_conn():
+    try:
+        return json.loads(CONN_FILE.read_text())
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def check_creds(b, need_share=False):
+    """Validate wizard input; blank password keeps the stored one. Returns a clean dict."""
+    load_options()
+    host = str(b.get("host") or o("host")).strip()
+    user = str(b.get("username") or o("username")).strip()
+    pw = str(b.get("password") or "") or str(o("password") or "")
+    dom = str(b.get("domain") if b.get("domain") is not None else o("domain") or "").strip()
+    share = str(b.get("share") or "").strip()
+    if not HOST_RE.match(host):
+        raise err(400, "Invalid address (IP or hostname only)")
+    if not USER_RE.match(user) or "\n" in pw or "\r" in pw or len(pw) > 128 or not USER_RE.match(dom or "x"):
+        raise err(400, "Invalid username, password or domain")
+    if need_share and not SHARE_RE.match(share):
+        raise err(400, "Invalid share name")
+    ver = "2" if str(b.get("smb_version", o("smb_version", "3"))) == "2" else "3"
+    return {"host": host, "username": user, "password": pw, "domain": dom, "share": share, "smb_version": ver}
+
+
+def temp_auth(c):
+    path = DATA / f"auth_{os.urandom(6).hex()}"
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        f.write(f"username = {c['username']}\npassword = {c['password']}\n" + (f"domain = {c['domain']}\n" if c["domain"] else ""))
+    return path
+
+
+async def h_shares(request):
+    """Log in to //host and list its disk shares (nothing is saved)."""
+    c = check_creds(await request.json())
+    auth = temp_auth(c)
+    try:
+        text = await smb(target=f"//{c['host']}", auth=auth, version=c["smb_version"], list_shares=True, timeout=25)
+    except QnapError as exc:
+        return web.json_response({"ok": False, "error": str(exc)})
+    finally:
+        auth.unlink(missing_ok=True)
+    shares = []
+    for line in text.splitlines():
+        p = line.split("|")
+        if len(p) >= 2 and p[0] == "Disk" and not p[1].endswith("$"):
+            shares.append({"name": p[1], "comment": p[2] if len(p) > 2 else ""})
+    return web.json_response({"ok": True, "shares": shares})
+
+
+async def h_conn_save(request):
+    b = await request.json()
+    c = check_creds(b, need_share=True)
+    conn = {k: c[k] for k in ("host", "share", "username", "password", "domain", "smb_version")}
+    for k in ("backup_dir", "media_remote_dir"):
+        if b.get(k) is not None:
+            conn[k] = clean_rel(b[k]) if str(b[k]).strip() else ""
+    fd = os.open(CONN_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        json.dump({**read_conn(), **conn}, f)
+    load_options()
+    write_auth()
+    try:
+        _, free = await ls("")
+    except QnapError as exc:
+        return web.json_response({"ok": False, "error": str(exc)})
+    history("connect", True, f"Connected to {c['host']}/{c['share']} as {c['username']}")
+    return web.json_response({"ok": True, "free": free})
+
+
+async def h_conn_reset(request):
+    CONN_FILE.unlink(missing_ok=True)
+    load_options()
+    write_auth()
+    return web.json_response({"ok": True})
+
+
+async def h_browse(request):
+    load_options()
+    write_auth()
+    try:
+        items, _ = await ls(request.query.get("path", ""))
+    except QnapError as exc:
+        raise err(502, str(exc))
+    return web.json_response({"dirs": sorted(i["name"] for i in items if i["dir"] and not BAD_CHARS.search(i["name"]))[:300]})
+
+
+async def lan_scan():
+    """Find SMB servers (port 445) in the HA host's /24 network; label the ones that look like a QNAP."""
+    import ipaddress
+    hosts = [h for h in os.environ.get("HQT_SCAN", "").split(",") if h]
+    if not hosts:
+        async with session.get(f"{SUP}/network/info", headers=ha_headers()) as r:
+            data = (await r.json()).get("data", {})
+        net = None
+        for itf in data.get("interfaces", []):
+            for addr in (itf.get("ipv4") or {}).get("address", []) or []:
+                net = ipaddress.ip_network(addr, strict=False)
+                break
+            if net:
+                break
+        if not net:
+            raise err(502, "Cannot read the network settings from Home Assistant")
+        if net.prefixlen < 24:
+            net = ipaddress.ip_network(f"{str(net.network_address)}/24", strict=False)
+        hosts = [str(h) for h in net.hosts()]
+    sem = asyncio.Semaphore(48)
+    found = []
+
+    async def probe(h):
+        async with sem:
+            try:
+                _, w = await asyncio.wait_for(asyncio.open_connection(h, int(os.environ.get("HQT_SMB_PORT", 445))), 0.7)
+                w.close()
+            except Exception:  # noqa: BLE001
+                return
+        qnap = False
+        try:
+            async with session.get(f"http://{h}:8080/", timeout=ClientTimeout(total=2)) as r:
+                qnap = "qnap" in ((await r.content.read(8192)).decode("utf-8", "ignore") + str(r.headers.get("Server", ""))).lower()
+        except Exception:  # noqa: BLE001
+            pass
+        found.append({"ip": h, "qnap": qnap})
+
+    await asyncio.gather(*(probe(h) for h in hosts))
+    return sorted(found, key=lambda x: (not x["qnap"], tuple(int(p) for p in x["ip"].split("."))))
+
+
+async def h_discover(request):
+    return web.json_response({"hosts": await lan_scan()})
+
+
 MOUNT = "qnap_media"
 
 
@@ -520,7 +672,8 @@ def build_app():
     app.add_routes([web.get("/", h_index), web.static("/static", STATIC), web.get("/api/state", h_state), web.post("/api/test", h_test),
                     web.post("/api/run/{kind}", h_run), web.post("/api/cancel", h_cancel), web.get("/api/remote", h_remote),
                     web.post("/api/fetch", h_fetch), web.post("/api/delete", h_delete_remote), web.post("/api/media/reset", h_reset_media),
-                    web.get("/api/mount", h_mount_get), web.post("/api/mount", h_mount_set), web.delete("/api/mount", h_mount_delete)])
+                    web.post("/api/shares", h_shares), web.post("/api/connection", h_conn_save), web.delete("/api/connection", h_conn_reset),
+                    web.get("/api/browse", h_browse), web.post("/api/discover", h_discover), web.get("/api/mount", h_mount_get), web.post("/api/mount", h_mount_set), web.delete("/api/mount", h_mount_delete)])
     return app
 
 

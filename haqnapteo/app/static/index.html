@@ -20,6 +20,28 @@ main{max-width:860px;margin:0 auto;padding:16px}
 <main>
 <div class="tabs" id="tabs"></div>
 
+<div class="view" id="v-cn">
+  <div class="card"><div class="sec" id="cnT1"></div><div class="hint" id="cnH1"></div>
+    <div class="row"><button class="b alt" id="scanBtn"></button></div><div class="row" id="scanRes" style="margin-top:6px"></div>
+    <label class="f" id="lHost"></label><input type="text" id="cHost" placeholder="192.168.1.20" autocomplete="off" autocapitalize="off">
+    <div class="row"><div class="grow"><label class="f" id="lUser"></label><input type="text" id="cUser" autocomplete="off" autocapitalize="off"></div>
+      <div class="grow"><label class="f" id="lPass"></label><input type="password" id="cPass" autocomplete="new-password"></div></div>
+    <div class="row"><div class="grow"><label class="f" id="lDom"></label><input type="text" id="cDom" autocomplete="off"></div>
+      <div class="grow"><label class="f">SMB</label><select id="cVer"><option value="3">3</option><option value="2">2</option></select></div></div>
+    <div class="row"><button class="b" id="shBtn"></button></div><div id="shOut" class="hint" style="margin-top:8px"></div>
+    <div class="row" id="shares" style="margin-top:6px"></div>
+    <div class="row"><button class="b" id="cSave" hidden></button></div>
+  </div>
+  <div class="card" id="cnStep3" hidden><div class="sec" id="cnT3"></div><div class="hint" id="cnH3"></div>
+    <label class="f" id="lBk"></label><div class="row" style="margin-top:0"><input type="text" id="cBk" class="grow" style="flex:1"><button class="b alt sm" data-pick="cBk" id="pkBk"></button></div>
+    <label class="f" id="lMd"></label><div class="row" style="margin-top:0"><input type="text" id="cMd" class="grow" style="flex:1"><button class="b alt sm" data-pick="cMd" id="pkMd"></button></div>
+    <div id="picker" class="card" style="background:var(--primary-background-color);margin-top:10px" hidden><div class="hint" id="pkPath"></div><div id="pkList"></div>
+      <div class="row"><button class="b sm" id="pkOk"></button><button class="b alt sm" id="pkUp"></button></div></div>
+    <div class="row"><button class="b" id="cSave2"></button><button class="b alt" id="cMount"></button></div>
+  </div>
+  <div class="card"><div class="row" style="margin:0"><button class="b red sm" id="cReset"></button></div><div class="hint" id="cResetH" style="margin-top:8px"></div></div>
+</div>
+
 <div class="view" id="v-st">
   <div class="card" id="warn" hidden></div>
   <div class="card" id="jobCard" hidden>
@@ -62,10 +84,10 @@ const hs = n => { for(const u of ["B","KB","MB","GB","TB"]){ if(n < 1024 || u ==
 const dt = ts => ts ? new Date(ts * 1000).toLocaleString() : "—";
 let S = null;
 $("barIcon").innerHTML = HL.icon("mdi:nas"); $("tag").textContent = tr("Backup i multimedia z QNAP","QNAP backup & media"); $("by").textContent = tr("Stworzone przez","Created by");
-[["st",tr("Status","Status")],["rm",tr("Backupy na QNAP","Backups on QNAP")],["md",tr("Multimedia","Media")],["lg",tr("Historia","History")]].forEach(([id, l]) => {
+[["cn",tr("Połączenie","Connect")],["st",tr("Status","Status")],["rm",tr("Backupy na QNAP","Backups on QNAP")],["md",tr("Multimedia","Media")],["lg",tr("Historia","History")]].forEach(([id, l]) => {
   const b = document.createElement("button"); b.textContent = l; b.dataset.id = id; b.onclick = () => show(id); $("tabs").append(b); });
 function show(id){ document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.id === id)); document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + id)); if(id === "rm") loadRemote(); if(id === "md") loadMount(); }
-show("st");
+show(null);
 const T = {
   sBk: tr("Backup Home Assistanta","Home Assistant backup"), sMd: tr("Multimedia z QNAP","Media from QNAP"), sConn: tr("Połączenie","Connection"),
   runBk: tr("Wyślij backupy teraz","Upload backups now"), runBkNew: tr("Nowy backup + wyślij","New backup + upload"), runMd: tr("Pobierz multimedia teraz","Download media now"),
@@ -76,12 +98,19 @@ const T = {
              "This add-on opens no port on your network - the panel is reachable only through Home Assistant. It only connects outward to your QNAP over SMB. Use a dedicated QNAP user with access to a single share."),
   mdTxt: tr("Nowe i zmienione pliki z folderu QNAP są kopiowane do folderu media HA (jednokierunkowo, nic nie jest kasowane). Plik jest pobierany ponownie tylko, gdy zmieni się rozmiar lub data.",
             "New and changed files from the QNAP folder are copied into the HA media folder (one way, nothing is deleted). A file is downloaded again only when its size or date changes.")};
-Object.assign(T, {sSrc: tr("Źródło multimediów w HA (strumieniowanie z QNAP)","Media source in HA (stream from the QNAP)"), srcOn: tr("Podłącz QNAP jako źródło multimediów","Mount QNAP as media source"), srcOff: tr("Odłącz","Remove"),
+Object.assign(T, {cnT1: tr("1. Połącz z QNAP","1. Connect to the QNAP"), cnH1: tr("Znajdź QNAP w sieci albo wpisz adres, podaj użytkownika i hasło (najlepiej osobnego użytkownika z dostępem do jednego udziału) i wybierz udział.","Find the QNAP on your network or type its address, enter the user and password (ideally a dedicated user with access to one share) and pick the share."),
+  scanBtn: tr("🔍 Szukaj w sieci","🔍 Scan the network"), lHost: tr("Adres (IP lub nazwa)","Address (IP or name)"), lUser: tr("Użytkownik","Username"), lPass: tr("Hasło (puste = bez zmian)","Password (empty = keep)"), lDom: tr("Domena (opcjonalnie)","Domain (optional)"),
+  shBtn: tr("Połącz i pokaż udziały","Connect & list shares"), cSave: tr("Zapisz połączenie","Save connection"), cnT3: tr("2. Foldery i źródło multimediów","2. Folders and media source"), cnH3: tr("Wybierz folder na backupy i folder z multimediami, zapisz, a potem podłącz QNAP jako źródło multimediów w HA.","Choose the backup folder and the media folder, save, then mount the QNAP as a media source in HA."),
+  lBk: tr("Folder backupów","Backup folder"), lMd: tr("Folder multimediów (pobieranie)","Media folder (download)"), pkBk: tr("Przeglądaj","Browse"), pkMd: tr("Przeglądaj","Browse"), pkOk: tr("Wybierz ten folder","Use this folder"), pkUp: tr("↑ Wyżej","↑ Up"),
+  cSave2: tr("Zapisz foldery","Save folders"), cMount: tr("Zapisz i podłącz jako źródło multimediów","Save & mount as media source"), cReset: tr("Usuń zapisane połączenie","Forget the saved connection"),
+  cResetH: tr("Dane zapisane tutaj (w prywatnym folderze dodatku) mają pierwszeństwo przed Konfiguracją dodatku.","Details saved here (in the add-on's private folder) take precedence over the add-on Configuration."),
+sSrc: tr("Źródło multimediów w HA (strumieniowanie z QNAP)","Media source in HA (stream from the QNAP)"), srcOn: tr("Podłącz QNAP jako źródło multimediów","Mount QNAP as media source"), srcOff: tr("Odłącz","Remove"),
   srcTxt: tr("Montuje cały udział QNAP w HA tylko do odczytu (Supervisor, CIFS). Pojawia się w Multimediach HA i w kartach odtwarzacza bez kopiowania plików.","Mounts the whole QNAP share in HA read-only (Supervisor, CIFS). It appears in HA Media and in player cards with no file copying.")});
 for(const [k, v] of Object.entries(T)) if($(k)) $(k).textContent = v;
 
 async function refresh(){
   try{ S = await HL.api("state"); }catch(e){ return; }
+  fillConn();
   const o = S.options, j = S.job;
   $("warn").hidden = S.configured;
   if(!S.configured) $("warn").innerHTML = `<div class="sec">${tr("Skonfiguruj QNAP","Set up your QNAP")}</div><div class="hint">${tr("Otwórz zakładkę Konfiguracja tego dodatku i podaj adres QNAP, nazwę udziału, użytkownika i hasło. Potem wróć tu i kliknij Testuj połączenie.","Open this add-on's Configuration tab and enter the QNAP address, share name, username and password. Then come back and press Test connection.")}</div>`;
@@ -135,7 +164,36 @@ $("srcOn").onclick = async () => { try{ await HL.post("mount"); HL.toast("✓");
 $("srcOff").onclick = async () => { if(!confirm(tr("Odłączyć QNAP od multimediów HA?","Remove the QNAP media source?"))) return; try{ await HL.api("mount", {method:"DELETE"}); }catch(e){ HL.toast(e.message, true); } loadMount(); };
 $("rmRefresh").onclick = loadRemote;
 $("mdReset").onclick = async () => { if(!confirm(tr("Następna synchronizacja pobierze wszystko od nowa. Kontynuować?","The next sync will download everything again. Continue?"))) return; await HL.post("media/reset"); HL.toast("✓"); refresh(); };
-refresh(); setInterval(refresh, 2500);
+
+// ---- connect wizard
+let cnShare = "", pickFor = null, pickPath = "";
+function fillConn(){ const o = S.options; if(!$("cHost").dataset.t){ $("cHost").dataset.t = 1; $("cHost").value = o.host || ""; $("cUser").value = o.username || ""; $("cDom").value = o.domain || ""; $("cVer").value = o.smb_version || "3"; cnShare = o.share || ""; $("cBk").value = o.backup_dir || ""; $("cMd").value = o.media_remote_dir || ""; } $("cnStep3").hidden = !S.configured; if(S.configured && !$("shares").children.length) showShares([{name:o.share}]); }
+const credBody = () => ({host:$("cHost").value.trim(), username:$("cUser").value.trim(), password:$("cPass").value, domain:$("cDom").value.trim(), smb_version:$("cVer").value});
+function showShares(list){
+  $("shares").innerHTML = ""; list.forEach(x => { const b = document.createElement("button"); b.className = "b sm " + (x.name === cnShare ? "" : "alt"); b.textContent = "📁 " + x.name + (x.comment ? " · " + x.comment : "");
+    b.onclick = () => { cnShare = x.name; showShares(list); }; $("shares").append(b); });
+  $("cSave").hidden = !cnShare; }
+$("scanBtn").onclick = async () => { $("scanRes").innerHTML = `<span class="hint">${tr("Skanuję…","Scanning…")}</span>`;
+  try{ const r = await HL.post("discover"); $("scanRes").innerHTML = r.hosts.length ? "" : `<span class="hint">${tr("Nic nie znaleziono - wpisz adres ręcznie.","Nothing found - type the address manually.")}</span>`;
+    r.hosts.forEach(h => { const b = document.createElement("button"); b.className = "b alt sm"; b.textContent = h.ip + (h.qnap ? " · QNAP" : ""); b.onclick = () => { $("cHost").value = h.ip; }; $("scanRes").append(b); }); }
+  catch(e){ $("scanRes").innerHTML = ""; HL.toast(e.message, true); } };
+$("shBtn").onclick = async () => { $("shOut").textContent = tr("Łączę…","Connecting…");
+  try{ const r = await HL.post("shares", credBody()); if(!r.ok){ $("shOut").innerHTML = "❌ " + HL.esc(r.error); return; }
+    $("shOut").textContent = "✅ " + tr("Połączono. Wybierz udział:","Connected. Pick a share:"); if(!cnShare || !r.shares.some(x => x.name === cnShare)) cnShare = r.shares[0]?.name || ""; showShares(r.shares); }
+  catch(e){ $("shOut").innerHTML = "❌ " + HL.esc(e.message); } };
+async function saveConn(extra){ const r = await HL.post("connection", {...credBody(), share:cnShare, ...extra}); if(!r.ok) throw new Error(r.error); $("cPass").value = ""; return r; }
+$("cSave").onclick = async () => { try{ await saveConn({}); HL.toast(tr("Zapisano ✓","Saved ✓")); await refresh(); $("cnStep3").hidden = false; }catch(e){ HL.toast(e.message, true); } };
+$("cSave2").onclick = async () => { try{ await saveConn({backup_dir:$("cBk").value, media_remote_dir:$("cMd").value}); HL.toast(tr("Zapisano ✓","Saved ✓")); refresh(); }catch(e){ HL.toast(e.message, true); } };
+$("cMount").onclick = async () => { try{ await saveConn({backup_dir:$("cBk").value, media_remote_dir:$("cMd").value}); await HL.post("mount"); HL.toast(tr("Źródło multimediów podłączone ✓","Media source mounted ✓")); refresh(); }catch(e){ HL.toast(e.message, true); } };
+$("cReset").onclick = async () => { if(!confirm(tr("Zapomnieć zapisane połączenie?","Forget the saved connection?"))) return; await HL.api("connection", {method:"DELETE"}); $("cHost").dataset.t = ""; $("shares").innerHTML = ""; refresh(); };
+async function browse(path){ pickPath = path; $("pkPath").textContent = "/" + path; $("pkList").innerHTML = `<div class="hint">${tr("Ładuję…","Loading…")}</div>`;
+  try{ const r = await HL.api("browse?path=" + encodeURIComponent(path)); $("pkList").innerHTML = r.dirs.length ? "" : `<div class="hint">${tr("(brak podfolderów)","(no subfolders)")}</div>`;
+    r.dirs.forEach(d => { const b = document.createElement("div"); b.className = "li"; b.style.cursor = "pointer"; b.textContent = "📁 " + d; b.onclick = () => browse(path ? path + "/" + d : d); $("pkList").append(b); }); }
+  catch(e){ $("pkList").innerHTML = `<div class="hint" style="color:var(--error-color)">${HL.esc(e.message)}</div>`; } }
+document.querySelectorAll("[data-pick]").forEach(b => b.onclick = () => { pickFor = b.dataset.pick; $("picker").hidden = false; browse(""); });
+$("pkOk").onclick = () => { $(pickFor).value = pickPath; $("picker").hidden = true; };
+$("pkUp").onclick = () => browse(pickPath.split("/").slice(0, -1).join("/"));
+refresh().then(() => { if(!document.querySelector(".tabs .on")) show(S && S.configured ? "st" : "cn"); }); setInterval(refresh, 2500);
 </script>
 </body>
 </html>

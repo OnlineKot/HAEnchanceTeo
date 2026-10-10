@@ -3,7 +3,10 @@
 Back up Home Assistant to your **QNAP** and download media from it. **Private by design:** the add-on publishes **no network ports**.
 The panel is reachable only through Home Assistant (sidebar “QNAP”); the add-on only connects *outward* to the QNAP over SMB.
 
-## Setup
+## Setup (easiest: the Connect tab)
+Open the panel → **Connect**: *Scan the network* (or type the address) → username/password → *Connect & list shares* → pick the share → *Save connection* → choose backup and media folders → **Save & mount as media source**. No need to touch the add-on Configuration; details saved in the panel override it.
+
+## Setup (alternative: Configuration tab)
 1. On the QNAP create a **dedicated user** with access to **one share** only (e.g. share `Backup`, user `ha`). Enable SMB (Control Panel → Network & File Services → Win/Mac/NFS).
 2. Add-on → *Configuration*: `host`, `share`, `username`, `password`. Save, start, open the panel and press **Test connection**.
 

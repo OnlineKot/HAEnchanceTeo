@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.0
+- Connect wizard in the panel: scan the network for the QNAP (SMB on the HA host's /24, QNAP detection), enter user/password, list the shares, pick one, browse folders for backups and media, then save and mount as an HA media source in one click. Saved details live in the add-on's private data (0600) and take precedence over Configuration.
+
 ## 1.1.1
 - Panel explicitly admin-only (`panel_admin: true`): only Home Assistant administrators can open it, change settings and read logs.
 
