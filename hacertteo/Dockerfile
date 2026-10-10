@@ -3,7 +3,7 @@ FROM $BUILD_FROM
 
 LABEL maintainer="TeodorTeo.com <https://teodorteo.com>"
 
-RUN apk add --no-cache python3 openssl certbot py3-certbot-dns-cloudflare
+RUN apk add --no-cache python3 openssl certbot
 
 COPY run.sh /run.sh
 COPY app /app

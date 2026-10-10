@@ -21,9 +21,8 @@ OPTIONS_FILE = Path(os.environ.get("HCT_OPTIONS", "/data/options.json"))
 SSL_DIR = Path(os.environ.get("HCT_SSL", "/ssl"))
 CERTBOT = os.environ.get("HCT_CERTBOT", "certbot")
 OPENSSL = os.environ.get("HCT_OPENSSL", "openssl")
-HOOK = os.environ.get("HCT_HOOK", str(Path(__file__).parent / "duckdns_hook.py"))
+HOOK_DIR = Path(os.environ.get("HCT_HOOK_DIR", str(Path(__file__).parent)))
 STATE_FILE = DATA / "state.json"
-CF_INI = DATA / "cloudflare.ini"
 LE_DIR = DATA / "letsencrypt"
 STATIC = Path(__file__).parent / "static"
 INGRESS_PORT = int(os.environ.get("HCT_INGRESS_PORT", 8099))
@@ -253,11 +252,7 @@ async def notify(title, message):
 
 # ---------------------------------------------------------------- certbot
 def write_credentials():
-    if o("provider", "cloudflare") == "cloudflare":
-        fd = os.open(CF_INI, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        with os.fdopen(fd, "w") as f:
-            f.write(f"dns_cloudflare_api_token = {o('cloudflare_api_token')}\n")
-        os.chmod(CF_INI, 0o600)
+    """Tokens travel only in the certbot environment (see run env below); nothing is written to disk."""
 
 
 def lineage():
@@ -269,11 +264,9 @@ def build_cmd(domains, dry_run=False, force=False):
     cmd = [CERTBOT, "certonly", "--non-interactive", "--agree-tos", "--no-eff-email", "--email", str(o("email")),
            "--config-dir", str(LE_DIR), "--work-dir", str(DATA / "le-work"), "--logs-dir", str(DATA / "le-logs"),
            "--cert-name", lineage(), "--expand", "--key-type", "rsa" if o("key_type", "ecdsa") == "rsa" else "ecdsa"]
-    if o("provider", "cloudflare") == "duckdns":
-        cmd += ["--manual", "--preferred-challenges", "dns", "--manual-auth-hook", f"python3 {HOOK} auth",
-                "--manual-cleanup-hook", f"python3 {HOOK} cleanup"]
-    else:
-        cmd += ["--dns-cloudflare", "--dns-cloudflare-credentials", str(CF_INI), "--dns-cloudflare-propagation-seconds", str(PROPAGATION)]
+    hook = HOOK_DIR / ("duckdns_hook.py" if o("provider", "cloudflare") == "duckdns" else "cloudflare_hook.py")
+    cmd += ["--manual", "--preferred-challenges", "dns", "--manual-auth-hook", f"python3 {hook} auth",
+            "--manual-cleanup-hook", f"python3 {hook} cleanup"]
     if staging:
         cmd.append("--staging")
     if dry_run:
@@ -304,6 +297,8 @@ async def stream_certbot(cmd):
     env["LC_ALL"] = "C.UTF-8"
     if o("provider") == "duckdns":
         env["HCT_DUCKDNS_TOKEN"] = str(o("duckdns_token"))
+    else:
+        env["HCT_CF_TOKEN"] = str(o("cloudflare_api_token"))
     proc = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT,
                                                 env=env, start_new_session=True, limit=64 * 1024)
     current_proc = proc

@@ -6,7 +6,7 @@ Gets and **auto-renews a free Let's Encrypt SSL certificate** for Home Assistant
 ## Setup
 1. Point a DNS name at Home Assistant (e.g. `ha.example.com` → your HA's LAN or Tailscale IP, or your public IP – it does not matter for the certificate). The name only has to exist in a zone you control.
 2. Pick a provider in *Configuration*:
-   - **cloudflare** – create an API token (My Profile → API Tokens → *Edit zone DNS* template) with permission **Zone:DNS:Edit** for the zone; paste it into `cloudflare_api_token`. Wildcards (`*.example.com`) work.
+   - **cloudflare** – create an API token (My Profile → API Tokens → *Edit zone DNS* template) with permissions **Zone → DNS → Edit** and **Zone → Zone → Read** for the zone; paste it into `cloudflare_api_token`. Wildcards (`*.example.com`) work.
    - **duckdns** – use `name.duckdns.org` domains and paste your token into `duckdns_token`. DuckDNS keeps one TXT record per name, so do not request both `name.duckdns.org` and `*.name.duckdns.org`.
 3. Set `domains`, `email`, keep `staging: true` first, start the add-on and press **Test (dry-run, staging)**. When it works set `staging: false`, restart and press **Issue / Renew now**.
 4. Add to Home Assistant's `configuration.yaml` and restart HA once:
