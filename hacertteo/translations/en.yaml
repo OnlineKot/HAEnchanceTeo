@@ -1,0 +1,34 @@
+configuration:
+  domains:
+    name: Domains
+    description: Host names for the certificate, e.g. ha.example.com. Wildcards like *.example.com are allowed (Cloudflare). With DuckDNS use name.duckdns.org.
+  email:
+    name: E-mail
+    description: Let's Encrypt sends expiry warnings here. Not shared with anyone else.
+  provider:
+    name: DNS provider
+    description: Where the DNS-01 TXT record is created - Cloudflare or DuckDNS. No ports need to be opened.
+  cloudflare_api_token:
+    name: Cloudflare API token
+    description: Token with Zone:DNS:Edit for your zone (only when provider is cloudflare). Stored by Home Assistant, never shown.
+  duckdns_token:
+    name: DuckDNS token
+    description: Your DuckDNS token (only when provider is duckdns). Never shown or logged.
+  key_type:
+    name: Key type
+    description: ecdsa (small, fast, recommended) or rsa (older devices).
+  staging:
+    name: Use Let's Encrypt staging
+    description: Test certificates that browsers do not trust. Turn off for the real certificate.
+  renew_days_before:
+    name: Renew when fewer days are left
+    description: The add-on checks twice a day and renews when the certificate has fewer days left than this.
+  notify_on_failure:
+    name: Notify on failure
+    description: Create a Home Assistant notification when issuing or renewing fails.
+  certfile:
+    name: Certificate file name
+    description: File written to /ssl. Default fullchain.pem.
+  keyfile:
+    name: Private key file name
+    description: File written to /ssl. Default privkey.pem.

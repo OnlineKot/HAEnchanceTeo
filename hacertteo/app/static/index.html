@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HACertTeo</title>
+<link rel="stylesheet" href="static/common.css">
+<style>
+main{max-width:860px;margin:0 auto;padding:16px}
+.big{font-size:32px;line-height:38px;font-weight:400}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-size:14px;margin-top:10px}.kv span:nth-child(odd){color:var(--secondary-text-color)}.kv span:nth-child(even){word-break:break-all}
+.li{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--divider-color);flex-wrap:wrap}.li:first-child{border-top:0}.li .n{flex:1;min-width:160px}
+#logBox{height:240px;overflow:auto;white-space:pre-wrap;word-break:break-all;font:12px/16px ui-monospace,Menlo,Consolas,monospace}
+.err li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="bar"><span class="ibtn" id="barIcon"></span><h1>HACertTeo</h1><small class="hint" id="tag" style="margin-right:12px"></small></div>
+<main>
+<div class="card" id="warn" hidden></div>
+<div class="grid2">
+  <div class="card"><div class="sec" id="sSt"></div>
+    <div><span class="badge" id="stBadge"></span></div>
+    <div class="big" id="days" style="margin-top:8px"></div><div class="hint" id="daysSub"></div>
+    <div class="kv" id="kv"></div></div>
+  <div class="card"><div class="sec" id="sAct"></div>
+    <div class="hint" id="next" style="margin-bottom:10px"></div>
+    <div class="row"><button class="b" id="issueBtn"></button><button class="b alt" id="testBtn"></button><button class="b red sm" id="cancelBtn" hidden></button></div>
+    <div class="hint" id="actHint" style="margin-top:10px"></div></div>
+</div>
+<div class="card"><div class="sec" id="sHow"></div><div class="hint" id="howTxt"></div>
+  <pre id="snippet" style="margin-top:10px"></pre>
+  <div class="row"><button class="b alt sm" id="copyBtn"></button></div>
+  <div class="hint" id="restart" style="margin-top:10px"></div></div>
+<div class="card"><div class="sec" id="sLog"></div><pre id="logBox"></pre></div>
+<div class="card"><div class="sec" id="sHist"></div><div id="hist"></div></div>
+<div class="card"><div class="sec" id="sSec"></div><div class="hint" id="secTxt"></div></div>
+<footer><span id="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
+</main>
+<script src="static/common.js"></script>
+<script src="static/icons.js"></script>
+<script>
+const $ = id => document.getElementById(id), tr = HL.tr;
+const dt = ts => ts ? new Date(ts * 1000).toLocaleString() : "—";
+const T = {
+  sSt: tr("Certyfikat","Certificate"), sAct: tr("Akcje","Actions"), sHow: tr("Jak użyć w Home Assistant","How to use in Home Assistant"), sLog: tr("Log na żywo","Live log"),
+  sHist: tr("Historia","History"), sSec: tr("Prywatność","Privacy"), issueBtn: tr("Wystaw / odnów teraz","Issue / Renew now"), testBtn: tr("Test (dry-run, staging)","Test (dry-run, staging)"),
+  cancelBtn: tr("Anuluj","Cancel"), copyBtn: tr("Kopiuj","Copy"),
+  actHint: tr("Test sprawdza całą ścieżkę DNS-01 na serwerze testowym Let's Encrypt i niczego nie zapisuje. Wystawienie trwa zwykle 1-2 minuty.","The test runs the full DNS-01 flow against the Let's Encrypt staging server and saves nothing. Issuing usually takes 1-2 minutes."),
+  howTxt: tr("Dodaj to do configuration.yaml w Home Assistant:","Add this to configuration.yaml in Home Assistant:"),
+  restart: tr("Po pierwszym wystawieniu uruchom ponownie Home Assistant (Ustawienia → System → Uruchom ponownie). Po późniejszych odnowieniach restart też jest potrzebny, by HA wczytał nowy plik - np. automatyzacją raz w miesiącu.","After the first issue restart Home Assistant (Settings → System → Restart). After later renewals HA also needs a restart to load the new file - e.g. an automation once a month."),
+  secTxt: tr("Ten dodatek nie otwiera żadnego portu i nic nie wystawia do internetu. Weryfikacja idzie przez rekord TXT w DNS (DNS-01), więc porty 80/443 nie są potrzebne. Panel działa tylko przez Home Assistant, a tokeny nigdy nie są tu pokazywane ani logowane.",
+             "This add-on opens no port and exposes nothing to the internet. Validation uses a DNS TXT record (DNS-01), so ports 80/443 are never needed. The panel is reachable only through Home Assistant, and tokens are never shown or logged."),
+  tag: tr("Certyfikat SSL Let's Encrypt","Let's Encrypt SSL certificate"), by: tr("Stworzone przez","Created by")};
+for(const [k, v] of Object.entries(T)) $(k).textContent = v;
+$("barIcon").innerHTML = HL.icon("mdi:certificate") || HL.icon("mdi:shield-check");
+let S = null, since = 0;
+const stLabel = {valid:tr("Ważny","Valid"), expiring:tr("Wygasa wkrótce","Expiring soon"), expired:tr("Wygasły","Expired"), none:tr("Brak certyfikatu","No certificate"), issuing:tr("W toku…","Working…"), error:tr("Błąd","Error")};
+const stCls = {valid:"ok", expiring:"warn", expired:"err", error:"err"};
+async function refresh(){
+  try{ S = await HL.api("state"); }catch(e){ return; }
+  const c = S.cert, j = S.job, o = S.options;
+  $("warn").hidden = !S.errors.length;
+  if(S.errors.length) $("warn").innerHTML = `<div class="sec">${tr("Skonfiguruj dodatek","Finish the configuration")}</div><ul class="err hint">${S.errors.map(e => `<li>${HL.esc(e)}</li>`).join("")}</ul><div class="hint">${tr("Ustaw to w zakładce Konfiguracja dodatku, zapisz i zrestartuj dodatek.","Set this in the add-on Configuration tab, save and restart the add-on.")}</div>`;
+  $("stBadge").textContent = stLabel[S.status] || S.status; $("stBadge").className = "badge " + (stCls[S.status] || "");
+  $("days").textContent = c ? c.days_left + " " + tr("dni","days") : "—";
+  $("daysSub").textContent = c ? tr("do wygaśnięcia","until expiry") + (c.staging ? " · " + tr("certyfikat TESTOWY (staging) - nie jest zaufany","TEST (staging) certificate - not trusted") : "") : tr("Nie wystawiono jeszcze certyfikatu.","No certificate has been issued yet.");
+  const rows = [[tr("Wygasa","Expires"), c ? new Date(c.expiry).toLocaleString() : "—"], [tr("Domeny","Domains"), (c ? c.domains : o.domains).join(", ") || "—"],
+    [tr("Wystawca","Issuer"), c ? c.issuer : "—"], [tr("Dostawca DNS","DNS provider"), o.provider + (o.token_set ? "" : " (" + tr("brak tokenu","no token") + ")")],
+    [tr("Klucz","Key type"), o.key_type.toUpperCase() + (o.staging ? " · staging" : "")], [tr("Odnawianie","Renews"), tr("gdy zostanie < ","when < ") + o.renew_days_before + tr(" dni"," days left")],
+    [tr("Ostatnie sprawdzenie","Last check"), dt(S.last_check)]];
+  $("kv").innerHTML = rows.map(([a, b]) => `<span>${HL.esc(a)}</span><span>${HL.esc(b)}</span>`).join("");
+  $("next").textContent = S.next_action ? (S.due ? tr("Do zrobienia: ","Due: ") : "") + S.next_action : "";
+  $("issueBtn").disabled = $("testBtn").disabled = j.running || S.errors.length > 0;
+  $("cancelBtn").hidden = !j.running;
+  $("snippet").textContent = `http:\n  ssl_certificate: /ssl/${o.certfile}\n  ssl_key: /ssl/${o.keyfile}`;
+  $("hist").innerHTML = S.history.length ? S.history.map(h => `<div class="li"><span class="badge ${h.ok ? "ok" : "err"}">${h.ok ? "OK" : tr("błąd","error")}</span><span class="badge">${HL.esc(h.kind)}</span><span class="n">${HL.esc(h.text)}</span><span class="hint">${dt(h.ts)}</span></div>`).join("") : `<div class="hint">${tr("Brak wpisów.","No entries yet.")}</div>`;
+}
+async function pollLog(){
+  try{
+    const r = await HL.api("log?since=" + since);
+    if(r.seq < since){ since = 0; $("logBox").textContent = ""; return; }
+    if(r.lines.length){ const b = $("logBox"), end = b.scrollTop + b.clientHeight >= b.scrollHeight - 20;
+      b.textContent += r.lines.map(l => l[1]).join("\n") + "\n"; since = r.seq; if(b.textContent.length > 40000) b.textContent = b.textContent.slice(-30000); if(end) b.scrollTop = b.scrollHeight; }
+  }catch(e){}
+}
+async function run(k){ $("logBox").textContent = ""; since = 0; try{ await HL.post("run/" + k); HL.toast(tr("Start ✓","Started ✓")); refresh(); }catch(e){ HL.toast(e.message, true); } }
+$("issueBtn").onclick = () => run("issue"); $("testBtn").onclick = () => run("test");
+$("cancelBtn").onclick = async () => { await HL.post("cancel"); HL.toast(tr("Anulowanie…","Cancelling…")); };
+$("copyBtn").onclick = async () => { const t = $("snippet").textContent; try{ await navigator.clipboard.writeText(t); }catch{ const r = document.createRange(); r.selectNodeContents($("snippet")); getSelection().removeAllRanges(); getSelection().addRange(r); document.execCommand("copy"); } HL.toast(tr("Skopiowano ✓","Copied ✓")); };
+refresh(); pollLog(); setInterval(refresh, 3000); setInterval(pollLog, 1500);
+</script>
+</body>
+</html>

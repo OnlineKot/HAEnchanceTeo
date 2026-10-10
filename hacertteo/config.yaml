@@ -1,0 +1,44 @@
+name: HACertTeo
+version: "1.0.0"
+slug: hacertteo
+description: Get and auto-renew a free Let's Encrypt SSL certificate for Home Assistant using DNS-01 (Cloudflare or DuckDNS). Private - no network ports, nothing exposed to the internet, panel only through Home Assistant. By TeodorTeo.com
+url: https://teodorteo.com
+arch:
+  - amd64
+  - aarch64
+init: false
+startup: application
+boot: auto
+homeassistant_api: true
+hassio_api: true
+ingress: true
+ingress_port: 8099
+panel_icon: mdi:certificate
+panel_title: Certificates
+map:
+  - ssl:rw
+options:
+  domains: []
+  email: ""
+  provider: cloudflare
+  cloudflare_api_token: ""
+  duckdns_token: ""
+  key_type: ecdsa
+  staging: false
+  renew_days_before: 30
+  notify_on_failure: true
+  certfile: fullchain.pem
+  keyfile: privkey.pem
+schema:
+  domains:
+    - str
+  email: str
+  provider: list(cloudflare|duckdns)
+  cloudflare_api_token: password?
+  duckdns_token: password?
+  key_type: list(ecdsa|rsa)
+  staging: bool
+  renew_days_before: int(1,60)
+  notify_on_failure: bool
+  certfile: str
+  keyfile: str
