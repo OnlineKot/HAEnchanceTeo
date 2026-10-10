@@ -1,0 +1,34 @@
+configuration:
+  provider:
+    name: Dostawca AI
+    description: claude (Anthropic) lub gemini (Google). W panelu można przełączać, jeśli oba klucze są ustawione.
+  anthropic_api_key:
+    name: Klucz API Anthropic
+    description: Z console.anthropic.com. Przechowywany przez Home Assistant, nigdy nie trafia do przeglądarki.
+  anthropic_model:
+    name: Model Claude
+    description: Identyfikator modelu dla Anthropic Messages API (np. claude-sonnet-5-5).
+  gemini_api_key:
+    name: Klucz API Gemini
+    description: Z aistudio.google.com. Przechowywany przez Home Assistant, nigdy nie trafia do przeglądarki.
+  gemini_model:
+    name: Model Gemini
+    description: Identyfikator modelu dla generateContent (np. gemini-2.5-flash).
+  mode:
+    name: Tryb
+    description: read_only = AI tylko patrzy. confirm_changes = każda zmiana (wywołanie usługi lub edycja konfiguracji) wymaga Twojej zgody. auto = usługi w dozwolonych domenach wykonują się od razu; edycje konfiguracji ZAWSZE wymagają zgody.
+  blocked_domains:
+    name: Zablokowane domeny
+    description: AI nigdy nie może wywoływać usług ani sterować encjami z tych domen (egzekwowane przez dodatek, nie przez model).
+  blocked_services:
+    name: Zablokowane usługi
+    description: Wzorce domena.usługa, które są zawsze odrzucane. Dozwolone * (np. hassio.*).
+  max_tool_rounds:
+    name: Maks. rund narzędzi
+    description: Górny limit wymian model-narzędzie na jedno pytanie.
+  language:
+    name: Język odpowiedzi
+    description: auto = język Twojej wiadomości, albo kod np. en, pl, de.
+  log_level:
+    name: Poziom logów
+    description: Szczegółowość logu dodatku (klucze API nigdy nie są logowane).

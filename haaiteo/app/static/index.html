@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HAAITeo</title>
+<link rel="stylesheet" href="static/common.css">
+<style>
+html,body{height:100%}
+body{display:flex;flex-direction:column;padding-bottom:0}
+main{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width:860px;margin:0 auto;padding:0}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--outline-color);border-radius:16px;padding:3px 12px;font-size:12px;line-height:18px;background:var(--card-background-color);color:var(--primary-text-color);cursor:pointer;white-space:nowrap;max-width:100%}
+.chip svg{width:16px;height:16px;fill:currentColor}
+.chip.mode-read_only{color:var(--info-color)}.chip.mode-confirm_changes{color:var(--success-color)}.chip.mode-auto{color:var(--warning-color)}
+.sub{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 16px;border-bottom:1px solid var(--divider-color);background:var(--card-background-color)}
+.sub .sp{flex:1}
+#chatView{flex:1;min-height:0;display:none;flex-direction:column}#chatView.on{display:flex}
+#msgs{flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;padding:10px 14px;border-radius:16px;word-wrap:break-word;overflow-wrap:anywhere;font-size:14px;line-height:20px}
+.msg.user{align-self:flex-end;background:var(--primary-color);color:var(--text-primary-color);border-bottom-right-radius:4px}
+.msg.ai{align-self:flex-start;background:var(--card-background-color);border:1px solid var(--divider-color);border-bottom-left-radius:4px}
+.msg p{margin:0 0 6px}.msg p:last-child{margin:0}.msg ul{margin:4px 0;padding-left:20px}.msg pre{margin:6px 0;white-space:pre-wrap}
+.msg.err{align-self:stretch;max-width:100%;border:1px solid var(--error-color);color:var(--error-color);background:transparent}
+.msg.note{align-self:center;max-width:100%;font-size:12px;color:var(--secondary-text-color);padding:2px 8px}
+details.tool{align-self:flex-start;max-width:96%;border:1px solid var(--outline-color);border-radius:14px;background:var(--card-background-color);font-size:12px}
+details.tool summary{cursor:pointer;padding:4px 12px;list-style:none;display:flex;gap:6px;align-items:center;min-height:28px}
+details.tool summary::-webkit-details-marker{display:none}
+details.tool .tn{font-family:monospace;font-weight:500}
+details.tool .ta{color:var(--secondary-text-color);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
+details.tool .tb{padding:0 12px 8px}details.tool pre{margin:4px 0;max-height:180px;white-space:pre-wrap;word-break:break-all}
+.st{width:8px;height:8px;border-radius:50%;background:var(--state-inactive-color);flex:none}.st.ok,.st.executed{background:var(--success-color)}.st.staged{background:var(--warning-color)}.st.blocked,.st.error{background:var(--error-color)}.st.running{background:var(--info-color);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.3}}
+.pend{align-self:stretch;border:1px solid var(--warning-color);border-radius:var(--ha-card-border-radius);background:var(--card-background-color);padding:12px}
+.pend.applied{border-color:var(--success-color)}.pend.rejected,.pend.undone{border-color:var(--outline-color);opacity:.8}.pend.failed{border-color:var(--error-color)}
+.pend h4{margin:0 0 4px;font-size:14px;font-weight:500;display:flex;gap:8px;align-items:center;flex-wrap:wrap;word-break:break-word}
+.diff{max-height:240px;overflow:auto;margin:8px 0;font-size:11px;line-height:15px;white-space:pre;border:1px solid var(--divider-color)}
+.diff .a{background:rgba(67,160,71,.22)}.diff .d{background:rgba(219,68,55,.22)}.diff .h{color:var(--secondary-text-color)}
+.pend .row{margin-top:8px}
+.dots span{display:inline-block;width:6px;height:6px;margin-right:3px;border-radius:50%;background:var(--secondary-text-color);animation:blink 1.2s infinite}.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+#empty{margin:auto 0;text-align:center}#empty h2{font-size:20px;margin:8px 0}
+.samples{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-top:12px;text-align:left}
+.samples button{border:1px solid var(--outline-color);background:var(--card-background-color);color:var(--primary-text-color);border-radius:12px;padding:10px 12px;text-align:left;cursor:pointer;font:400 13px/18px var(--ha-font)}
+.samples button:hover{background:rgba(var(--rgb-primary-color),.08)}
+#composer{display:flex;gap:8px;align-items:flex-end;padding:8px 12px calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--divider-color);background:var(--card-background-color)}
+#composer textarea{flex:1;resize:none;min-height:44px;max-height:140px;border-radius:22px;border:1px solid var(--outline-color);padding:10px 16px;font-size:15px;line-height:22px}
+#composer textarea:focus{border:1px solid var(--primary-color);padding-bottom:10px}
+#composer button{width:44px;height:44px;padding:0;border-radius:50%;display:grid;place-items:center;flex:none}
+#composer button svg{width:22px;height:22px;fill:currentColor}
+#logView,#infoView{display:none;overflow-y:auto;padding:16px;flex:1}#logView.on,#infoView.on{display:block}
+.lrow{padding:8px 0;border-top:1px solid var(--divider-color);font-size:13px}.lrow:first-child{border-top:0}.lrow .m{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.lrow code{display:block;margin-top:4px;white-space:pre-wrap;font-size:11px}
+.keywarn{margin:12px 16px 0;padding:10px 14px;border-radius:12px;border:1px solid var(--warning-color);font-size:13px}
+select.cs{width:auto;min-height:32px;padding:4px 8px;font-size:13px;max-width:100%;border-radius:8px}
+.tabs{margin:0;padding:0 8px}
+</style>
+</head>
+<body>
+<div class="bar"><span class="ibtn" id="barIcon"></span><h1>HAAITeo</h1><small class="hint" id="tag" style="margin-right:8px"></small></div>
+<div class="tabs" id="tabs" style="background:var(--card-background-color)"></div>
+<main>
+<div id="warn" class="keywarn" hidden></div>
+<div class="view on" id="chatView">
+  <div class="sub"><span class="chip" id="provChip"></span><span class="chip" id="modeChip"></span><span class="sp"></span>
+    <select class="cs" id="convSel" aria-label="conversation"></select><button class="b alt sm" id="newBtn"></button></div>
+  <div id="msgs"></div>
+  <div id="composer"><textarea id="inp" rows="1" maxlength="4000"></textarea><button class="b" id="sendBtn" aria-label="send"></button></div>
+</div>
+<div class="view" id="logView"><div class="sec"><span id="sLg"></span><span class="sp"></span><button class="b alt sm" id="lgRef"></button></div><div id="logList"></div></div>
+<div class="view" id="infoView"><div class="card"><div class="sec" id="iMode"></div><div id="iModeTxt"></div><div class="hint" id="iBlock" style="margin-top:8px"></div></div>
+  <div class="card"><div class="sec" id="iUse"></div><div id="iUseTxt" class="kv"></div><div class="hint" id="iUseH" style="margin-top:8px"></div></div>
+  <div class="card"><div class="sec" id="iSec"></div><div class="hint" id="iSecTxt"></div></div>
+  <footer><span id="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer></div>
+</main>
+<script src="static/common.js"></script>
+<script src="static/icons.js"></script>
+<script>
+const $ = id => document.getElementById(id), tr = HL.tr, esc = HL.esc;
+let S = {}, cur = null, rev = 0, running = false, view = {timeline: []}, poll = null, stick = true;
+const SEND = '<svg viewBox="0 0 24 24"><path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/></svg>', STOP = '<svg viewBox="0 0 24 24"><path d="M18,18H6V6H18V18Z"/></svg>';
+const MODES = {
+  read_only: [tr("Tylko odczyt","Read-only"), tr("AI może tylko patrzeć: odpowiada na pytania o dom, nic nie zmienia.","The AI can only look: it answers questions about your home and changes nothing.")],
+  confirm_changes: [tr("Z potwierdzeniem","Confirm changes"), tr("Każda zmiana (sterowanie lub edycja konfiguracji) czeka na Twoje „Zatwierdź”.","Every change (device control or config edit) waits for your Approve.")],
+  auto: [tr("Auto","Auto"), tr("Sterowanie w dozwolonych domenach wykonuje się od razu. Edycje automatyzacji/skryptów/scen ZAWSZE wymagają zatwierdzenia.","Device control on allowed domains runs immediately. Automation/script/scene edits ALWAYS need approval.")]
+};
+const SAMPLES = [
+  tr("Zapal światło w kuchni","Turn on the kitchen light"),
+  tr("Które światła są teraz włączone?","Which lights are on right now?"),
+  tr("Jaka była temperatura w salonie w ostatnich 24 godzinach?","What was the living room temperature over the last 24 hours?"),
+  tr("Stwórz automatyzację, która gasi światła w salonie o 23:00","Create an automation that turns off the living room lights at 23:00"),
+  tr("Wyjaśnij, co robi moja automatyzacja o wejściu do domu","Explain what my arriving-home automation does"),
+  tr("Zrób scenę „Film” z przyciemnionym światłem w salonie","Make a 'Movie' scene with dimmed living room lights")
+];
+$("barIcon").innerHTML = HL.icon("mdi:message"); $("tag").textContent = tr("Asystent AI dla Home Assistant","AI assistant for Home Assistant");
+$("by").textContent = tr("Stworzone przez","Created by"); $("newBtn").textContent = tr("Nowa","New"); $("sendBtn").innerHTML = SEND; $("lgRef").textContent = tr("Odśwież","Refresh");
+$("inp").placeholder = tr("Zapytaj o swój dom…","Ask about your home…"); $("sLg").textContent = tr("Dziennik zdarzeń (audyt)","Audit log");
+[["chat",tr("Czat","Chat")],["log",tr("Dziennik","Log")],["info",tr("Info","Info")]].forEach(([id,l]) => { const b = document.createElement("button"); b.textContent = l; b.dataset.id = id; b.onclick = () => show(id); $("tabs").append(b); });
+function show(id){ document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.id === id));
+  ["chat","log","info"].forEach(v => $(v + "View").classList.toggle("on", v === id)); if(id === "log") loadLog(); if(id === "info") renderInfo(); }
+show("chat");
+
+// markdown-lite: escape FIRST, then a few safe patterns
+function md(t){
+  let s = esc(t); const blocks = [];
+  s = s.replace(/```(?:\w+)?\n?([\s\S]*?)```/g, (_, c) => { blocks.push(`<pre>${c}</pre>`); return `\u0000${blocks.length - 1}\u0000`; });
+  s = s.replace(/`([^`\n]+)`/g, "<code>$1</code>").replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>").replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?]|$)/g, "$1<i>$2</i>");
+  const out = []; let list = false;
+  s.split("\n").forEach(l => { const m = l.match(/^\s*(?:[-*•]|\d+\.)\s+(.*)$/);
+    if(m){ if(!list){ out.push("<ul>"); list = true; } out.push(`<li>${m[1]}</li>`); }
+    else { if(list){ out.push("</ul>"); list = false; } out.push(l.trim() ? `<p>${l}</p>` : ""); } });
+  if(list) out.push("</ul>");
+  return out.join("").replace(/\u0000(\d+)\u0000/g, (_, i) => blocks[+i]);
+}
+function diffHtml(d){ return esc(d).split("\n").map(l => `<div class="${l.startsWith("+") && !l.startsWith("+++") ? "a" : l.startsWith("-") && !l.startsWith("---") ? "d" : "h"}">${l || " "}</div>`).join(""); }
+const ST = {pending: tr("Czeka na zgodę","Awaiting approval"), applied: tr("Zastosowano","Applied"), rejected: tr("Odrzucono","Rejected"), failed: tr("Błąd","Failed"), undone: tr("Cofnięto","Undone")};
+
+function renderItem(it){
+  let d = document.createElement("div");
+  if(it.kind === "user"){ d.className = "msg user"; d.innerHTML = md(it.text); }
+  else if(it.kind === "assistant"){ d.className = "msg ai"; d.innerHTML = md(it.text); }
+  else if(it.kind === "error"){ d.className = "msg err"; d.textContent = it.text; }
+  else if(it.kind === "notice"){ d.className = "msg note"; d.textContent = it.text; }
+  else if(it.kind === "tool"){
+    d = document.createElement("details"); d.className = "tool"; d.dataset.k = it.ts;
+    d.innerHTML = `<summary><span class="st ${esc(it.status)}"></span><span class="tn">${esc(it.name)}</span><span class="ta">${esc(it.args)}</span></summary><div class="tb"><div class="hint">${tr("Wywołanie","Call")}</div><pre>${esc(it.args)}</pre><div class="hint">${tr("Wynik","Result")}: ${esc(it.status)}</div><pre>${esc(it.result || "…")}</pre></div>`;
+    if(openTools.has(String(it.ts))) d.open = true; d.ontoggle = () => d.open ? openTools.add(String(it.ts)) : openTools.delete(String(it.ts));
+  }
+  else if(it.kind === "pending"){
+    d.className = "pend " + it.status;
+    const cfg = it.type !== "service";
+    d.innerHTML = `<h4><span class="badge ${it.status === "applied" ? "ok" : it.status === "pending" ? "warn" : it.status === "failed" ? "err" : ""}">${esc(ST[it.status] || it.status)}</span><span>${esc(it.title)}</span></h4>
+      ${it.reason ? `<div class="hint">${esc(it.reason)}</div>` : ""}
+      ${cfg && it.diff ? `<div class="diff card" style="padding:0">${diffHtml(it.diff)}</div>` : ""}
+      ${it.type === "service" && it.payload ? `<pre>${esc(JSON.stringify({data: it.payload.data, target: it.payload.target}, null, 1))}</pre>` : ""}
+      ${it.result && it.status !== "pending" ? `<div class="hint">${esc(it.result)}</div>` : ""}
+      <div class="row"></div>`;
+    const row = d.querySelector(".row");
+    const btn = (label, cls, act) => { const b = document.createElement("button"); b.className = "b sm " + cls; b.textContent = label; b.onclick = async () => { b.disabled = true; try{ await HL.post(`pending/${it.id}/${act}`); }catch(e){ HL.toast(e.message, true); } fetchConv(true); }; row.append(b); };
+    if(it.status === "pending"){ btn(tr("Zatwierdź","Approve"), "", "approve"); btn(tr("Odrzuć","Reject"), "alt", "reject"); }
+    else if(it.status === "applied" && it.backup) btn(tr("Cofnij","Undo"), "alt", "undo");
+    else row.remove();
+  }
+  return d;
+}
+const openTools = new Set();
+function renderChat(){
+  const box = $("msgs"), near = box.scrollHeight - box.scrollTop - box.clientHeight < 80; box.innerHTML = "";
+  const tl = view.timeline || [];
+  if(!tl.length && !running){
+    const e = document.createElement("div"); e.id = "empty";
+    e.innerHTML = `<div class="shape" style="margin:0 auto;background:rgba(var(--rgb-primary-color),.15);color:var(--primary-color);width:56px;height:56px">${HL.icon("mdi:message")}</div><h2>${tr("O co możesz zapytać?","What can I ask?")}</h2><div class="hint">${tr("Wybierz przykład albo napisz własne polecenie.","Pick an example or type your own request.")}</div><div class="samples"></div>`;
+    SAMPLES.forEach(s => { const b = document.createElement("button"); b.textContent = s; b.onclick = () => send(s); e.querySelector(".samples").append(b); }); box.append(e);
+  }
+  tl.forEach(it => box.append(renderItem(it)));
+  if(running){ const d = document.createElement("div"); d.className = "msg ai"; const ph = view.phase || "thinking";
+    d.innerHTML = `<span class="dots"><span></span><span></span><span></span></span> <span class="hint">${ph.startsWith("tool:") ? esc(ph.slice(5)) : tr("myślę…","thinking…")}</span>`; box.append(d); }
+  if(near || stick) box.scrollTop = box.scrollHeight; stick = false;
+  $("sendBtn").innerHTML = running ? STOP : SEND; $("sendBtn").classList.toggle("red", running);
+}
+async function fetchConv(force){
+  if(!cur) return;
+  try{ const r = await HL.api(`conv/${cur}` + (force ? "" : `?rev=${rev}`));
+    if(r.same){ running = r.running; return; }
+    view = r; rev = r.rev; running = r.running; renderChat(); loadState(true);
+  }catch(e){ if(/no such/.test(e.message)){ cur = null; await loadState(); } }
+  if(running && !poll) poll = setInterval(() => fetchConv(), 700);
+  if(!running && poll){ clearInterval(poll); poll = null; }
+}
+async function send(text){
+  text = (text ?? $("inp").value).trim(); if(!text) return;
+  if(running){ await HL.post(`conv/${cur}/cancel`); return; }
+  if(!cur){ const c = await HL.post("convs"); cur = c.id; }
+  $("inp").value = ""; autoGrow(); stick = true;
+  try{ await HL.post(`conv/${cur}/chat`, {text}); running = true; view.timeline = (view.timeline || []).concat([{kind:"user", text}]); renderChat(); fetchConv(true); if(!poll) poll = setInterval(() => fetchConv(), 700); }
+  catch(e){ HL.toast(e.message, true); }
+}
+$("sendBtn").onclick = () => running ? HL.post(`conv/${cur}/cancel`) : send();
+$("inp").addEventListener("keydown", e => { if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); send(); } });
+function autoGrow(){ const t = $("inp"); t.style.height = "auto"; t.style.height = Math.min(140, t.scrollHeight) + "px"; } $("inp").oninput = autoGrow;
+$("newBtn").onclick = async () => { const c = await HL.post("convs"); cur = c.id; rev = 0; view = {timeline: []}; await loadState(); fetchConv(true); };
+$("convSel").onchange = e => { cur = e.target.value; rev = 0; fetchConv(true); };
+
+function fmt(n){ return n >= 1e6 ? (n/1e6).toFixed(1) + "M" : n >= 1e3 ? (n/1e3).toFixed(1) + "k" : String(n); }
+async function loadState(keep){
+  S = await HL.api("state"); const p = S.providers[S.provider];
+  $("provChip").innerHTML = `${HL.icon("mdi:swap-vertical")}${S.provider === "claude" ? "Claude" : "Gemini"} · ${esc(p.model)}`;
+  const u = S.usage[S.provider]; $("provChip").title = tr("Tokeny (wejście/wyjście): ","Tokens (in/out): ") + fmt(u.in) + " / " + fmt(u.out);
+  $("modeChip").className = "chip mode-" + S.mode; $("modeChip").innerHTML = `${HL.icon("mdi:shield-check")}${esc(MODES[S.mode][0])}`; $("modeChip").title = MODES[S.mode][1];
+  const w = $("warn"), miss = ["claude","gemini"].filter(k => !S.providers[k].key);
+  if(!p.key){ w.hidden = false; w.textContent = tr(`Brak klucza API dla ${S.provider === "claude" ? "Claude (anthropic_api_key)" : "Gemini (gemini_api_key)"}. Dodaj go w Konfiguracji dodatku i zrestartuj.`, `No API key for ${S.provider === "claude" ? "Claude (anthropic_api_key)" : "Gemini (gemini_api_key)"}. Add it in the add-on Configuration and restart.`); }
+  else w.hidden = true;
+  const sel = $("convSel"); sel.innerHTML = ""; S.convs.forEach(c => { const o = document.createElement("option"); o.value = c.id; o.textContent = c.title; sel.append(o); });
+  if(!cur && S.convs.length) cur = S.convs[0].id; if(cur) sel.value = cur; sel.hidden = !S.convs.length;
+  if(!keep && $("infoView").classList.contains("on")) renderInfo();
+}
+$("provChip").onclick = async () => { const o = S.provider === "claude" ? "gemini" : "claude";
+  if(!S.providers[o].key){ HL.toast(tr("Brak klucza dla ","No API key for ") + o, true); return; }
+  await HL.post("provider", {provider: o}); loadState(); };
+$("modeChip").onclick = () => { show("info"); };
+function renderInfo(){
+  $("iMode").textContent = tr("Tryb: ","Mode: ") + MODES[S.mode][0]; $("iModeTxt").textContent = MODES[S.mode][1];
+  $("iBlock").textContent = tr("Zablokowane (wymuszane przez dodatek): ","Blocked (enforced by the add-on): ") + (S.blocked_domains || []).join(", ") + " · " + (S.blocked_services || []).join(", ");
+  $("iUse").textContent = tr("Zużycie tokenów (od początku)","Token usage (all time)");
+  $("iUseTxt").innerHTML = ["claude","gemini"].map(k => `<span>${k === "claude" ? "Claude" : "Gemini"}</span><span>${tr("wejście","in")} ${fmt(S.usage[k].in)} · ${tr("wyjście","out")} ${fmt(S.usage[k].out)} · ${S.usage[k].req} ${tr("zapytań","requests")}</span>`).join("");
+  $("iUseH").textContent = tr("Liczniki z odpowiedzi API; dodatek nie liczy kosztów. Ta rozmowa: ","Counters come from the API responses; no cost is estimated. This conversation: ") + fmt((view.usage || {in:0}).in) + " / " + fmt((view.usage || {out:0}).out);
+  $("iSec").textContent = tr("Prywatność","Privacy");
+  $("iSecTxt").textContent = tr("Panel jest dostępny tylko przez Home Assistant (bez otwartych portów). Klucze API nigdy nie trafiają do przeglądarki ani logów. Do dostawcy AI wysyłane są Twoje wiadomości oraz wyniki narzędzi (stany/atrybuty encji).","The panel is reachable only through Home Assistant (no published ports). API keys never reach the browser or the logs. Your messages and tool results (entity states/attributes) are sent to the selected AI provider.");
+}
+async function loadLog(){
+  const r = await HL.api("log"); const L = $("logList"); L.innerHTML = r.rows.length ? "" : `<div class="hint">${tr("Brak wpisów.","No entries.")}</div>`;
+  r.rows.forEach(x => { const d = document.createElement("div"); d.className = "lrow";
+    const cls = {ok:"ok",executed:"ok",applied:"ok",staged:"warn",blocked:"err",error:"err",failed:"err"}[x.outcome] || "";
+    d.innerHTML = `<div class="m"><b>${esc(x.tool)}</b><span class="badge ${cls}">${esc(x.outcome)}</span><span class="hint">${tr("zatwierdził","by")}: ${esc(x.by)}</span><span class="hint">${new Date(x.ts*1000).toLocaleString()}</span></div><code>${esc(x.args)}${x.result ? "\n→ " + esc(x.result) : ""}</code>`; L.append(d); });
+}
+$("lgRef").onclick = loadLog;
+(async () => { await loadState(); if(cur) await fetchConv(true); else renderChat(); setInterval(() => { if(!running && !document.hidden) fetchConv(); }, 4000); })();
+</script>
+</body>
+</html>
