@@ -29,3 +29,10 @@ No SDKs, no background polling, nothing cached beyond a short service-name list;
 
 ## Config reference
 `provider`, `anthropic_api_key`, `anthropic_model`, `gemini_api_key`, `gemini_model`, `mode`, `blocked_domains`, `blocked_services`, `max_tool_rounds` (1-30), `language` (auto or a code), `log_level`.
+
+## From the iPhone lock screen
+1. Options: `shortcut_enabled: true`, `notify_service: mobile_app_<your_iphone>`; restart. Panel → *Info* → *From the lock screen* → **Create token** (shown once).
+2. Shortcuts app → new shortcut: *Dictate Text* → *Get Contents of URL* (`http://<HA-IP>:8770/api/ask`, POST, JSON, field `text` = Dictated Text, header `Authorization: Bearer <token>`) → *Get Dictionary Value* `reply` → *Speak Text*.
+3. Put it on the **Action Button**, a **Lock Screen widget**, or say “Hey Siri, <shortcut name>”. iOS may ask to unlock for some actions depending on your settings.
+4. Anything that changes something is only *staged*: you get a notification with **Approve / Reject** on the lock screen (needs Face ID/unlock to confirm per iOS settings). Shortcut requests never run in `auto` mode; `shortcut_mode: read_only` makes them look-only.
+5. Away from home use Nabu Casa / a VPN such as Tailscale - do **not** port-forward port 8770. Without `shortcut_enabled` nothing listens on that port.

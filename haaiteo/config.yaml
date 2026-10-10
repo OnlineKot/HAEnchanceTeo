@@ -1,7 +1,7 @@
 name: HAAITeo
-version: "1.0.0"
+version: "1.1.0"
 slug: haaiteo
-description: AI assistant panel for Home Assistant - ask Claude (Anthropic) or Gemini (Google) to understand, control and modify your smart home. Changes need your approval. Private - no network ports, panel only through Home Assistant. By TeodorTeo.com
+description: AI assistant panel for Home Assistant - ask Claude (Anthropic) or Gemini (Google) to understand, control and modify your smart home. Changes need your approval. Private by default - panel only through Home Assistant; optional token-protected lock-screen / Siri endpoint. By TeodorTeo.com
 url: https://teodorteo.com
 arch:
   - amd64
@@ -15,6 +15,10 @@ ingress: true
 ingress_port: 8099
 panel_icon: mdi:robot-happy-outline
 panel_title: AI
+ports:
+  8770/tcp: 8770
+ports_description:
+  8770/tcp: "Lock screen / Siri / Shortcuts endpoint (only listens when enabled in options; token required)"
 map:
   - homeassistant_config:ro
 options:
@@ -37,6 +41,9 @@ options:
   max_tool_rounds: 12
   language: auto
   log_level: info
+  shortcut_enabled: false
+  shortcut_mode: confirm_changes
+  notify_service: ""
 schema:
   provider: list(claude|gemini)
   anthropic_api_key: password?
@@ -51,3 +58,6 @@ schema:
   max_tool_rounds: int(1,30)
   language: str?
   log_level: list(debug|info|warning)
+  shortcut_enabled: bool
+  shortcut_mode: list(read_only|confirm_changes)
+  notify_service: str?

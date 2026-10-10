@@ -52,6 +52,7 @@ details.tool .tb{padding:0 12px 8px}details.tool pre{margin:4px 0;max-height:180
 .keywarn{margin:12px 16px 0;padding:10px 14px;border-radius:12px;border:1px solid var(--warning-color);font-size:13px}
 select.cs{width:auto;min-height:32px;padding:4px 8px;font-size:13px;max-width:100%;border-radius:8px}
 .tabs{margin:0;padding:0 8px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 16px}.kv span:nth-child(odd){color:var(--secondary-text-color)}
 </style>
 </head>
 <body>
@@ -68,6 +69,7 @@ select.cs{width:auto;min-height:32px;padding:4px 8px;font-size:13px;max-width:10
 <div class="view" id="logView"><div class="sec"><span id="sLg"></span><span class="sp"></span><button class="b alt sm" id="lgRef"></button></div><div id="logList"></div></div>
 <div class="view" id="infoView"><div class="card"><div class="sec" id="iMode"></div><div id="iModeTxt"></div><div class="hint" id="iBlock" style="margin-top:8px"></div></div>
   <div class="card"><div class="sec" id="iUse"></div><div id="iUseTxt" class="kv"></div><div class="hint" id="iUseH" style="margin-top:8px"></div></div>
+  <div class="card" id="lockCard"><div class="sec" id="lkT"></div><div class="hint" id="lkTxt"></div><div id="lkBody" style="margin-top:10px"></div></div>
   <div class="card"><div class="sec" id="iSec"></div><div class="hint" id="iSecTxt"></div></div>
   <footer><span id="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer></div>
 </main>
@@ -95,7 +97,7 @@ $("by").textContent = tr("Stworzone przez","Created by"); $("newBtn").textConten
 $("inp").placeholder = tr("Zapytaj o swój dom…","Ask about your home…"); $("sLg").textContent = tr("Dziennik zdarzeń (audyt)","Audit log");
 [["chat",tr("Czat","Chat")],["log",tr("Dziennik","Log")],["info",tr("Info","Info")]].forEach(([id,l]) => { const b = document.createElement("button"); b.textContent = l; b.dataset.id = id; b.onclick = () => show(id); $("tabs").append(b); });
 function show(id){ document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.id === id));
-  ["chat","log","info"].forEach(v => $(v + "View").classList.toggle("on", v === id)); if(id === "log") loadLog(); if(id === "info") renderInfo(); }
+  ["chat","log","info"].forEach(v => $(v + "View").classList.toggle("on", v === id)); if(id === "log") loadLog(); if(id === "info"){ renderInfo(); renderLock(); } }
 show("chat");
 
 // markdown-lite: escape FIRST, then a few safe patterns
@@ -203,7 +205,20 @@ function renderInfo(){
   $("iUseTxt").innerHTML = ["claude","gemini"].map(k => `<span>${k === "claude" ? "Claude" : "Gemini"}</span><span>${tr("wejście","in")} ${fmt(S.usage[k].in)} · ${tr("wyjście","out")} ${fmt(S.usage[k].out)} · ${S.usage[k].req} ${tr("zapytań","requests")}</span>`).join("");
   $("iUseH").textContent = tr("Liczniki z odpowiedzi API; dodatek nie liczy kosztów. Ta rozmowa: ","Counters come from the API responses; no cost is estimated. This conversation: ") + fmt((view.usage || {in:0}).in) + " / " + fmt((view.usage || {out:0}).out);
   $("iSec").textContent = tr("Prywatność","Privacy");
-  $("iSecTxt").textContent = tr("Panel jest dostępny tylko przez Home Assistant (bez otwartych portów). Klucze API nigdy nie trafiają do przeglądarki ani logów. Do dostawcy AI wysyłane są Twoje wiadomości oraz wyniki narzędzi (stany/atrybuty encji).","The panel is reachable only through Home Assistant (no published ports). API keys never reach the browser or the logs. Your messages and tool results (entity states/attributes) are sent to the selected AI provider.");
+  $("iSecTxt").textContent = tr("Panel jest dostępny tylko przez Home Assistant. Opcjonalny punkt dla ekranu blokady działa wyłącznie z tokenem i jest domyślnie wyłączony. Klucze API nigdy nie trafiają do przeglądarki ani logów. Do dostawcy AI wysyłane są Twoje wiadomości oraz wyniki narzędzi (stany/atrybuty encji).","The panel is reachable only through Home Assistant. The optional lock-screen endpoint is off by default and token-only. API keys never reach the browser or the logs. Your messages and tool results (entity states/attributes) are sent to the selected AI provider.");
+}
+async function renderLock(){
+  $("lkT").textContent = tr("Z ekranu blokady (Siri / Action Button / widżet)","From the lock screen (Siri / Action Button / widget)");
+  $("lkTxt").textContent = tr("iPhone Skróty wysyłają Twoje pytanie do HAAITeo, a odpowiedź jest czytana na głos. Zmiany wymagają zatwierdzenia - dostajesz powiadomienie z przyciskami Zatwierdź / Odrzuć prosto na ekranie blokady.","An iPhone Shortcut sends your question to HAAITeo and the answer is read aloud. Changes need approval - you get a notification with Approve / Reject buttons right on the lock screen.");
+  let r; try{ r = await HL.api("shortcut"); }catch{ return; }
+  const B = $("lkBody");
+  if(!r.enabled){ B.innerHTML = `<div class="hint">${tr("Wyłączone. Włącz w Konfiguracji dodatku: shortcut_enabled (otwiera port ","Off. Enable it in the add-on Configuration: shortcut_enabled (opens port ")}${r.port}${tr(", dostęp tylko z tokenem), ustaw notify_service np. mobile_app_iphone, zrestartuj dodatek.", ", token-only access), set notify_service e.g. mobile_app_iphone, then restart the add-on.")}</div>`; return; }
+  B.innerHTML = `<div class="hint">${tr("Tryb dla skrótów: ","Shortcut mode: ")}<b>${esc(r.mode)}</b> · ${r.notify ? tr("powiadomienia: włączone","notifications: on") : tr("powiadomienia: brak (ustaw notify_service)","notifications: off (set notify_service)")}</div>
+    <div class="row"><input type="text" id="tkName" placeholder="iPhone" style="flex:1"><button class="b sm" id="tkNew">${tr("Utwórz token","Create token")}</button></div><div id="tkOut"></div><div id="tkList"></div>
+    <div class="hint" style="margin-top:12px"><b>${tr("Skrót (Skróty → +):","Shortcut (Shortcuts → +):")}</b><br>1. ${tr("Dyktuj tekst","Dictate Text")}<br>2. ${tr("Pobierz zawartość URL: ","Get Contents of URL: ")}<code>http://&lt;HA-IP&gt;:${r.port}/api/ask</code> · POST · JSON · <code>text</code> = ${tr("Podyktowany tekst","Dictated Text")} · ${tr("nagłówek","header")} <code>Authorization</code> = <code>Bearer &lt;token&gt;</code><br>3. ${tr("Pobierz wartość słownika: ","Get Dictionary Value: ")}<code>reply</code><br>4. ${tr("Wypowiedz tekst","Speak Text")}<br>${tr("Potem: Ustawienia → Action Button / Ekran blokady → widżet Skróty, albo powiedz „Hej Siri, ” + nazwa skrótu.","Then: Settings → Action Button / Lock Screen → Shortcuts widget, or say “Hey Siri, ” + the shortcut name.")}<br>${tr("Poza domem użyj adresu Nabu Casa / VPN (np. Tailscale) - nie przekierowuj portu na routerze.","Away from home use Nabu Casa / a VPN (e.g. Tailscale) - do not port-forward on the router.")}</div>`;
+  $("tkNew").onclick = async () => { const o = await HL.post("tokens", {name: $("tkName").value}); $("tkOut").appendChild(HL.copyRow(tr("Token (pokazany raz)","Token (shown once)"), o.token)); renderLock2(); };
+  const list = async () => { const x = await HL.api("shortcut"); $("tkList").innerHTML = ""; x.tokens.forEach(t => { const d = document.createElement("div"); d.className = "lrow"; d.innerHTML = `<div class="m"><b>${esc(t.name)}</b><span class="hint">${t.last ? HL.ago(t.last) : tr("nieużywany","unused")}</span><button class="b red sm" style="margin-left:auto">${tr("Usuń","Delete")}</button></div>`; d.querySelector("button").onclick = async () => { await HL.api("tokens/" + t.id, {method:"DELETE"}); list(); }; $("tkList").appendChild(d); }); };
+  window.renderLock2 = list; list();
 }
 async function loadLog(){
   const r = await HL.api("log"); const L = $("logList"); L.innerHTML = r.rows.length ? "" : `<div class="hint">${tr("Brak wpisów.","No entries.")}</div>`;

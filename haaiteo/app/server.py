@@ -3,10 +3,13 @@
 Low-memory design: aiohttp only, no SDKs, no background loops, nothing big cached.
 By TeodorTeo.com (https://teodorteo.com)."""
 import asyncio
+import hashlib
+import hmac
 import json
 import logging
 import os
 import re
+import secrets
 import time
 import uuid
 from pathlib import Path
@@ -23,6 +26,7 @@ OPTIONS_FILE = Path(os.environ.get("HAI_OPTIONS", "/data/options.json"))
 CONFIG_DIR = Path(os.environ.get("HAI_CONFIG_DIR", "/homeassistant"))
 STATIC = Path(__file__).parent / "static"
 INGRESS_PORT = int(os.environ.get("HAI_INGRESS_PORT", 8099))
+SHORTCUT_PORT = int(os.environ.get("HAI_SHORTCUT_PORT", 8770))
 INGRESS_PEERS = {"172.30.32.2", "127.0.0.1", "::1"}
 DEV = bool(os.environ.get("HAI_DEV"))
 HA_URL = os.environ.get("HAI_HA_URL", "http://supervisor/core/api")
@@ -30,7 +34,7 @@ HA_WS = os.environ.get("HAI_HA_WS") or (HA_URL[:-4] if HA_URL.endswith("/api") e
 TOKEN = os.environ.get("SUPERVISOR_TOKEN", "")
 ANTHROPIC_URL = os.environ.get("HAI_ANTHROPIC_URL", llm.ANTHROPIC_URL_DEFAULT)
 GEMINI_URL = os.environ.get("HAI_GEMINI_URL", llm.GEMINI_URL_DEFAULT)
-CONV_FILE, USAGE_FILE, UI_FILE = DATA / "convs.json", DATA / "usage.json", DATA / "ui.json"
+CONV_FILE, USAGE_FILE, UI_FILE, TOK_FILE = DATA / "convs.json", DATA / "usage.json", DATA / "ui.json", DATA / "tokens.json"
 MAX_CONVS, MAX_TIMELINE, MAX_HISTORY_SENT, MAX_MSG = 20, 150, 20, 4000
 RATE_LIMIT, TOOL_TIMEOUT = 30, 60
 PROVIDERS = ("claude", "gemini")
@@ -38,7 +42,8 @@ PROVIDERS = ("claude", "gemini")
 log = logging.getLogger("haaiteo")
 DEFAULTS = {"provider": "claude", "anthropic_api_key": "", "anthropic_model": "claude-sonnet-5-5", "gemini_api_key": "", "gemini_model": "gemini-2.5-flash",
             "mode": "confirm_changes", "blocked_domains": ["lock", "alarm_control_panel", "camera", "shell_command", "hassio"],
-            "blocked_services": ["homeassistant.restart", "homeassistant.stop", "hassio.*"], "max_tool_rounds": 12, "language": "auto", "log_level": "info"}
+            "blocked_services": ["homeassistant.restart", "homeassistant.stop", "hassio.*"], "max_tool_rounds": 12, "language": "auto", "log_level": "info",
+            "shortcut_enabled": False, "shortcut_mode": "confirm_changes", "notify_service": ""}
 
 
 class Opts:
@@ -59,8 +64,26 @@ class Opts:
             raise AttributeError(k)
 
 
+class ShortcutOpts:
+    """Options view for requests from the lock screen: never more permissive than confirm_changes."""
+    def __init__(self, base):
+        self.base = base
+
+    @property
+    def mode(self):
+        return "read_only" if "read_only" in (self.base.mode, self.base.shortcut_mode) else "confirm_changes"
+
+    def __getattr__(self, k):
+        return getattr(self.base, k)
+
+
 opts = Opts()
 session = None
+stools = None
+tokens = []           # shortcut tokens: {id, name, hash, created, last}
+notif = {}            # nonce -> {pid, ts}  (one-time approval notifications sent to the phone)
+listener_task = None
+tok_rate = {}
 ha = None
 tools = None
 convs = {}            # id -> conv dict (persisted fields + runtime fields prefixed with _)
@@ -167,7 +190,8 @@ async def build_system(c):
         f"Home Assistant version: {cfg.get('version', '?')}. Time zone: {cfg.get('time_zone', 'UTC')}. Location: {cfg.get('location_name', '')}. "
         f"Current time: {time.strftime('%Y-%m-%d %H:%M')} (server clock). Unit system: {(cfg.get('unit_system') or {}).get('temperature', '')}.\n"
         f"Areas: {', '.join(a for a in areas if a) or 'none/unknown'}.\n"
-        f"Mode: {modes_text(opts.mode)}\n"
+        f"Mode: {modes_text(c.get('_mode') or opts.mode)}\n"
+        + ("This is a VOICE request from the phone lock screen: answer in one or two short plain sentences (no markdown, no lists, no emoji) so it can be read aloud. If a change was staged, say it must be approved on the phone" + (" - a notification with Approve/Reject buttons was sent." if str(opts.notify_service or "").strip() else " in the HAAITeo panel.") + "\n" if c.get("_voice") else "") +
         f"Blocked domains (always refused): {', '.join(opts.blocked_domains or []) or 'none'}. Blocked services: {', '.join(opts.blocked_services or []) or 'none'}.\n\n"
         "RULES\n"
         "- Use search_entities before using any entity_id; never guess ids. If several entities match and it is ambiguous, ask the user which one.\n"
@@ -209,8 +233,11 @@ def stage_fn(c):
     return stage
 
 
-async def agent(c, text):
+async def agent(c, text, tl=None, mode=None):
     opts.reload()
+    tl = tl or tools
+    mode = mode or opts.mode
+    c["_mode"] = mode
     h = c["history"]
     p = provider()
     c["running"], c["phase"] = True, "thinking"
@@ -224,7 +251,7 @@ async def agent(c, text):
             tl_add(c, {"kind": "error", "text": f"No API key for {p}. Set it in the add-on Configuration."})
             return
         system = await build_system(c)
-        specs = public_specs(opts.mode)
+        specs = public_specs(mode)
         for rnd in range(int(opts.max_tool_rounds)):
             c["phase"] = "thinking"
             bump(c)
@@ -254,7 +281,7 @@ async def agent(c, text):
                 c["phase"] = "tool:" + call["name"]
                 bump(c)
                 try:
-                    content, outcome, is_err = await asyncio.wait_for(tools.execute(c["id"], call["name"], call["args"], stage_fn(c)), TOOL_TIMEOUT)
+                    content, outcome, is_err = await asyncio.wait_for(tl.execute(c["id"], call["name"], call["args"], stage_fn(c)), TOOL_TIMEOUT)
                 except asyncio.TimeoutError:
                     content, outcome, is_err = json.dumps({"error": "tool timeout"}), "error", True
                 item["status"], item["result"] = outcome, clip(content, 2500)
@@ -413,23 +440,198 @@ async def h_log(request):
     return web.json_response({"rows": tools.read_audit(200)})
 
 
+# ------------------------------------------------------------------ lock screen / Siri / Shortcuts
+def load_tokens():
+    global tokens
+    try:
+        d = json.loads(TOK_FILE.read_text())
+        tokens = d if isinstance(d, list) else []
+    except (OSError, ValueError):
+        tokens = []
+
+
+def find_token(raw):
+    digest = hashlib.sha256(raw.encode()).hexdigest()
+    found = None
+    for t in tokens:
+        if hmac.compare_digest(t["hash"], digest):
+            found = t
+    return found
+
+
+@web.middleware
+async def token_guard(request, handler):
+    raw = request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
+    tok = find_token(raw) if raw else None
+    if not tok:
+        return jerr(401, "invalid or missing token")
+    now = time.time()
+    hits = [t for t in tok_rate.get(tok["id"], []) if now - t < 60]
+    if len(hits) >= 10:
+        return jerr(429, "too many requests - slow down")
+    hits.append(now)
+    tok_rate[tok["id"]] = hits
+    request["tok"] = tok
+    return await handler(request)
+
+
+def last_reply(c):
+    for it in reversed(c["timeline"]):
+        if it.get("kind") in ("assistant", "error", "notice") and it.get("text"):
+            return it["text"], it["kind"] == "error"
+    return "", False
+
+
+async def h_ask(request):
+    """POST {text} -> {reply, pending, notified}. Runs with at most confirm_changes: nothing is changed without Approve."""
+    opts.reload()
+    try:
+        text = str((await request.json()).get("text", "")).strip()
+    except ValueError:
+        return jerr(400, "bad json")
+    if not text or len(text) > MAX_MSG:
+        return jerr(400, "empty or too long message")
+    c = new_conv()
+    c["title"], c["_voice"] = "\U0001F399 " + text[:44], True
+    c["_task"] = task = asyncio.create_task(agent(c, text, stools, stools.opts.mode))
+    c["running"] = True
+    try:
+        await asyncio.wait_for(asyncio.shield(task), 55)
+    except asyncio.TimeoutError:
+        return web.json_response({"reply": "Still working on it - check the HAAITeo panel.", "pending": 0, "notified": False, "error": False})
+    reply, is_err = last_reply(c)
+    pend = [it for it in c["timeline"] if it.get("kind") == "pending" and it.get("status") == "pending"]
+    notified = await notify_pending(pend) if pend else False
+    request["tok"]["last"] = int(time.time())
+    save_json(TOK_FILE, tokens)
+    return web.json_response({"reply": reply, "pending": len(pend), "notified": notified, "error": is_err})
+
+
+async def notify_pending(items):
+    svc = str(opts.notify_service or "").strip().removeprefix("notify.")
+    if not re.fullmatch(r"[a-z0-9_]{1,60}", svc):
+        return False
+    sent = False
+    for it in items[:3]:
+        nonce = secrets.token_hex(8)
+        notif[nonce] = {"pid": it["id"], "ts": time.time()}
+        data = {"title": "HAAITeo - approve?", "message": str(it.get("title", ""))[:200],
+                "data": {"tag": "haai_" + nonce, "push": {"interruption-level": "time-sensitive"},
+                         "actions": [{"action": "HAAI_A_" + nonce, "title": "Approve"}, {"action": "HAAI_R_" + nonce, "title": "Reject", "destructive": True}]}}
+        try:
+            await ha.req("POST", f"/services/notify/{svc}", data)
+            sent = True
+        except Exception as exc:  # noqa: BLE001
+            log.warning("notification failed: %s", exc)
+            notif.pop(nonce, None)
+    if sent:
+        ensure_listener()
+    return sent
+
+
+def ensure_listener():
+    global listener_task
+    if not listener_task or listener_task.done():
+        listener_task = asyncio.create_task(action_listener())
+
+
+async def action_listener():
+    """Short-lived WebSocket: only open while approval notifications are outstanding (max 1 h)."""
+    started = time.time()
+    try:
+        async with session.ws_connect(HA_WS, heartbeat=30, timeout=15) as ws:
+            await ws.receive_json(timeout=10)
+            await ws.send_json({"type": "auth", "access_token": TOKEN})
+            if (await ws.receive_json(timeout=10)).get("type") != "auth_ok":
+                return
+            await ws.send_json({"id": 1, "type": "subscribe_events", "event_type": "mobile_app_notification_action"})
+            while True:
+                for n in [n for n, v in notif.items() if time.time() - v["ts"] > 3600]:
+                    notif.pop(n, None)
+                if not notif or time.time() - started > 3600:
+                    return
+                try:
+                    msg = await ws.receive(timeout=60)
+                except asyncio.TimeoutError:
+                    continue
+                if msg.type != web.WSMsgType.TEXT:
+                    return
+                d = json.loads(msg.data)
+                if d.get("type") != "event":
+                    continue
+                m = re.fullmatch(r"HAAI_([AR])_([0-9a-f]{16})", str(((d.get("event") or {}).get("data") or {}).get("action", "")))
+                entry = notif.pop(m.group(2), None) if m else None
+                if not entry:
+                    continue
+                try:
+                    if m.group(1) == "A":
+                        await tools.approve(entry["pid"], who="phone")
+                    else:
+                        tools.reject(entry["pid"])
+                except ToolError as exc:
+                    log.info("phone action ignored: %s", exc)
+                try:
+                    await ha.req("POST", f"/services/notify/{str(opts.notify_service).removeprefix('notify.')}", {"message": "clear_notification", "data": {"tag": "haai_" + m.group(2)}})
+                except Exception:  # noqa: BLE001
+                    pass
+    except Exception as exc:  # noqa: BLE001
+        log.warning("approval listener stopped: %s", type(exc).__name__)
+
+
+async def h_shortcut_info(request):
+    opts.reload()
+    return web.json_response({"enabled": bool(opts.shortcut_enabled), "port": SHORTCUT_PORT, "mode": ShortcutOpts(opts).mode,
+                              "notify": bool(str(opts.notify_service or "").strip()),
+                              "tokens": [{"id": t["id"], "name": t["name"], "created": t["created"], "last": t.get("last", 0)} for t in tokens]})
+
+
+async def h_token_new(request):
+    name = str((await request.json()).get("name", "")).strip()[:40] or "iPhone"
+    if len(tokens) >= 10:
+        return jerr(400, "max 10 tokens")
+    raw = "haai_" + secrets.token_urlsafe(32)
+    tokens.append({"id": uuid.uuid4().hex[:8], "name": name, "hash": hashlib.sha256(raw.encode()).hexdigest(), "created": int(time.time()), "last": 0})
+    save_json(TOK_FILE, tokens)
+    try:
+        os.chmod(TOK_FILE, 0o600)
+    except OSError:
+        pass
+    return web.json_response({"token": raw})
+
+
+async def h_token_del(request):
+    tokens[:] = [t for t in tokens if t["id"] != request.match_info["id"]]
+    save_json(TOK_FILE, tokens)
+    return web.json_response({"ok": True})
+
+
+def build_shortcut_app():
+    app = web.Application(middlewares=[token_guard], client_max_size=8 * 1024)
+    app.add_routes([web.post("/api/ask", h_ask)])
+    return app
+
+
 def build_app():
     app = web.Application(middlewares=[guard], client_max_size=32 * 1024)
     app.add_routes([web.get("/", h_index), web.static("/static", STATIC), web.get("/api/state", h_state), web.post("/api/provider", h_provider),
                     web.post("/api/convs", h_new), web.get("/api/conv/{id}", h_conv), web.delete("/api/conv/{id}", h_del),
                     web.post("/api/conv/{id}/chat", h_chat), web.post("/api/conv/{id}/cancel", h_cancel),
-                    web.post("/api/pending/{pid}/{act}", h_pending), web.get("/api/log", h_log)])
+                    web.post("/api/pending/{pid}/{act}", h_pending), web.get("/api/log", h_log),
+                    web.get("/api/shortcut", h_shortcut_info), web.post("/api/tokens", h_token_new), web.delete("/api/tokens/{id}", h_token_del)])
     return app
 
 
 async def main():
-    global session, ha, tools
+    global session, ha, tools, stools
     logging.basicConfig(level=getattr(logging, str(opts.log_level).upper(), logging.INFO), format="%(asctime)s %(levelname)s %(message)s")
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
     DATA.mkdir(parents=True, exist_ok=True)
     session = ClientSession(timeout=ClientTimeout(total=30))
     ha = HA(session, HA_URL, HA_WS, TOKEN)
     tools = Tools(ha, opts, DATA, CONFIG_DIR, lambda: "", on_update)
+    stools = Tools(ha, ShortcutOpts(opts), DATA, CONFIG_DIR, lambda: "", on_update)
+    stools.pending = tools.pending
+    load_tokens()
     load_state()
     runner = web.AppRunner(build_app(), access_log=None)
     await runner.setup()
@@ -438,10 +640,18 @@ async def main():
     except OSError as exc:
         log.error("Cannot listen on port %s: %s", INGRESS_PORT, exc)
         raise SystemExit(1)
+    if opts.shortcut_enabled:
+        try:
+            r2 = web.AppRunner(build_shortcut_app(), access_log=None)
+            await r2.setup()
+            await web.TCPSite(r2, "0.0.0.0", SHORTCUT_PORT).start()
+            log.info("Lock-screen / Shortcuts endpoint enabled on port %s (token required)", SHORTCUT_PORT)
+        except OSError as exc:
+            log.error("Cannot listen on port %s for Shortcuts: %s", SHORTCUT_PORT, exc)
     for p in PROVIDERS:
         if not key_for(p):
             log.warning("No API key for %s - set it in the add-on Configuration to use it.", p)
-    log.info("HAAITeo by %s (%s) - mode=%s provider=%s - panel via ingress only, no network ports published", CREDIT, CREDIT_URL, opts.mode, provider())
+    log.info("HAAITeo by %s (%s) - mode=%s provider=%s - panel via ingress only", CREDIT, CREDIT_URL, opts.mode, provider())
     await asyncio.Event().wait()
 
 
