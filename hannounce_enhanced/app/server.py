@@ -1509,6 +1509,33 @@ async def h_announce(request):
         body = await request.json()
     except ValueError:
         raise _json_error(400, "invalid JSON")
+    return await do_announce(request, body)
+
+
+async def h_record(request):
+    """Voice announcement from a Shortcut: raw audio in the body (Record Audio -> Get Contents of URL, Request Body: File)."""
+    max_bytes = int(OPTIONS.get("max_upload_mb", 20)) * 1024 * 1024
+    tmp = ONCE / f"rec_{uuid.uuid4().hex}"
+    try:
+        size = 0
+        with open(tmp, "wb") as f:
+            async for chunk in request.content.iter_chunked(65536):
+                size += len(chunk)
+                if size > max_bytes:
+                    raise _json_error(413, "recording too large")
+                f.write(chunk)
+        if size < 200:
+            raise _json_error(400, "empty recording")
+        item = await convert_to_item(tmp, time.strftime("Voice %Y-%m-%d %H:%M:%S"), "record", False)
+    finally:
+        tmp.unlink(missing_ok=True)
+    body = {"item": item["id"]}
+    if request.query.get("targets"):
+        body["targets"] = request.query["targets"]
+    return await do_announce(request, body)
+
+
+async def do_announce(request, body):
     tok = request.get("token")
     body = {k: v for k, v in body.items() if not str(k).startswith("_")}   # internal keys cannot be set from outside
     try:
@@ -1802,7 +1829,7 @@ async def ingress_guard(request, handler):
     return await handler(request)
 
 
-SCOPED_PATHS = {"/api/announce", "/api/sounds", "/api/stop", "/api/status"}
+SCOPED_PATHS = {"/api/announce", "/api/record", "/api/sounds", "/api/stop", "/api/status"}
 
 
 @web.middleware
@@ -1847,6 +1874,7 @@ def routes(with_index=True):
         web.get("/api/tts/voices", h_tts_voices),
         web.post("/api/generate", h_generate),
         web.post("/api/announce", h_announce),
+        web.post("/api/record", h_record),
         web.post("/api/script", h_script),
         web.get("/api/version", h_version),
         web.get("/api/network", h_network),

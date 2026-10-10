@@ -76,6 +76,9 @@ audio{width:100%;margin-top:10px}
 footer{text-align:center;color:var(--mut);font-size:13px;margin:18px 0 6px}
 footer a{color:var(--acc);text-decoration:none;font-weight:700}
 .hint{color:var(--mut);font-size:13px;margin-top:8px}.rec{color:var(--err);font-weight:600}
+.meter{height:8px;border-radius:4px;background:var(--bd);overflow:hidden;margin-bottom:12px}.meter i{display:block;height:100%;width:0;background:var(--acc);transition:width .08s}.meter.live i{background:var(--err)}
+[hidden]{display:none!important}
+.recopts{align-items:center;gap:16px}.recopts select{width:auto;min-height:36px;padding:4px 12px}
 pre{background:var(--bg);padding:10px;border-radius:10px;overflow:auto;font-size:12px}
 code{background:var(--bg);padding:1px 5px;border-radius:5px;word-break:break-all}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
@@ -177,13 +180,20 @@ html.embedded header{display:none}
   </div>
 
   <div class="pane" id="p-rec">
+    <div class="meter" id="recMeter"><i id="recLvl"></i></div>
     <div class="row">
       <button class="b" id="recBtn" data-i="rec"></button>
       <span class="rec" id="recTime"></span>
       <label class="b alt" style="margin:0"><span data-i="devrec"></span>
-        <input type="file" id="recFile" accept="audio/*" capture style="display:none"></label>
+        <input type="file" id="recFile" accept="audio/*,.m4a,.caf,.aac,.wav,.mp3,.ogg,.opus" style="display:none"></label>
+    </div>
+    <div class="row recopts">
+      <label class="chk"><input type="checkbox" id="recCount" checked><span data-i="recCount"></span></label>
+      <label class="chk"><input type="checkbox" id="recNs" checked><span data-i="recNs"></span></label>
+      <select id="recMax"><option value="30">30 s</option><option value="60" selected>60 s</option><option value="120">2 min</option><option value="300">5 min</option></select>
     </div>
     <div class="hint" id="recHint"></div>
+    <div class="prof" id="recHelp" hidden><b data-i="recHelpT"></b><div class="hint" data-i="recHelp1"></div><div class="hint" data-i="recHelp2"></div><div class="hint" data-i="recHelp3"></div></div>
     <audio id="recAudio" controls hidden></audio>
     <div class="out" id="recOut" hidden></div>
   </div>
@@ -296,12 +306,12 @@ const L = {
   tokMax:"Max volume % (empty = no limit)",tokTtsHint:"The TTS engine, language and voice currently chosen in the Say tab become this token's defaults, so the shortcut only needs to send the message.",
   tokCreate:"Create token",tokShown:"Copy the token now - it is shown only once!",tokSteps:"Shortcuts app → + → “Get Contents of URL”: paste the URL, Show More → Method POST → add the two headers → Request Body: JSON with a “message” text field (use “Ask for Input” or “Dictate Text” as its value). Name it and add it to the lock screen / Siri.",
   tokURL:"URL",tokAuth:"Header Authorization",tokCT:"Header Content-Type",tokBody:"JSON body (text)",tokBody2:"JSON body (library sound)",tokRevoke:"Revoke",tokConfirm:"Revoke this token? Shortcuts using it will stop working.",
-  tokNone:"No tokens yet.",tokCopy:"Copy token",tokCopyAny:"Token and ready-to-paste values",tokOld:"Created before copying was possible - revoke and create a new one",tokUsed:"last used",tokNever:"never used",tokUses:"uses",tokSupB:"👁 supervised",tokLimited:"limited speakers",tokNeed:"Enter a name and select at least one speaker.",
+  tokNone:"No tokens yet.",tokCopy:"Copy token",tokRecURL:"Voice URL (record from the lock screen)",tokRecSteps:"Voice shortcut: “Record Audio” → “Get Contents of URL” with this Voice URL, method POST, Request Body = File → Recorded Audio, same Authorization header (the token's speakers are used; optional ?targets=media_player.x). It is announced once and not saved.",tokCopyAny:"Token and ready-to-paste values",tokOld:"Created before copying was possible - revoke and create a new one",tokUsed:"last used",tokNever:"never used",tokUses:"uses",tokSupB:"👁 supervised",tokLimited:"limited speakers",tokNeed:"Enter a name and select at least one speaker.",
   logTitle:"Announcement log",logClear:"Clear log",logAll:"All sources",logConfirm:"Clear the whole log?",logNoText:"(text not recorded)",logEmpty:"Nothing logged yet.",logViewTok:"Log",stop2:"■ Stop",stopped:"Stopped ■",preparing:"Preparing voice…",playing:"Playing ♪",queued:"Queued - plays in {s} s",updNew:"New version available",updHave:"you have",updHow:"Open the add-on page and tap Update.",updOpen:"Open add-on page",updAuto:"auto-update on",updManual:"auto-update off (enable it on the add-on page)",copy:"Copy",copied:"Copied ✓",allThree:"All three ways to open it:",w1:"① Script in HA",w2:"② iOS shortcut (Open URL)",w3:"③ Standalone app (Add to Home Screen)",quick:"⚡ Quick",qSounds:"Favorite sounds - tap to announce",qMsg:"Say something",qNoFav:"No favorite sounds yet. Mark sounds with ★ in the Library.",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
   setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",speakers:"Speakers",app:"📱 App",
   actBefore:"Run before (script / scene)",actAfter:"Run after (script / scene)",actNone:"— none —",
   ttsent:"TTS engine",message:"Message",lang:"Language",voice:"Voice",deflt:"(default)",ttsnone:"No TTS engine found in Home Assistant",
-  announce:"Announce",rec:"● Record",stop:"■ Stop",devrec:"Use device recorder",
+  announce:"Announce",rec:"● Record",stop:"■ Stop",devrec:"Choose a recording (Voice Memos / Files)",recCount:"3-2-1 countdown",recNs:"Reduce noise",recAgain:"press Record to redo",recDenied:"Microphone permission denied - allow it in the browser/app settings.",recHelpT:"Why is there no Record button here?",recHelp1:"The browser only allows the microphone on secure (HTTPS) pages. Over plain http:// (typical for Home Assistant in the app) it is blocked, and iPhone cannot record audio from a file picker (it would open the camera).",recHelp2:"Easy way: record in the Voice Memos app, then press the button above and choose the recording. Or use a Shortcut with “Record Audio” (see Tokens tab: voice URL).",recHelp3:"Best: open Home Assistant over HTTPS (Nabu Casa or a Let's Encrypt certificate, e.g. the HACertTeo add-on) and the Record button appears.",
   nomic:"Browser microphone needs HTTPS - use \"Use device recorder\" or open HA over HTTPS.",file:"Audio file",type:"Sound",freq:"Frequency Hz",dur:"Duration s",rep:"Repeat",
   preview:"▶ Preview",name:"Name",once:"Announce once",save:"Save to library",saveAnn:"Save & announce",empty:"Nothing here yet.",del:"Delete",rename:"Rename",
   sel:"Select at least one speaker.",sent:"Announced ✓",saved:"Saved ✓",confirmDel:"Delete this sound?",by:"Created by",nomsg:"Type a message.",nofile:"Choose or record a sound first.",newname:"New name",
@@ -329,12 +339,12 @@ const L = {
   tokMax:"Maks. głośność % (puste = bez limitu)",tokTtsHint:"Silnik TTS, język i głos wybrane teraz w zakładce Mów staną się domyślnymi dla tego tokenu, więc skrót wysyła tylko wiadomość.",
   tokCreate:"Utwórz token",tokShown:"Skopiuj token teraz - pokazuje się tylko raz!",tokSteps:"Aplikacja Skróty → + → „Pobierz zawartość URL”: wklej adres, Pokaż więcej → Metoda POST → dodaj oba nagłówki → Treść żądania: JSON z polem tekstowym „message” (jako wartość użyj „Zapytaj o dane” lub „Dyktuj tekst”). Nazwij skrót i dodaj go do ekranu blokady / Siri.",
   tokURL:"Adres URL",tokAuth:"Nagłówek Authorization",tokCT:"Nagłówek Content-Type",tokBody:"Treść JSON (tekst)",tokBody2:"Treść JSON (dźwięk z biblioteki)",tokRevoke:"Odwołaj",tokConfirm:"Odwołać ten token? Skróty, które go używają, przestaną działać.",
-  tokNone:"Brak tokenów.",tokCopy:"Kopiuj token",tokCopyAny:"Token i gotowe wartości do wklejenia",tokOld:"Utworzony zanim kopiowanie było możliwe - usuń i utwórz nowy",tokUsed:"ostatnio użyty",tokNever:"nieużywany",tokUses:"użyć",tokSupB:"👁 nadzorowany",tokLimited:"ograniczone głośniki",tokNeed:"Wpisz nazwę i zaznacz co najmniej jeden głośnik.",
+  tokNone:"Brak tokenów.",tokCopy:"Kopiuj token",tokRecURL:"Adres głosowy (nagrywanie z ekranu blokady)",tokRecSteps:"Skrót głosowy: „Nagraj dźwięk” → „Pobierz zawartość URL” z tym adresem, metoda POST, Treść żądania = Plik → Nagrany dźwięk, ten sam nagłówek Authorization (używa głośników tokenu; opcjonalnie ?targets=media_player.x). Ogłoszenie leci raz i nie jest zapisywane.",tokCopyAny:"Token i gotowe wartości do wklejenia",tokOld:"Utworzony zanim kopiowanie było możliwe - usuń i utwórz nowy",tokUsed:"ostatnio użyty",tokNever:"nieużywany",tokUses:"użyć",tokSupB:"👁 nadzorowany",tokLimited:"ograniczone głośniki",tokNeed:"Wpisz nazwę i zaznacz co najmniej jeden głośnik.",
   logTitle:"Dziennik ogłoszeń",logClear:"Wyczyść dziennik",logAll:"Wszystkie źródła",logConfirm:"Wyczyścić cały dziennik?",logNoText:"(tekst niezapisany)",logEmpty:"Nic jeszcze nie zapisano.",logViewTok:"Dziennik",stop2:"■ Stop",stopped:"Zatrzymano ■",preparing:"Przygotowuję głos…",playing:"Gra ♪",queued:"W kolejce - zagra za {s} s",updNew:"Dostępna nowa wersja",updHave:"masz",updHow:"Otwórz stronę dodatku i kliknij Aktualizuj.",updOpen:"Otwórz stronę dodatku",updAuto:"automatyczna aktualizacja włączona",updManual:"automatyczna aktualizacja wyłączona (włącz na stronie dodatku)",copy:"Kopiuj",copied:"Skopiowano ✓",allThree:"Wszystkie trzy sposoby otwierania:",w1:"① Skrypt w HA",w2:"② Skrót iOS (Otwórz URL)",w3:"③ Osobna aplikacja (Do ekranu początkowego)",quick:"⚡ Szybkie",qSounds:"Ulubione dźwięki - dotknij, by ogłosić",qMsg:"Powiedz coś",qNoFav:"Brak ulubionych dźwięków. Oznacz dźwięki ★ w Bibliotece.",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
   setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",speakers:"Głośniki",app:"📱 Aplikacja",
   actBefore:"Uruchom przed (skrypt / scena)",actAfter:"Uruchom po (skrypt / scena)",actNone:"— brak —",
   ttsent:"Silnik TTS",message:"Wiadomość",lang:"Język",voice:"Głos",deflt:"(domyślny)",ttsnone:"Nie znaleziono silnika TTS w Home Assistant",
-  announce:"Ogłoś",rec:"● Nagrywaj",stop:"■ Stop",devrec:"Nagrywarka urządzenia",
+  announce:"Ogłoś",rec:"● Nagrywaj",stop:"■ Stop",devrec:"Wybierz nagranie (Dyktafon / Pliki)",recCount:"Odliczanie 3-2-1",recNs:"Redukcja szumu",recAgain:"naciśnij Nagrywaj, by powtórzyć",recDenied:"Brak zgody na mikrofon - zezwól w ustawieniach przeglądarki/aplikacji.",recHelpT:"Dlaczego nie ma tu przycisku nagrywania?",recHelp1:"Przeglądarka pozwala na mikrofon tylko na stronach HTTPS. Przez zwykłe http:// (typowe dla HA w aplikacji) jest zablokowany, a iPhone nie umie nagrać dźwięku z okna wyboru pliku (otwiera wtedy kamerę - stąd wideo).",recHelp2:"Prosto: nagraj w aplikacji Dyktafon, potem naciśnij przycisk wyżej i wybierz nagranie. Albo skrót z akcją „Nagraj dźwięk” (zakładka Tokeny: adres głosowy).",recHelp3:"Najlepiej: otwórz HA przez HTTPS (Nabu Casa lub certyfikat Let's Encrypt, np. dodatek HACertTeo) - wtedy pojawia się przycisk nagrywania.",
   nomic:"Mikrofon w przeglądarce wymaga HTTPS - użyj „Nagrywarka urządzenia” albo otwórz HA przez HTTPS.",file:"Plik audio",type:"Dźwięk",freq:"Częstotliwość Hz",dur:"Czas s",rep:"Powtórzenia",
   preview:"▶ Podgląd",name:"Nazwa",once:"Ogłoś jednorazowo",save:"Zapisz w bibliotece",saveAnn:"Zapisz i ogłoś",empty:"Na razie pusto.",del:"Usuń",rename:"Zmień nazwę",
   sel:"Wybierz co najmniej jeden głośnik.",sent:"Ogłoszono ✓",saved:"Zapisano ✓",confirmDel:"Usunąć ten dźwięk?",by:"Stworzone przez",nomsg:"Wpisz wiadomość.",nofile:"Najpierw wybierz lub nagraj dźwięk.",newname:"Nowa nazwa",
@@ -526,25 +536,45 @@ async function sendBlob(blob, fname, kind, save, name){
 }
 
 // ---- record
-let blobRec = null, mr = null, chunks = [], tick;
+let blobRec = null, mr = null, chunks = [], tick, actx = null, raf = 0;
 actions($("recOut"), (save,name)=>blobRec ? sendBlob(blobRec,"rec","record",save,name) : (toast(t("nofile"),true),null));
-function setRec(blob){ blobRec = blob; $("recAudio").src = URL.createObjectURL(blob); $("recAudio").hidden = false; $("recOut").hidden = false; }
-if(!navigator.mediaDevices?.getUserMedia){ $("recBtn").hidden = true; $("recFile").parentElement.classList.remove("alt"); $("recHint").textContent = t("nomic"); }
-$("recBtn").onclick = async () => {
-  if(mr && mr.state==="recording"){ mr.stop(); return; }
+function setRec(blob, secs){
+  blobRec = blob; $("recAudio").src = URL.createObjectURL(blob); $("recAudio").hidden = false; $("recOut").hidden = false;
+  $("recHint").textContent = (secs ? secs.toFixed(0) + " s · " : "") + (blob.size/1024 < 1024 ? (blob.size/1024).toFixed(0) + " KB" : (blob.size/1048576).toFixed(1) + " MB") + " · " + t("recAgain");
+}
+const canMic = !!(navigator.mediaDevices?.getUserMedia && window.MediaRecorder && window.isSecureContext);
+if(!canMic){ $("recBtn").hidden = true; $("recMeter").hidden = true; document.querySelector(".recopts").hidden = true; $("recFile").parentElement.classList.remove("alt"); $("recHelp").hidden = false; }
+function stopMeter(){ cancelAnimationFrame(raf); if(actx){ actx.close().catch(()=>{}); actx = null; } $("recLvl").style.width = "0"; $("recMeter").classList.remove("live"); }
+function startMeter(stream){
   try{
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    mr = new MediaRecorder(stream); chunks = [];
-    mr.ondataavailable = e => chunks.push(e.data);
+    actx = new (window.AudioContext || window.webkitAudioContext)(); const an = actx.createAnalyser(); an.fftSize = 512;
+    actx.createMediaStreamSource(stream).connect(an); const buf = new Uint8Array(an.fftSize); $("recMeter").classList.add("live");
+    const loop = () => { an.getByteTimeDomainData(buf); let m = 0; for(const v of buf) m = Math.max(m, Math.abs(v - 128)); $("recLvl").style.width = Math.min(100, m / 100 * 100) + "%"; raf = requestAnimationFrame(loop); };
+    loop();
+  }catch{ /* meter is optional */ }
+}
+const wait = ms => new Promise(r => setTimeout(r, ms));
+let recBusy = false;
+$("recBtn").onclick = async () => {
+  if(mr && mr.state === "recording"){ mr.stop(); return; }
+  if(recBusy) return; recBusy = true;
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:$("recNs").checked, noiseSuppression:$("recNs").checked, autoGainControl:true}});
+    if($("recCount").checked){ for(let i = 3; i > 0; i--){ $("recTime").textContent = i + "…"; await wait(1000); } }
+    const mime = ["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus"].find(m => MediaRecorder.isTypeSupported(m));
+    mr = mime ? new MediaRecorder(stream, {mimeType:mime}) : new MediaRecorder(stream); chunks = [];
+    const max = +$("recMax").value, t0 = Date.now();
+    mr.ondataavailable = e => { if(e.data.size) chunks.push(e.data); };
     mr.onstop = () => {
-      stream.getTracks().forEach(x=>x.stop()); clearInterval(tick);
-      $("recBtn").textContent = t("rec"); $("recTime").textContent = "";
-      setRec(new Blob(chunks,{type:mr.mimeType}));
+      stream.getTracks().forEach(x => x.stop()); clearInterval(tick); stopMeter();
+      $("recBtn").textContent = t("rec"); $("recTime").textContent = ""; recBusy = false;
+      if(chunks.length) setRec(new Blob(chunks, {type:mr.mimeType || mime || "audio/webm"}), (Date.now() - t0) / 1000);
     };
-    mr.start(); const t0 = Date.now();
+    mr.start(250); startMeter(stream);
     $("recBtn").textContent = t("stop");
-    tick = setInterval(()=>{ $("recTime").textContent = ((Date.now()-t0)/1000).toFixed(0)+" s"; },250);
-  }catch(e){ toast(e.message,true); }
+    tick = setInterval(() => { const s = (Date.now() - t0) / 1000; $("recTime").textContent = "● " + s.toFixed(0) + " / " + max + " s"; if(s >= max) mr.stop(); }, 250);
+    recBusy = false;
+  }catch(e){ recBusy = false; stopMeter(); toast(e.name === "NotAllowedError" ? t("recDenied") : e.message, true); $("recTime").textContent = ""; }
 };
 $("recFile").onchange = e => { if(e.target.files[0]) setRec(e.target.files[0]); };
 
@@ -697,6 +727,8 @@ function showTokenCard(token, fresh = true){
     const hint = document.createElement("div"); hint.className = "hint"; hint.style.marginTop = "10px"; hint.textContent = t("tokSteps"); card.append(hint);
     card.append(copyRow(t("tokURL"), S.base_url + "/api/announce"));
     if(NET && NET.external_base) card.append(copyRow(t("tokURLext"), NET.external_base + "/api/announce"));
+    card.append(copyRow(t("tokRecURL"), S.base_url + "/api/record"));
+    const rh = document.createElement("div"); rh.className = "hint"; rh.textContent = t("tokRecSteps"); card.append(rh);
     card.append(copyRow(t("tokAuth"), "Bearer " + token));
     card.append(copyRow(t("tokCT"), "application/json"));
     card.append(copyRow(t("tokBody"), JSON.stringify({message:lang==="pl"?"Obiad gotowy":"Dinner is ready"})));

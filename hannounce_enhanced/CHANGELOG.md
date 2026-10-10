@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.14.0
+- Recording: the file picker no longer uses `capture` (iPhone opened the camera = video). New recorder: level meter, 3-2-1 countdown, noise reduction, max length, best format per browser (m4a on Safari), clear permission errors, and a help card explaining why the mic is unavailable over http.
+- New `POST /api/record`: send raw audio (iPhone Shortcut: Record Audio -> Get Contents of URL, Request Body = File) and it is announced once on the token's speakers - record from the lock screen.
+
 ## 1.13.2
 - Tokens can be copied again at any time (new "Copy token" button). Tokens created before this update can't be recovered - regenerate them once. Note: the token is now stored in the add-on's private data folder (tokens.json) instead of only as a hash.
 
