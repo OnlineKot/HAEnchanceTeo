@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.13.1
+- UI: "Use device recorder" is now a real button; when the browser microphone is unavailable (no HTTPS) the dead Record button is hidden and the device recorder is the primary action; duplicate header hidden inside HA ingress.
+
 ## 1.13.0
 - External (public) IP check shown next to the local IP, external URLs in token results, sensor.hannounce_external_ip with change detection; options check_external_ip, external_host.
 
