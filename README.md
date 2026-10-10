@@ -23,6 +23,15 @@ automations, and a REST API for screenless devices (Shortcuts, ESP).
 **Routines with steps** instead of YAML scripts: announce, fade lights over minutes, scenes, waits, wait-for-state, conditions and
 stop-if. Run from an iPhone Shortcut, by time or by an entity, with **live step progress on the Dynamic Island**.
 
+### 🔒 [HACertTeo](hacertteo/DOCS.md)
+**Free Let's Encrypt certificate for Home Assistant** via DNS-01 (Cloudflare / DuckDNS) – no open ports, automatic renewal, days-left sensor and failure notification.
+
+### 🎴 [HACardsTeo](hacardsteo/DOCS.md)
+**Beautiful Lovelace cards for everything** (Mushroom-style, but for every entity type): universal card, chips, room, stats, title and a media card with a library browser (works with the QNAP media source). The add-on installs and registers them for you.
+
+### 🤖 [HAAITeo](haaiteo/DOCS.md)
+**Claude or Gemini inside Home Assistant** – ask, control and modify. Changes are staged with a diff and need your approval (with undo); dangerous domains are blocked server-side. Optional lock-screen / Siri shortcut with Approve / Reject notifications on the phone.
+
 ### 🗄 [HAQnapTeo](haqnapteo/DOCS.md)
 **Backups to your QNAP and media from it.** Uploads Home Assistant backups to a QNAP share over SMB with schedule and retention,
 downloads new media into HA, lists / fetches / deletes backups on the NAS. **Private: no network ports** – panel only through Home Assistant.

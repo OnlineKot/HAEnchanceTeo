@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HACardsTeo</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="static/common.css">
+<style>
+:root[data-theme=dark]{--primary-background-color:#111111;--card-background-color:#1c1c1c;--secondary-background-color:#282828;--primary-text-color:#e1e1e1;--secondary-text-color:#9b9b9b;--disabled-text-color:#6f6f6f;--divider-color:rgba(225,225,225,.12);--outline-color:rgba(225,225,225,.12);--shadow-color:rgba(0,0,0,.48);--input-fill-color:rgba(255,255,255,.05);color-scheme:dark}
+:root[data-theme=light]{--primary-background-color:#fafafa;--card-background-color:#fff;--secondary-background-color:#e5e5e5;--primary-text-color:#212121;--secondary-text-color:#727272;--divider-color:rgba(0,0,0,.12);--outline-color:rgba(0,0,0,.12);--shadow-color:rgba(0,0,0,.16);--input-fill-color:rgb(245,245,245);color-scheme:light}
+main{max-width:1100px;margin:0 auto;padding:16px 16px 40px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-size:14px;align-items:center}.kv span:nth-child(odd){color:var(--secondary-text-color)}
+.lead{font-size:14px;color:var(--secondary-text-color);margin:0 0 16px;max-width:70ch}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:16px;align-items:start}
+.gal.wide{grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr))}
+.demo{min-width:0}
+.demo h3{font-size:13px;font-weight:600;margin:0 0 8px;color:var(--secondary-text-color);letter-spacing:.02em;display:flex;align-items:center;gap:8px}.demo h3 .sp{flex:1}
+.pv{border-radius:28px;padding:14px;background:var(--secondary-background-color);background:color-mix(in srgb,var(--secondary-background-color) 55%,var(--primary-background-color))}
+.pv>*{display:block}.pv>*+*{margin-top:10px}
+.ym{position:relative;margin-top:8px}.ym pre{margin:0;max-height:220px;font-size:12px;line-height:17px;padding:12px 14px;border-radius:14px;border:1px solid var(--divider-color);background:var(--card-background-color)}
+.ym button{position:absolute;top:6px;right:6px}
+h2.gh{font-size:18px;font-weight:500;margin:26px 0 12px}h2.gh:first-child{margin-top:0}
+.who{display:flex;gap:6px;flex-wrap:wrap}
+.tog{background:none;border:0;cursor:pointer;color:var(--secondary-text-color);padding:0 12px;height:40px;border-radius:20px;font:500 13px var(--ha-font)}.tog:hover{background:rgba(var(--rgb-primary-color),.08)}
+.note{border-left:4px solid var(--warning-color);padding:8px 12px;font-size:13px;margin:12px 0 0;background:color-mix(in srgb,var(--warning-color) 10%,transparent);border-radius:0 8px 8px 0}
+.mock{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--secondary-text-color);margin-bottom:14px}
+</style>
+</head>
+<body>
+<div class="bar"><span class="ibtn" id="barIcon"></span><h1>TeoCards</h1><button class="tog" id="themeBtn" aria-label="Theme"></button></div>
+<main>
+<div class="tabs" id="tabs" role="tablist"></div>
+<div class="view" id="v-st">
+  <div class="card">
+    <div class="sec" id="sInst"></div>
+    <div class="kv" id="kv"></div>
+    <div class="note" id="restart" hidden></div>
+    <div class="note" id="errNote" hidden></div>
+    <div class="row"><button class="b" id="bInstall"></button><button class="b alt" id="bRemove"></button><button class="b alt" id="bRefresh"></button></div>
+  </div>
+  <div class="card" id="manual">
+    <div class="sec" id="sMan"></div><div class="hint" id="manTxt"></div><div id="manRow"></div>
+  </div>
+  <div class="card"><div class="sec" id="sUse"></div><div class="hint" id="useTxt"></div></div>
+</div>
+<div class="view" id="v-gal"><div id="gal"></div></div>
+<footer><span id="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
+</main>
+<script src="static/common.js"></script>
+<script src="static/icons.js"></script>
+<script src="static/mock-hass.js"></script>
+<script src="static/teodorteo-cards.js"></script>
+<script>
+const $ = id => document.getElementById(id), tr = HL.tr;
+$("barIcon").innerHTML = HL.icon("mdi:cards") || '<svg viewBox="0 0 24 24"><path d="M21.47 4.35L20.13 3.79V12.82L22.56 6.96C22.97 5.94 22.5 4.77 21.47 4.35M1.97 8.05L6.93 20C7.24 20.77 7.97 21.24 8.74 21.26C9 21.26 9.27 21.21 9.5 21.12L16.9 18.05C17.65 17.74 18.11 17 18.13 16.26C18.14 16 18.09 15.71 18 15.45L13 3.5C12.7 2.73 11.97 2.27 11.2 2.25C10.94 2.24 10.67 2.29 10.4 2.4L3.04 5.45C2.03 5.87 1.55 7.04 1.97 8.05M18.12 4.25A2 2 0 0 0 16.12 2.25H14.67L18.12 10.59"/></svg>';
+$("by").textContent = tr("Stworzone przez", "Created by");
+const TABS = [["st", tr("Instalacja", "Install")], ["card", "teo-card"], ["media", "teo-media"], ["room", "teo-room"], ["chips", "chips + title"], ["stats", "teo-stats"]];
+let cur = "st";
+TABS.forEach(([id, l]) => { const b = document.createElement("button"); b.textContent = l; b.dataset.id = id; b.setAttribute("role", "tab"); b.onclick = () => show(id); $("tabs").append(b); });
+
+/* ---------------- theme ---------------- */
+let theme = "auto";
+try { theme = localStorage.getItem("hcc-theme") || "auto"; } catch (e) {}
+const applyTheme = () => { if (theme === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = theme; $("themeBtn").textContent = {auto: tr("Motyw: auto", "Theme: auto"), light: tr("Motyw: jasny", "Theme: light"), dark: tr("Motyw: ciemny", "Theme: dark")}[theme]; };
+$("themeBtn").onclick = () => { theme = {auto: "light", light: "dark", dark: "auto"}[theme]; try { localStorage.setItem("hcc-theme", theme); } catch (e) {} applyTheme(); };
+applyTheme();
+
+/* ---------------- install status ---------------- */
+let S = null;
+const T = {sInst: tr("Instalacja kart", "Card installation"), sMan: tr("Ręczne dodanie zasobu", "Add the resource manually"), sUse: tr("Jak używać", "How to use"),
+  bInstall: tr("Zainstaluj", "Install"), bRemove: tr("Usuń", "Remove"), bRefresh: tr("Odśwież", "Refresh")};
+Object.entries(T).forEach(([k, v]) => { const e = $(k); if (e) e.textContent = v; });
+$("useTxt").textContent = tr("Po instalacji odśwież przeglądarkę (Ctrl+F5) lub aplikację. Karty pojawią się w edytorze dashboardu jako „Teo Card”, „Teo Media” itd. Przykłady YAML znajdziesz w zakładkach obok.",
+  "After installing refresh the browser (Ctrl+F5) or the app. The cards appear in the dashboard editor as “Teo Card”, “Teo Media” and so on. YAML examples are in the tabs next to this one.");
+const badge = (ok, t) => `<span class="badge ${ok ? "ok" : "warn"}">${HL.esc(t)}</span>`;
+async function loadStatus() {
+  try { S = await HL.api("status"); } catch (e) { HL.toast(e.message, true); return; }
+  const r = S.resource, yes = tr("tak", "yes"), no = tr("nie", "no");
+  $("kv").innerHTML = `<span>${tr("Wersja w dodatku", "Add-on bundle")}</span><b>v${HL.esc(S.version)}</b>
+    <span>${tr("Zainstalowana wersja", "Installed version")}</span><span>${S.file_present ? badge(S.installed_version === S.version, "v" + S.installed_version) : badge(false, tr("brak pliku", "not installed"))}</span>
+    <span>${tr("Zasób Lovelace", "Lovelace resource")}</span><span>${!r.checked ? badge(false, tr("nie można sprawdzić", "cannot check")) : badge(r.registered && r.current !== false, r.registered ? (r.current === false ? tr("inna wersja", "other version") : yes) : no)}</span>
+    <span>${tr("Tryb dashboardów", "Dashboard mode")}</span><b>${HL.esc(r.mode)}</b>
+    <span>${tr("Plik", "File")}</span><code>${HL.esc(S.path)}</code>`;
+  $("bInstall").textContent = S.file_present ? tr("Zainstaluj ponownie", "Reinstall") : T.bInstall;
+  $("bRemove").disabled = !S.file_present && !r.registered;
+  $("restart").hidden = !S.needs_restart;
+  if (S.needs_restart) { $("restart").innerHTML = HL.esc(tr("Folder /config/www został utworzony przez dodatek - jeśli /local/… zwraca 404, zrestartuj raz Home Assistanta. ", "The add-on created /config/www - if /local/… returns 404, restart Home Assistant once. ")) + `<button class="b alt sm" id="ack">OK</button>`; $("ack").onclick = async () => { await HL.post("ack"); loadStatus(); }; }
+  const bad = r.mode === "yaml" || !r.registered || r.error;
+  $("errNote").hidden = !r.error; $("errNote").textContent = r.error || "";
+  $("manual").hidden = !bad;
+  if (bad) {
+    $("manTxt").textContent = r.mode === "yaml" ? tr("Dashboardy są w trybie YAML - dodaj zasób ręcznie w configuration.yaml (lovelace → resources) i zrestartuj, albo w Ustawienia → Dashboardy → Zasoby.", "Dashboards are in YAML mode - add the resource manually under lovelace: resources: in configuration.yaml, or in Settings → Dashboards → Resources.")
+      : tr("Automatyczna rejestracja nie powiodła się. Dodaj zasób ręcznie (Ustawienia → Dashboardy → ⋮ → Zasoby) jako moduł JavaScript:", "Automatic registration did not work. Add the resource manually (Settings → Dashboards → ⋮ → Resources) as a JavaScript module:");
+    $("manRow").replaceChildren(HL.copyRow("URL", r.manual), HL.copyRow("YAML", "lovelace:\n  resources:\n    - url: " + r.manual + "\n      type: module"));
+  }
+}
+async function act(path, btn) {
+  btn.disabled = true;
+  try { const j = await HL.post(path); HL.toast(path === "install" ? (j.resource && j.resource.registered ? tr("Zainstalowano ✓", "Installed ✓") : tr("Plik skopiowany, zasób wymaga ręcznego dodania", "File copied, resource needs manual setup")) : tr("Usunięto ✓", "Removed ✓")); }
+  catch (e) { HL.toast(e.message, true); }
+  btn.disabled = false; loadStatus();
+}
+$("bInstall").onclick = () => act("install", $("bInstall")); $("bRemove").onclick = () => { if (confirm(tr("Usunąć karty i zasób?", "Remove the cards and the resource?"))) act("remove", $("bRemove")); }; $("bRefresh").onclick = loadStatus;
+
+/* ---------------- gallery ---------------- */
+const yq = s => /^[A-Za-z0-9_.\/:\-]+$/.test(s) && !/^(true|false|null|yes|no|on|off|[0-9.]+)$/i.test(s) ? s : JSON.stringify(s);
+function toYaml(v, ind = 0, inArr = false) {
+  const pad = "  ".repeat(ind);
+  if (Array.isArray(v)) return v.map(x => { const t = toYaml(x, ind + 1, true); return `${pad}- ${t.replace(/^\s+/, "")}`; }).join("\n");
+  if (v && typeof v === "object") return Object.entries(v).map(([k, x], i) => {
+    const p = inArr && i === 0 ? "" : pad;
+    if (x && typeof x === "object") return `${p}${k}:\n${toYaml(x, ind + 1)}`;
+    return `${p}${k}: ${typeof x === "string" ? yq(x) : x}`;
+  }).join("\n");
+  return pad + (typeof v === "string" ? yq(v) : v);
+}
+const C = (type, o) => ({type: "custom:" + type, ...o});
+const GAL = {
+  card: [
+    [tr("Światło - kolor i temperatura", "Light - colour & temperature"), C("teo-card", {entity: "light.living_room", name: "Living room"}), tr("Ikona przełącza, suwak jasności, paleta otwiera barwę.", "Icon toggles, slider = brightness, palette button reveals colour controls.")],
+    [tr("Światło - big", "Light - big layout"), C("teo-card", {entity: "light.desk", layout: "big"})],
+    [tr("Światło - compact", "Light - compact"), C("teo-card", {entity: "light.kitchen", layout: "compact"})],
+    [tr("Światło wyłączone", "Light off"), C("teo-card", {entity: "light.bedroom"})],
+    [tr("Termostat", "Climate"), C("teo-card", {entity: "climate.living_room", name: "Heating"})],
+    [tr("Roleta", "Cover"), C("teo-card", {entity: "cover.blinds"})],
+    [tr("Wentylator", "Fan"), C("teo-card", {entity: "fan.bedroom"})],
+    [tr("Nawilżacz", "Humidifier"), C("teo-card", {entity: "humidifier.dehumidifier"})],
+    [tr("Zamek", "Lock"), C("teo-card", {entity: "lock.front_door"})],
+    [tr("Odkurzacz", "Vacuum"), C("teo-card", {entity: "vacuum.robot"})],
+    [tr("Alarm", "Alarm panel"), C("teo-card", {entity: "alarm_control_panel.home"})],
+    [tr("Czujnik z wykresem 24 h", "Sensor with 24 h graph"), C("teo-card", {entity: "sensor.living_temperature", graph: true})],
+    [tr("Czujnik - big", "Sensor - big"), C("teo-card", {entity: "sensor.power", layout: "big", color: "amber"})],
+    [tr("Czujnik drzwi", "Binary sensor"), C("teo-card", {entity: "binary_sensor.front_door", layout: "compact"})],
+    [tr("Pogoda", "Weather"), C("teo-card", {entity: "weather.home"})],
+    [tr("Osoba", "Person"), C("teo-card", {entity: "person.teodor", layout: "compact"})],
+    [tr("Scena / skrypt / przycisk", "Scene / script / button"), C("teo-card", {entity: "scene.movie_night", icon: "mdi:movie"})],
+    [tr("Aktualizacja", "Update"), C("teo-card", {entity: "update.home_assistant_core"})],
+    [tr("Kamera", "Camera"), C("teo-card", {entity: "camera.front_door"})],
+    [tr("Timer", "Timer"), C("teo-card", {entity: "timer.pizza"})],
+    [tr("Select", "Select"), C("teo-card", {entity: "select.heating_mode"})],
+    [tr("Number", "Number"), C("teo-card", {entity: "number.target_soc"})],
+    [tr("Gniazdko - compact", "Switch - compact"), C("teo-card", {entity: "switch.coffee_machine", layout: "compact", tap_action: {action: "toggle"}})],
+    [tr("Odtwarzacz mini", "Mini media player"), C("teo-card", {entity: "media_player.living_room", layout: "big"})],
+  ],
+  media: [
+    [tr("Odtwarzacz z biblioteką QNAP", "Player with QNAP library"), C("teo-media", {entity: "media_player.living_room", speakers: ["media_player.kitchen", "media_player.bedroom"], start_path: "media-source://media_source/qnap"}), tr("Przycisk Biblioteka otwiera przeglądarkę mediów (media-source).", "The Library button opens the media browser (media-source).")],
+    [tr("Telewizor wyłączony", "Player off"), C("teo-media", {entity: "media_player.tv"})],
+  ],
+  room: [
+    [tr("Pokój z obszaru", "Room from an area"), C("teo-room", {area: "living_room"})],
+    [tr("Pokój z listy encji", "Room from a list"), C("teo-room", {name: "Kitchen", icon: "mdi:countertop", temperature_entity: "sensor.outside_temperature", entities: ["light.kitchen", "switch.coffee_machine", "cover.garage"]})],
+  ],
+  chips: [
+    [tr("Tytuł z powitaniem", "Title with greeting"), C("teo-title", {greeting: true, subtitle: "Welcome home", show_date: true})],
+    [tr("Tytuł wyśrodkowany", "Centered title"), C("teo-title", {title: "Living room", subtitle: "Everything at a glance", align: "center", size: "medium"})],
+    [tr("Chipy", "Chips"), C("teo-chips", {entities: [{entity: "weather.home"}, {entity: "alarm_control_panel.home"}, {type: "people"}, {type: "battery", threshold: 20}, {type: "lights"}, {entity: "sensor.living_temperature"}, {entity: "person.ola", show_name: true}]})],
+  ],
+  stats: [
+    [tr("Kafelki liczb", "Stat tiles"), C("teo-stats", {title: "Energy", entities: ["sensor.power", "sensor.energy_today", {entity: "sensor.living_temperature", decimals: 0}]})],
+    [tr("Dwie kolumny", "Two columns"), C("teo-stats", {columns: 2, entities: ["sensor.outside_temperature", "sensor.living_humidity"]})],
+  ],
+};
+let live = [];
+function demo(box, [title, cfg, desc]) {
+  const d = document.createElement("div"); d.className = "demo";
+  d.innerHTML = `<h3>${HL.esc(title)}</h3><div class="pv"></div><div class="ym"><pre></pre><button class="b alt sm">${tr("Kopiuj YAML", "Copy YAML")}</button></div>`;
+  const yaml = toYaml(cfg); d.querySelector("pre").textContent = yaml;
+  d.querySelector("button").onclick = async () => { try { await navigator.clipboard.writeText(yaml); } catch (e) { const t = document.createElement("textarea"); t.value = yaml; document.body.append(t); t.select(); document.execCommand("copy"); t.remove(); } HL.toast(tr("Skopiowano ✓", "Copied ✓")); };
+  const el = document.createElement(cfg.type.replace("custom:", ""));
+  const c = {...cfg}; try { el.setConfig(c); } catch (e) { el.textContent = e.message; }
+  d.querySelector(".pv").append(el); el.hass = MOCK.hass; MOCK.cards.add(el); live.push(el);
+  if (desc) { const p = document.createElement("div"); p.className = "hint"; p.style.margin = "8px 4px 0"; p.textContent = desc; d.insertBefore(p, d.querySelector(".ym")); }
+  box.append(d);
+}
+function renderGal(id) {
+  live.forEach(e => MOCK.cards.delete(e)); live = [];
+  const g = $("gal"); g.replaceChildren();
+  const head = document.createElement("div"); head.className = "mock"; head.textContent = tr("Podgląd z atrapą danych Home Assistanta - klikaj, przesuwaj suwaki, przeglądaj bibliotekę.", "Live preview with a fake Home Assistant - click, drag the sliders, browse the library."); g.append(head);
+  const box = document.createElement("div"); box.className = "gal" + (id === "media" || id === "room" ? " wide" : ""); g.append(box);
+  GAL[id].forEach(x => demo(box, x));
+}
+function show(id) {
+  cur = id;
+  document.querySelectorAll(".tabs button").forEach(b => { b.classList.toggle("on", b.dataset.id === id); b.setAttribute("aria-selected", b.dataset.id === id); });
+  $("v-st").classList.toggle("on", id === "st"); $("v-gal").classList.toggle("on", id !== "st");
+  if (id !== "st") renderGal(id); else { live.forEach(e => MOCK.cards.delete(e)); live = []; $("gal").replaceChildren(); loadStatus(); }
+}
+window.addEventListener("hass-more-info", e => HL.toast("more-info: " + e.detail.entityId));
+window.addEventListener("mock-call", e => { const d = e.detail; window.__lastCall = d; });
+const q = new URLSearchParams(location.search).get("tab");
+show(TABS.some(t => t[0] === q) ? q : "st");
+</script>
+</body>
+</html>
