@@ -1,0 +1,49 @@
+configuration:
+  host:
+    name: QNAP address
+    description: IP or hostname of the QNAP (e.g. 192.168.1.20).
+  share:
+    name: Share name
+    description: SMB share on the QNAP (e.g. Backup). Create a dedicated user with access to this share only.
+  username:
+    name: Username
+    description: QNAP user that can read/write the share.
+  password:
+    name: Password
+    description: Stored by Home Assistant, never shown in the panel.
+  domain:
+    name: Domain (optional)
+    description: Workgroup/domain, leave empty for a local QNAP user.
+  smb_version:
+    name: SMB version
+    description: 3 for current QNAP firmware, 2 for very old devices.
+  backup_enabled:
+    name: Back up Home Assistant
+    description: Copy Home Assistant backups to the QNAP on a schedule.
+  backup_dir:
+    name: Backup folder on the QNAP
+    description: Folder inside the share (created automatically).
+  backup_keep:
+    name: Backups to keep on the QNAP
+    description: Older backups in that folder are deleted after a successful upload.
+  backup_time:
+    name: Backup time (HH:MM)
+    description: Daily time to upload backups. Empty = only manual from the panel.
+  create_backup:
+    name: Create a fresh full backup first
+    description: Ask Home Assistant for a new full backup before each scheduled upload.
+  media_enabled:
+    name: Download media from the QNAP
+    description: Copy new files from a QNAP folder into the HA media folder.
+  media_remote_dir:
+    name: Media folder on the QNAP
+    description: Folder inside the share to download from.
+  media_local_dir:
+    name: Local media subfolder
+    description: Files land in /media/<this folder> (visible in HA Media).
+  media_every_hours:
+    name: Media sync every N hours
+    description: 0 = only manual from the panel.
+  log_level:
+    name: Log level
+    description: Verbosity of the add-on log.

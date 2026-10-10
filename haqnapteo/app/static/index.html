@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HAQnapTeo</title>
+<link rel="stylesheet" href="static/common.css">
+<style>
+main{max-width:860px;margin:0 auto;padding:16px}
+.big{font-size:22px;line-height:28px;font-weight:400}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.li{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--divider-color);flex-wrap:wrap}.li:first-child{border-top:0}
+.li .n{flex:1;min-width:160px;word-break:break-all}
+.pbar{height:6px;border-radius:3px;background:rgba(var(--rgb-primary-color),.2);overflow:hidden;margin-top:10px}.pbar i{display:block;height:100%;background:var(--primary-color);transition:width .3s}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-size:14px}.kv span:nth-child(odd){color:var(--secondary-text-color)}
+</style>
+</head>
+<body>
+<div class="bar"><span class="ibtn" id="barIcon"></span><h1>HAQnapTeo</h1><small class="hint" id="tag" style="margin-right:12px"></small></div>
+<main>
+<div class="tabs" id="tabs"></div>
+
+<div class="view" id="v-st">
+  <div class="card" id="warn" hidden></div>
+  <div class="card" id="jobCard" hidden>
+    <div class="sec" id="jobTitle"></div><div id="jobStep"></div>
+    <div class="pbar"><i id="jobBar" style="width:0"></i></div>
+    <div class="row"><button class="b red sm" id="cancelBtn"></button></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="sec" id="sBk"></div><div class="big" id="bkWhen"></div><div class="hint" id="bkInfo"></div>
+      <div class="row"><button class="b" id="runBk"></button><button class="b alt" id="runBkNew"></button></div></div>
+    <div class="card"><div class="sec" id="sMd"></div><div class="big" id="mdWhen"></div><div class="hint" id="mdInfo"></div>
+      <div class="row"><button class="b" id="runMd"></button></div></div>
+  </div>
+  <div class="card"><div class="sec" id="sConn"></div><div class="kv" id="conn"></div>
+    <div class="hint" id="connHint" style="margin-top:10px"></div>
+    <div class="row"><button class="b alt" id="testBtn"></button></div><div id="testOut" class="hint" style="margin-top:8px"></div></div>
+  <div class="card"><div class="sec" id="sSec"></div><div class="hint" id="secTxt"></div></div>
+</div>
+
+<div class="view" id="v-rm">
+  <div class="card"><div class="sec"><span id="sRm"></span><span class="sp"></span><button class="b alt sm" id="rmRefresh"></button></div>
+    <div class="hint" id="rmFree" style="margin-bottom:6px"></div><div id="rmList"></div></div>
+</div>
+
+<div class="view" id="v-md">
+  <div class="card"><div class="sec" id="sMd2"></div><div class="hint" id="mdTxt"></div><div class="row"><button class="b alt" id="mdReset"></button></div></div>
+</div>
+
+<div class="view" id="v-lg"><div class="card"><div class="sec" id="sLg"></div><div id="logList"></div></div></div>
+
+<footer><span id="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
+</main>
+<script src="static/common.js"></script>
+<script src="static/icons.js"></script>
+<script>
+const $ = id => document.getElementById(id), tr = HL.tr;
+const hs = n => { for(const u of ["B","KB","MB","GB","TB"]){ if(n < 1024 || u === "TB") return (u === "B" ? Math.round(n) : n.toFixed(1)) + " " + u; n /= 1024; } };
+const dt = ts => ts ? new Date(ts * 1000).toLocaleString() : "—";
+let S = null;
+$("barIcon").innerHTML = HL.icon("mdi:nas"); $("tag").textContent = tr("Backup i multimedia z QNAP","QNAP backup & media"); $("by").textContent = tr("Stworzone przez","Created by");
+[["st",tr("Status","Status")],["rm",tr("Backupy na QNAP","Backups on QNAP")],["md",tr("Multimedia","Media")],["lg",tr("Historia","History")]].forEach(([id, l]) => {
+  const b = document.createElement("button"); b.textContent = l; b.dataset.id = id; b.onclick = () => show(id); $("tabs").append(b); });
+function show(id){ document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.id === id)); document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + id)); if(id === "rm") loadRemote(); }
+show("st");
+const T = {
+  sBk: tr("Backup Home Assistanta","Home Assistant backup"), sMd: tr("Multimedia z QNAP","Media from QNAP"), sConn: tr("Połączenie","Connection"),
+  runBk: tr("Wyślij backupy teraz","Upload backups now"), runBkNew: tr("Nowy backup + wyślij","New backup + upload"), runMd: tr("Pobierz multimedia teraz","Download media now"),
+  testBtn: tr("Testuj połączenie","Test connection"), cancelBtn: tr("Anuluj","Cancel"), sRm: tr("Backupy zapisane na QNAP","Backups stored on the QNAP"), rmRefresh: tr("Odśwież","Refresh"),
+  sMd2: tr("Pobieranie multimediów","Media download"), mdReset: tr("Pobierz wszystko od nowa","Re-download everything"), sLg: tr("Historia","History"), sSec: tr("Prywatność","Privacy"),
+  connHint: tr("Dane logowania ustawiasz w zakładce Konfiguracja dodatku (hasło nigdy nie jest tu pokazywane).","Set credentials in the add-on Configuration tab (the password is never shown here)."),
+  secTxt: tr("Ten dodatek nie otwiera żadnego portu w Twojej sieci - panel działa tylko przez Home Assistant. Łączy się wyłącznie wychodząco z Twoim QNAP po SMB. Używaj osobnego użytkownika QNAP z dostępem tylko do jednego udziału.",
+             "This add-on opens no port on your network - the panel is reachable only through Home Assistant. It only connects outward to your QNAP over SMB. Use a dedicated QNAP user with access to a single share."),
+  mdTxt: tr("Nowe i zmienione pliki z folderu QNAP są kopiowane do folderu media HA (jednokierunkowo, nic nie jest kasowane). Plik jest pobierany ponownie tylko, gdy zmieni się rozmiar lub data.",
+            "New and changed files from the QNAP folder are copied into the HA media folder (one way, nothing is deleted). A file is downloaded again only when its size or date changes.")};
+for(const [k, v] of Object.entries(T)) if($(k)) $(k).textContent = v;
+
+async function refresh(){
+  try{ S = await HL.api("state"); }catch(e){ return; }
+  const o = S.options, j = S.job;
+  $("warn").hidden = S.configured;
+  if(!S.configured) $("warn").innerHTML = `<div class="sec">${tr("Skonfiguruj QNAP","Set up your QNAP")}</div><div class="hint">${tr("Otwórz zakładkę Konfiguracja tego dodatku i podaj adres QNAP, nazwę udziału, użytkownika i hasło. Potem wróć tu i kliknij Testuj połączenie.","Open this add-on's Configuration tab and enter the QNAP address, share name, username and password. Then come back and press Test connection.")}</div>`;
+  $("jobCard").hidden = !j.running;
+  if(j.running){
+    $("jobTitle").textContent = ({backup:tr("Backup w toku","Backup running"),media:tr("Pobieranie multimediów","Downloading media"),fetch:tr("Pobieranie backupu","Fetching backup")})[j.kind] || "";
+    $("jobStep").textContent = j.step + (j.files_total ? ` (${j.files_done}/${j.files_total})` : "");
+    $("jobBar").style.width = (j.files_total ? Math.round(100 * j.files_done / j.files_total) : 100) + "%";
+  }
+  [$("runBk"), $("runBkNew"), $("runMd")].forEach(b => b.disabled = j.running || !S.configured);
+  $("runMd").disabled = j.running || !S.configured || !o.media_enabled;
+  $("bkWhen").textContent = S.last_backup ? HL.ago(S.last_backup) : tr("jeszcze nie było","not yet");
+  $("bkInfo").textContent = (S.last_backup ? dt(S.last_backup) + " · " : "") + (o.backup_enabled ? (o.backup_time ? tr("codziennie o ","daily at ") + o.backup_time : tr("tylko ręcznie","manual only")) + " · " + tr("trzymam ","keeping ") + o.backup_keep : tr("wyłączone w konfiguracji","disabled in configuration")) + " · " + tr("lokalnie: ","local: ") + S.local_backups;
+  $("mdWhen").textContent = S.last_media ? HL.ago(S.last_media) : tr("jeszcze nie było","not yet");
+  $("mdInfo").textContent = o.media_enabled ? (S.last_media ? dt(S.last_media) + " · " : "") + (o.media_every_hours ? tr("co ","every ") + o.media_every_hours + " h" : tr("tylko ręcznie","manual only")) + " · " + tr("śledzone pliki: ","tracked files: ") + S.media_tracked : tr("wyłączone w konfiguracji","disabled in configuration");
+  const rows = [[tr("Adres","Address"), o.host || "—"], [tr("Udział","Share"), o.share || "—"], [tr("Użytkownik","User"), o.username || "—"], [tr("Hasło","Password"), o.password_set ? "••••••••" : tr("brak","not set")], ["SMB", o.smb_version],
+    [tr("Folder backupów","Backup folder"), o.backup_dir], [tr("Folder multimediów","Media folder"), o.media_remote_dir + " → /media/" + o.media_local_dir]];
+  $("conn").innerHTML = rows.map(([a, b]) => `<span>${HL.esc(a)}</span><span>${HL.esc(b)}</span>`).join("");
+  $("mdReset").disabled = j.running;
+  $("logList").innerHTML = S.history.length ? S.history.map(h => `<div class="li"><span class="badge ${h.ok ? "ok" : "err"}">${h.ok ? "OK" : tr("błąd","error")}</span><span class="badge">${HL.esc(h.kind)}</span><span class="n">${HL.esc(h.text)}</span><span class="hint">${dt(h.ts)}</span></div>`).join("") : `<div class="hint">${tr("Brak wpisów.","No entries yet.")}</div>`;
+}
+$("runBk").onclick = () => run("backup", false); $("runBkNew").onclick = () => run("backup", true); $("runMd").onclick = () => run("media", false);
+async function run(k, create){ try{ await HL.post("run/" + k, {create}); HL.toast(tr("Start ✓","Started ✓")); refresh(); }catch(e){ HL.toast(e.message, true); } }
+$("cancelBtn").onclick = async () => { await HL.post("cancel"); HL.toast(tr("Anulowanie…","Cancelling…")); };
+$("testBtn").onclick = async () => {
+  $("testOut").textContent = tr("Łączę…","Connecting…");
+  const r = await HL.post("test");
+  $("testOut").innerHTML = r.ok ? `✅ ${tr("Połączono","Connected")}${r.free != null ? " · " + tr("wolne miejsce: ","free space: ") + hs(r.free) : ""}${r.backup_dir ? " · " + tr("folder backupów: ","backup folder: ") + HL.esc(r.backup_dir) : ""}${r.media_dir ? " · " + tr("folder multimediów: ","media folder: ") + HL.esc(r.media_dir) : ""}` : "❌ " + HL.esc(r.error);
+};
+async function loadRemote(){
+  $("rmList").innerHTML = `<div class="hint">${tr("Ładuję…","Loading…")}</div>`;
+  try{
+    const r = await HL.api("remote");
+    $("rmFree").textContent = r.free != null ? tr("Wolne miejsce na QNAP: ","Free space on the QNAP: ") + hs(r.free) : "";
+    $("rmList").innerHTML = r.items.length ? "" : `<div class="hint">${tr("Brak backupów w folderze.","No backups in the folder.")}</div>`;
+    r.items.forEach(i => {
+      const d = document.createElement("div"); d.className = "li";
+      d.innerHTML = `<span class="n">${HL.esc(i.name)}<div class="hint">${dt(i.mtime)} · ${hs(i.size)}</div></span>${i.local ? `<span class="badge ok">${tr("jest w HA","in HA")}</span>` : `<button class="b alt sm" data-a="f">${tr("Pobierz do HA","Fetch to HA")}</button>`}<button class="b red sm" data-a="d">${tr("Usuń","Delete")}</button>`;
+      const f = d.querySelector('[data-a=f]'); if(f) f.onclick = async () => { f.disabled = true; try{ await HL.post("fetch", {name:i.name}); HL.toast(tr("Skopiowano do backupów HA ✓","Copied to HA backups ✓")); loadRemote(); }catch(e){ HL.toast(e.message, true); f.disabled = false; } };
+      d.querySelector('[data-a=d]').onclick = async () => { if(!confirm(tr("Usunąć z QNAP: ","Delete from the QNAP: ") + i.name + "?")) return; try{ await HL.post("delete", {name:i.name}); loadRemote(); }catch(e){ HL.toast(e.message, true); } };
+      $("rmList").append(d);
+    });
+  }catch(e){ $("rmList").innerHTML = `<div class="hint" style="color:var(--error-color)">${HL.esc(e.message)}</div>`; }
+}
+$("rmRefresh").onclick = loadRemote;
+$("mdReset").onclick = async () => { if(!confirm(tr("Następna synchronizacja pobierze wszystko od nowa. Kontynuować?","The next sync will download everything again. Continue?"))) return; await HL.post("media/reset"); HL.toast("✓"); refresh(); };
+refresh(); setInterval(refresh, 2500);
+</script>
+</body>
+</html>

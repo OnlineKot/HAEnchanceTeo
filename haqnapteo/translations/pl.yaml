@@ -1,0 +1,49 @@
+configuration:
+  host:
+    name: Adres QNAP
+    description: IP lub nazwa QNAP-a (np. 192.168.1.20).
+  share:
+    name: Nazwa udziału
+    description: Udział SMB na QNAP (np. Backup). Załóż osobnego użytkownika z dostępem tylko do tego udziału.
+  username:
+    name: Użytkownik
+    description: Użytkownik QNAP z odczytem i zapisem do udziału.
+  password:
+    name: Hasło
+    description: Przechowywane przez Home Assistant, nigdy nie pokazywane w panelu.
+  domain:
+    name: Domena (opcjonalnie)
+    description: Grupa robocza/domena, puste dla lokalnego użytkownika QNAP.
+  smb_version:
+    name: Wersja SMB
+    description: 3 dla aktualnego firmware QNAP, 2 dla bardzo starych urządzeń.
+  backup_enabled:
+    name: Kopie zapasowe Home Assistanta
+    description: Kopiuj backupy HA na QNAP według harmonogramu.
+  backup_dir:
+    name: Folder backupów na QNAP
+    description: Folder w udziale (tworzony automatycznie).
+  backup_keep:
+    name: Ile backupów trzymać na QNAP
+    description: Starsze backupy z tego folderu są usuwane po udanym wysłaniu.
+  backup_time:
+    name: Godzina backupu (GG:MM)
+    description: Codzienna godzina wysyłki. Puste = tylko ręcznie z panelu.
+  create_backup:
+    name: Najpierw utwórz świeży backup
+    description: Przed zaplanowaną wysyłką poproś HA o nowy pełny backup.
+  media_enabled:
+    name: Pobieraj multimedia z QNAP
+    description: Kopiuj nowe pliki z folderu QNAP do folderu media HA.
+  media_remote_dir:
+    name: Folder multimediów na QNAP
+    description: Folder w udziale, z którego pobieramy.
+  media_local_dir:
+    name: Lokalny podfolder media
+    description: Pliki trafiają do /media/<ten folder> (widoczne w Multimediach HA).
+  media_every_hours:
+    name: Synchronizacja multimediów co N godzin
+    description: 0 = tylko ręcznie z panelu.
+  log_level:
+    name: Poziom logów
+    description: Szczegółowość logów dodatku.
