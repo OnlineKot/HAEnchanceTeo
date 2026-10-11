@@ -1,0 +1,13 @@
+configuration:
+  cat_name:
+    name: Imię kota
+    description: Używane w panelu, powiadomieniach i nazwach sensorów (sensor.<imie>_last_fed ...). Można też zmienić w panelu.
+  notify_services:
+    name: Telefony do przypomnień
+    description: Usługi powiadomień aplikacji mobilnej, np. mobile_app_iphone. Przypomnienia mają przycisk „Zrobione”, także na ekranie blokady.
+  api_enabled:
+    name: Punkt dla Skrótów / Siri
+    description: Otwiera port 8771 (wymaga tokenu). Pozwala zapisać „nakarmiony” jednym dotknięciem lub komendą głosową.
+  log_level:
+    name: Poziom logów
+    description: Szczegółowość logów dodatku.

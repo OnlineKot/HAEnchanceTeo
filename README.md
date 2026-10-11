@@ -32,6 +32,9 @@ stop-if. Run from an iPhone Shortcut, by time or by an entity, with **live step 
 ### 🤖 [HAAITeo](haaiteo/DOCS.md)
 **Claude or Gemini inside Home Assistant** – ask, control and modify. Changes are staged with a diff and need your approval (with undo); dangerous domains are blocked server-side. Optional lock-screen / Siri shortcut with Approve / Reject notifications on the phone.
 
+### 🐈‍⬛ [HAFreudTeo](hafreudteo/DOCS.md)
+**A calm cat companion** (for Freud): who fed the cat and when – with protection against double feeding – plus water, litter, flea / deworming / vaccine reminders, weight chart, phone reminders with a *Done* button and HA sensors.
+
 ### 🗄 [HAQnapTeo](haqnapteo/DOCS.md)
 **Backups to your QNAP and media from it.** Uploads Home Assistant backups to a QNAP share over SMB with schedule and retention,
 downloads new media into HA, lists / fetches / deletes backups on the NAS. **Private: no network ports** – panel only through Home Assistant.

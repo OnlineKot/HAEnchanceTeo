@@ -1,0 +1,33 @@
+name: HAFreudTeo
+version: "1.0.0"
+slug: hafreudteo
+description: A small, calm cat companion - feeding log (no double feeding), water, litter, flea / deworming / vaccine reminders and weight, with lock-screen reminders. By TeodorTeo.com
+url: https://teodorteo.com
+arch:
+  - amd64
+  - aarch64
+init: false
+startup: application
+boot: auto
+homeassistant_api: true
+hassio_api: true
+ingress: true
+ingress_port: 8099
+panel_admin: false
+panel_icon: mdi:cat
+panel_title: Freud
+ports:
+  8771/tcp: 8771
+ports_description:
+  8771/tcp: "Shortcuts / Siri endpoint (only listens when api_enabled is on; token required)"
+options:
+  cat_name: Freud
+  notify_services: []
+  api_enabled: false
+  log_level: info
+schema:
+  cat_name: str
+  notify_services:
+    - str?
+  api_enabled: bool
+  log_level: list(debug|info|warning)
