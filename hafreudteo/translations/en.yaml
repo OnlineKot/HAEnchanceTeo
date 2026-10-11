@@ -5,6 +5,9 @@ configuration:
   cat_age_years:
     name: Age (years)
     description: Used once to set an approximate birthday if you have not entered one in the panel. 11+ years switches on gentle senior defaults (vet check-up every 6 months, weight alert at 5 %).
+  cat_birthday:
+    name: Birthday (MM-DD)
+    description: Day and month of the birthday, e.g. 12-03. Together with the age it gives the exact date; you also get a notification on the day.
   notify_services:
     name: Phones to remind
     description: Companion app notify services, e.g. mobile_app_iphone. Reminders arrive with a "Done" button, also on the lock screen.

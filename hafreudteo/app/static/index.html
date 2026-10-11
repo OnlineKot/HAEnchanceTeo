@@ -82,7 +82,7 @@ async function load(){ try{ S = await HL.api("state"); render(); }catch(e){ /* k
 function render(){
   if(!S) return;
   document.title = S.name; $("barT").textContent = S.name; $("nm").textContent = S.name; $("av").src = "avatar" + (S._av ? "?" + S._av : "");
-  const a = age(S.cfg.birthday, S.cfg.birthday_approx); $("sub").textContent = [a, S.weight_change != null && Math.abs(S.weight_change) >= S.weight_alert ? tr("zmiana wagi ","weight change ") + (S.weight_change > 0 ? "+" : "") + S.weight_change + "%" : ""].filter(Boolean).join(" · ");
+  const a = age(S.cfg.birthday, S.cfg.birthday_approx); $("sub").textContent = [a, S.birthday && S.birthday.in_days <= 60 ? (S.birthday.in_days === 0 ? tr("dziś urodziny - ","birthday today - ") + S.birthday.turns : tr("urodziny za ","birthday in ") + S.birthday.in_days + tr(" dni"," days")) : "", S.weight_change != null && Math.abs(S.weight_change) >= S.weight_alert ? tr("zmiana wagi ","weight change ") + (S.weight_change > 0 ? "+" : "") + S.weight_change + "%" : ""].filter(Boolean).join(" · ");
   ({today: rToday, hist: rHist, wt: rWt, set: rSet})[tab]();
 }
 

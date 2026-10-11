@@ -37,7 +37,7 @@ TICK = int(os.environ.get("HFT_TICK", 60))
 log = logging.getLogger("hafreudteo")
 
 DEFAULT_CFG = {
-    "name": "", "birthday": "", "birthday_approx": False, "senior_applied": False, "portion_g": 40, "quiet": ["22:00", "07:00"], "repeat_min": 60, "who": "",
+    "name": "", "birthday": "", "birthday_approx": False, "senior_applied": False, "bday_notified": 0, "portion_g": 40, "quiet": ["22:00", "07:00"], "repeat_min": 60, "who": "",
     "tasks": {
         "feed": {"enabled": True, "remind": True, "times": ["07:00", "18:00"], "grace_min": 30},
         "water": {"enabled": True, "remind": False, "every_h": 24},
@@ -136,7 +136,7 @@ def load():
         d = json.loads(STORE.read_text())
         merged = json.loads(json.dumps(DEFAULT_CFG))
         c = d.get("cfg", {})
-        for k in ("name", "birthday", "birthday_approx", "senior_applied", "portion_g", "quiet", "repeat_min", "who"):
+        for k in ("name", "birthday", "birthday_approx", "senior_applied", "bday_notified", "portion_g", "quiet", "repeat_min", "who"):
             if k in c:
                 merged[k] = c[k]
         for t in TASK_IDS:
@@ -225,9 +225,20 @@ def apply_age_option():
         yrs = int(OPT.get("cat_age_years") or 0)
     except (TypeError, ValueError):
         yrs = 0
-    if not cfg.get("birthday") and yrs > 0:
+    md = re.fullmatch(r"(\d{2})-(\d{2})", str(OPT.get("cat_birthday") or ""))
+    if (not cfg.get("birthday") or cfg.get("birthday_approx")) and yrs > 0:
         n = datetime.now(tz)
-        cfg["birthday"], cfg["birthday_approx"], changed = f"{n.year - yrs:04d}-{n.month:02d}-{min(n.day, 28):02d}", True, True
+        mo, dy = (int(md.group(1)), int(md.group(2))) if md else (n.month, min(n.day, 28))
+        year = n.year - yrs - (1 if md and (mo, dy) > (n.month, n.day) else 0)   # age today == yrs, birthday still ahead this year
+        try:
+            datetime(year, mo, dy)
+            b = f"{year:04d}-{mo:02d}-{dy:02d}"
+        except ValueError:
+            b = f"{year:04d}-{n.month:02d}-{min(n.day, 28):02d}"
+        if b != cfg.get("birthday"):
+            cfg["birthday"], changed = b, True
+        cfg["birthday_approx"] = not md      # only the year is a guess when the real day and month are known
+        changed = True
     if is_senior() and not cfg.get("senior_applied"):
         cfg["tasks"]["vet"]["every_h"] = min(cfg["tasks"]["vet"]["every_h"], 4380)   # senior cats: check-up every 6 months
         cfg["senior_applied"], changed = True, True
@@ -237,6 +248,21 @@ def apply_age_option():
 
 def weights():
     return [(e["ts"], e["value"]) for e in events if e["task"] == "weight" and isinstance(e.get("value"), (int, float))]
+
+
+def birthday_info(now=None):
+    b = cfg.get("birthday")
+    if not b:
+        return None
+    n = now or datetime.now(tz)
+    try:
+        d = datetime.strptime(b, "%Y-%m-%d")
+        nxt = datetime(n.year, d.month, d.day, tzinfo=n.tzinfo)
+    except ValueError:
+        return None
+    if nxt.date() < n.date():
+        nxt = datetime(n.year + 1, d.month, d.day, tzinfo=n.tzinfo)
+    return {"in_days": (nxt.date() - n.date()).days, "turns": nxt.year - d.year}
 
 
 def weight_alert_pct():
@@ -418,6 +444,12 @@ async def scheduler():
                     continue
                 sent[tid] = {"ts": time.time(), "n": (rec["n"] + 1) if rec else 1}
                 await notify(tid, L("remind", cat=cat_name(), task=L(tid)))
+            bi = birthday_info(now)
+            if bi and bi["in_days"] == 0 and cfg.get("bday_notified") != now.year and now.hour >= 8:
+                cfg["bday_notified"] = now.year
+                save()
+                for svc in notify_services():
+                    await ha_call("POST", f"/services/notify/{svc}", {"title": cat_name(), "message": (f"{cat_name()} ma dziś urodziny - {bi['turns']} lat" if lang == "pl" else f"{cat_name()}'s birthday today - {bi['turns']} years")})
             if now.minute % 10 == 0:
                 await publish()
         except Exception:  # noqa: BLE001
@@ -463,7 +495,7 @@ def request_who(request, body):
 
 def view_state():
     now = datetime.now(tz)
-    return {"name": cat_name(), "cfg": cfg, "status": all_status(now), "now": now.timestamp(), "weight_change": weight_change(), "weight_alert": weight_alert_pct(), "senior": is_senior(),
+    return {"name": cat_name(), "cfg": cfg, "status": all_status(now), "now": now.timestamp(), "weight_change": weight_change(), "weight_alert": weight_alert_pct(), "birthday": birthday_info(now), "senior": is_senior(),
             "events": events[-400:][::-1], "has_avatar": AVATAR.exists(), "notify": notify_services(), "api_enabled": bool(OPT.get("api_enabled")),
             "api_port": API_PORT, "lang": lang, "sensors": slug(), "summary": summary_text()}
 
