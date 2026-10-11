@@ -407,7 +407,7 @@ async def live_send(act, st, first, force=False):
     run.update(t=time.time(), sig=sig)
     if first:
         run["started"] = time.time()
-    await push_feed({"device": "Live Activity", "device_id": "", "tile": "", "label": act["name"], "icon": "🏝️",
+    await push_feed({"device": "Live Activity", "device_id": "", "tile": "", "label": act["name"], "icon": "mdi:cellphone",
                      "type": "live", "value": prog if prog is not None else payload["message"], "ok": True, "error": "",
                      "source": "start" if first else "update", "entity_id": act["entity_id"]})
     return True
@@ -422,7 +422,7 @@ async def live_end(act):
             await ha_post(f"/services/notify/{phone}", {"message": "clear_notification", "data": {"tag": act["tag"]}})
         except web.HTTPException as exc:
             log.warning("could not end %s on %s: %s", act["name"], phone, exc.text)
-    await push_feed({"device": "Live Activity", "device_id": "", "tile": "", "label": act["name"], "icon": "🏝️",
+    await push_feed({"device": "Live Activity", "device_id": "", "tile": "", "label": act["name"], "icon": "mdi:cellphone",
                      "type": "live", "value": None, "ok": True, "error": "", "source": "end", "entity_id": act["entity_id"]})
 
 
@@ -621,7 +621,7 @@ async def run_event(device, name, payload):
     if not name:
         return {"ok": False, "error": "event name required"}
     payload = payload if isinstance(payload, dict) and len(json.dumps(payload)) < 2000 else {}
-    entry = {"device": device["name"], "device_id": device["id"], "tile": "", "label": name, "icon": "📡",
+    entry = {"device": device["name"], "device_id": device["id"], "tile": "", "label": name, "icon": "mdi:cast",
              "type": "event", "value": payload or None, "ok": True, "error": "", "source": "device", "entity_id": ""}
     await push_feed(entry)
     try:

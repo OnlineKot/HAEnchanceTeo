@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.15.1
+- Minimalist pass: decorative emoji removed from the interface and notification texts (plain labels, calmer look). Functional symbols (check, star, arrows) stay.
+
 ## 1.15.0
 - Admin vs. everyone else: the add-on panel is admin-only in Home Assistant (`panel_admin: true`). Version / "update available" information and the add-on system log are shown only in that admin panel - never on the public port or in the quick/kiosk view that other people use. New "Show add-on system log" button in the Log tab.
 

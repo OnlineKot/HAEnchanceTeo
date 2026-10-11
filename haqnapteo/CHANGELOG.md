@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.2
+- Minimalist pass: decorative emoji removed from the interface and notification texts (plain labels, calmer look). Functional symbols (check, star, arrows) stay.
+
 ## 1.2.1
 - Fix: the media source is shown at `media-source://media_source/local/qnap_media` (HA Media → My media → qnap_media) - the panel/docs showed a wrong path. Mounting now waits for the Supervisor result and reports a failed mount (with hints) instead of claiming success.
 

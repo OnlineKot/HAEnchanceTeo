@@ -313,9 +313,9 @@ def step_text(st):
         return st["label"]
     t = st["type"]
     return {"service": st.get("service", ""), "scene": st.get("entity_id", ""), "script": st.get("entity_id", ""),
-            "announce": "📣 " + st.get("text", "")[:40], "notify": "🔔 " + st.get("text", "")[:40], "wait": f"⏳ {int(st.get('seconds', 0))} s",
-            "wait_state": f"⏳ {st.get('entity_id', '')} → {st.get('state', '')}", "fade": f"🌅 {st.get('entity_id', '')} → {st.get('to', '')}%",
-            "stop_if": "⛔ stop-if"}.get(t, t)
+            "announce": st.get("text", "")[:40], "notify": st.get("text", "")[:40], "wait": f"{int(st.get('seconds', 0))} s",
+            "wait_state": f"{st.get('entity_id', '')} → {st.get('state', '')}", "fade": f"{st.get('entity_id', '')} → {st.get('to', '')}%",
+            "stop_if": "stop-if"}.get(t, t)
 
 
 async def live_update(run, r, message, done=False, wait_until=None, failed=False):
@@ -430,7 +430,7 @@ def public_run(run):
 
 async def execute(run, r):
     run["status"] = "running"
-    final_msg, failed = "✅ Done", False
+    final_msg, failed = "Done", False
     st = {}
     try:
         steps = r["steps"]
@@ -450,13 +450,13 @@ async def execute(run, r):
         run["step"] = len(steps)
         run["status"] = "done"
     except StopRoutine:
-        run["status"], final_msg = "stopped", "⛔ " + (st.get("label") or "Stopped")
+        run["status"], final_msg = "stopped", (st.get("label") or "Stopped")
         run["log"].append({"ts": time.time(), "msg": "stopped by condition"})
     except asyncio.CancelledError:
-        run["status"], final_msg = "cancelled", "⛔ Stopped"
+        run["status"], final_msg = "cancelled", "Stopped"
         raise
     except Exception as exc:  # noqa: BLE001
-        run["status"], failed, final_msg = "error", True, "⚠ " + str(exc)[:80]
+        run["status"], failed, final_msg = "error", True, str(exc)[:80]
         log.warning("routine %s failed: %s", r["name"], exc)
     finally:
         run["ended"] = time.time()
@@ -748,7 +748,7 @@ TEMPLATES = {
         {"type": "announce", "text": "Do zobaczenia!"}]},
     "movie": {"name": "Seans", "icon": "mdi:movie-open", "color": "#E91E63", "steps": [
         {"type": "fade", "entity_id": "light.salon", "kind": "light", "from": None, "to": 15, "seconds": 20, "label": "Przyciemniam"},
-        {"type": "notify", "text": "Seans zaczyna się 🍿"}]},
+        {"type": "notify", "text": "Seans zaczyna się"}]},
 }
 
 

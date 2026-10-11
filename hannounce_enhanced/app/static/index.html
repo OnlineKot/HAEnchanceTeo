@@ -67,9 +67,8 @@ audio{width:100%;margin-top:10px}
 .tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
 .tools input[type=search]{flex:1;min-width:150px}
 #nowBar .nrow{display:flex;gap:12px;align-items:center;padding:6px 0}#nowBar .nrow+.nrow{border-top:1px solid var(--divider-color)}
-#nowBar .pulse{width:12px;height:12px;border-radius:50%;background:var(--primary-color);flex:none;animation:np 1.2s infinite}
+#nowBar .pulse{width:8px;height:8px;border-radius:50%;background:var(--primary-color);flex:none}
 #nowBar .pulse.q{background:var(--warning-color);animation:none}
-@keyframes np{0%{box-shadow:0 0 0 0 rgba(var(--rgb-primary-color),.5)}100%{box-shadow:0 0 0 10px transparent}}
 #nowBar .bar{height:4px;border-radius:2px;background:rgba(var(--rgb-primary-color),.2);overflow:hidden;margin-top:6px}#nowBar .bar i{display:block;height:100%;background:var(--primary-color);transition:width .3s linear}
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;max-width:90%;z-index:9;box-shadow:var(--sh)}
 #toast.on{opacity:1}
@@ -129,7 +128,7 @@ html.embedded header{display:none}
 </head>
 <body>
 <main>
-<header><div class="logo">📣</div><div><h1>HAnnounce Enhanced</h1><small data-i="tagline"></small></div></header>
+<header><div><h1>HAnnounce Enhanced</h1><small data-i="tagline"></small></div></header>
 
 <div class="card" id="nowBar" hidden style="border-color:var(--primary-color);padding:12px 16px"></div>
 
@@ -295,31 +294,31 @@ html.embedded header{display:none}
 
 <script>
 const L = {
- en:{tagline:"Announcements for your speakers",netTitle:"Network",netLocal:"Local address",netExt:"External address",netChecked:"checked",netRefresh:"Refresh",netCopy:"Copy",netErr:"Could not check the external IP",netOff:"External IP check is off (option check_external_ip).",netChanged:"IP changed",netWarn:"From outside your home you need port forwarding on the router (or a VPN such as Tailscale/WireGuard). This address is plain HTTP – a token sent over the internet can be read; prefer a VPN or an HTTPS reverse proxy.",tokURLext:"URL (from outside the home)",tabLive:"🏝️ Live",nowPlaying:"Announcing now",nowQueued:"Queued",nowOn:"on",liveTitle:"Live Activity – Dynamic Island & Lock Screen",
+ en:{tagline:"Announcements for your speakers",netTitle:"Network",netLocal:"Local address",netExt:"External address",netChecked:"checked",netRefresh:"Refresh",netCopy:"Copy",netErr:"Could not check the external IP",netOff:"External IP check is off (option check_external_ip).",netChanged:"IP changed",netWarn:"From outside your home you need port forwarding on the router (or a VPN such as Tailscale/WireGuard). This address is plain HTTP – a token sent over the internet can be read; prefer a VPN or an HTTPS reverse proxy.",tokURLext:"URL (from outside the home)",tabLive:"Live",nowPlaying:"Announcing now",nowQueued:"Queued",nowOn:"on",liveTitle:"Live Activity – Dynamic Island & Lock Screen",
   liveInfo:"Shows the announcement in progress (what, where, countdown) on the iPhone Dynamic Island and Lock Screen (Android: Live Update) via the Home Assistant Companion app. Needs iOS 17.2+, Home Assistant Core 2026.7+ and Live Activities enabled in the app (Settings → Live Activities). The status is also published as sensor.hannounce_status. An admin can also give a person their own live status per token (Tokens tab) or per announcement (API field live).",
   lvOn:"Show announcements as a Live Activity on the phones below",lvPhones:"Phones (Companion app)",lvOnly:"Only for announcements from (empty = all)",lvOnlyHint:"Sources: the panel/admin or a token name.",
   lvTitle:"Title",lvCrit:"Island compact text",lvMsg:"Message",lvMsgHint:"Placeholders: {text} {speakers} {source} {user}",lvHide:"Hide the spoken text (privacy – show only that something is announced)",lvCount:"Countdown timer until the announcement ends",
   lvIcon:"Icon",lvColor:"Color",lvAdv:"Advanced",lvEnd:"Keep after end (s)",lvUrl:"Open on tap",lvTest:"Test (6 s)",lvNoPhone:"No phone found (notify.mobile_app_*). Install the Home Assistant app on the phone.",lvSaved:"Saved ✓",lvTested:"Test sent to the phone",
-  tokLive:"Live status on these phones (gives them a Live Activity of this token's announcements)",tokLiveHint:"Optional. E.g. the person who owns the shortcut sees their announcement on their Dynamic Island.",tokens:"🔑 Tokens",tokTitle:"Tokens for shortcuts",tokNew:"+ New token",cancel:"Cancel",refresh:"Refresh",
+  tokLive:"Live status on these phones (gives them a Live Activity of this token's announcements)",tokLiveHint:"Optional. E.g. the person who owns the shortcut sees their announcement on their Dynamic Island.",tokens:"Tokens",tokTitle:"Tokens for shortcuts",tokNew:"+ New token",cancel:"Cancel",refresh:"Refresh",
   tokHint:"A token lets one shortcut (or app) announce without your admin key. It can be limited to chosen speakers and revoked any time.",
   tokName:"Name (e.g. the shortcut or person)",tokNamePh:"iPhone shortcut",tokSup:"Supervised: save everything this token says in the log",
   tokSpk:"Speakers (default targets)",tokAll:"Allow it to announce on other speakers too",tokTts:"May use text-to-speech",tokSnd:"May play library sounds",tokAct:"May run scripts / scenes",
   tokMax:"Max volume % (empty = no limit)",tokTtsHint:"The TTS engine, language and voice currently chosen in the Say tab become this token's defaults, so the shortcut only needs to send the message.",
   tokCreate:"Create token",tokShown:"Copy the token now - it is shown only once!",tokSteps:"Shortcuts app → + → “Get Contents of URL”: paste the URL, Show More → Method POST → add the two headers → Request Body: JSON with a “message” text field (use “Ask for Input” or “Dictate Text” as its value). Name it and add it to the lock screen / Siri.",
   tokURL:"URL",tokAuth:"Header Authorization",tokCT:"Header Content-Type",tokBody:"JSON body (text)",tokBody2:"JSON body (library sound)",tokRevoke:"Revoke",tokConfirm:"Revoke this token? Shortcuts using it will stop working.",
-  tokNone:"No tokens yet.",tokCopy:"Copy token",tokRecURL:"Voice URL (record from the lock screen)",tokRecSteps:"Voice shortcut: “Record Audio” → “Get Contents of URL” with this Voice URL, method POST, Request Body = File → Recorded Audio, same Authorization header (the token's speakers are used; optional ?targets=media_player.x). It is announced once and not saved.",tokCopyAny:"Token and ready-to-paste values",tokOld:"Created before copying was possible - revoke and create a new one",tokUsed:"last used",tokNever:"never used",tokUses:"uses",tokSupB:"👁 supervised",tokLimited:"limited speakers",tokNeed:"Enter a name and select at least one speaker.",
-  logTitle:"Announcement log",addonLog:"Show add-on system log (admin)",logClear:"Clear log",logAll:"All sources",logConfirm:"Clear the whole log?",logNoText:"(text not recorded)",logEmpty:"Nothing logged yet.",logViewTok:"Log",stop2:"■ Stop",stopped:"Stopped ■",preparing:"Preparing voice…",playing:"Playing ♪",queued:"Queued - plays in {s} s",updNew:"New version available",updHave:"you have",updHow:"Open the add-on page and tap Update.",updOpen:"Open add-on page",updAuto:"auto-update on",updManual:"auto-update off (enable it on the add-on page)",copy:"Copy",copied:"Copied ✓",allThree:"All three ways to open it:",w1:"① Script in HA",w2:"② iOS shortcut (Open URL)",w3:"③ Standalone app (Add to Home Screen)",quick:"⚡ Quick",qSounds:"Favorite sounds - tap to announce",qMsg:"Say something",qNoFav:"No favorite sounds yet. Mark sounds with ★ in the Library.",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
-  setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",speakers:"Speakers",app:"📱 App",
+  tokNone:"No tokens yet.",tokCopy:"Copy token",tokRecURL:"Voice URL (record from the lock screen)",tokRecSteps:"Voice shortcut: “Record Audio” → “Get Contents of URL” with this Voice URL, method POST, Request Body = File → Recorded Audio, same Authorization header (the token's speakers are used; optional ?targets=media_player.x). It is announced once and not saved.",tokCopyAny:"Token and ready-to-paste values",tokOld:"Created before copying was possible - revoke and create a new one",tokUsed:"last used",tokNever:"never used",tokUses:"uses",tokSupB:"supervised",tokLimited:"limited speakers",tokNeed:"Enter a name and select at least one speaker.",
+  logTitle:"Announcement log",addonLog:"Show add-on system log (admin)",logClear:"Clear log",logAll:"All sources",logConfirm:"Clear the whole log?",logNoText:"(text not recorded)",logEmpty:"Nothing logged yet.",logViewTok:"Log",stop2:"■ Stop",stopped:"Stopped ■",preparing:"Preparing voice…",playing:"Playing ♪",queued:"Queued - plays in {s} s",updNew:"New version available",updHave:"you have",updHow:"Open the add-on page and tap Update.",updOpen:"Open add-on page",updAuto:"auto-update on",updManual:"auto-update off (enable it on the add-on page)",copy:"Copy",copied:"Copied ✓",allThree:"All three ways to open it:",w1:"① Script in HA",w2:"② iOS shortcut (Open URL)",w3:"③ Standalone app (Add to Home Screen)",quick:"Quick",qSounds:"Favorite sounds - tap to announce",qMsg:"Say something",qNoFav:"No favorite sounds yet. Mark sounds with ★ in the Library.",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
+  setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",speakers:"Speakers",app:"App",
   actBefore:"Run before (script / scene)",actAfter:"Run after (script / scene)",actNone:"— none —",
   ttsent:"TTS engine",message:"Message",lang:"Language",voice:"Voice",deflt:"(default)",ttsnone:"No TTS engine found in Home Assistant",
   announce:"Announce",rec:"● Record",stop:"■ Stop",devrec:"Choose a recording (Voice Memos / Files)",recCount:"3-2-1 countdown",recNs:"Reduce noise",recAgain:"press Record to redo",recDenied:"Microphone permission denied - allow it in the browser/app settings.",recHelpT:"Why is there no Record button here?",recHelp1:"The browser only allows the microphone on secure (HTTPS) pages. Over plain http:// (typical for Home Assistant in the app) it is blocked, and iPhone cannot record audio from a file picker (it would open the camera).",recHelp2:"Easy way: record in the Voice Memos app, then press the button above and choose the recording. Or use a Shortcut with “Record Audio” (see Tokens tab: voice URL).",recHelp3:"Best: open Home Assistant over HTTPS (Nabu Casa or a Let's Encrypt certificate, e.g. the HACertTeo add-on) and the Record button appears.",
   nomic:"Browser microphone needs HTTPS - use \"Use device recorder\" or open HA over HTTPS.",file:"Audio file",type:"Sound",freq:"Frequency Hz",dur:"Duration s",rep:"Repeat",
   preview:"▶ Preview",name:"Name",once:"Announce once",save:"Save to library",saveAnn:"Save & announce",empty:"Nothing here yet.",del:"Delete",rename:"Rename",
   sel:"Select at least one speaker.",sent:"Announced ✓",saved:"Saved ✓",confirmDel:"Delete this sound?",by:"Created by",nomsg:"Type a message.",nofile:"Choose or record a sound first.",newname:"New name",
-  mkscript:"📱 Create script",scriptOk:"Script created: ",scriptManual:"Could not create it automatically. Paste into scripts.yaml, then reload scripts:",
+  mkscript:"Create script",scriptOk:"Script created: ",scriptManual:"Could not create it automatically. Paste into scripts.yaml, then reload scripts:",
   scriptHow:"iPhone: long-press the lock screen → Customize → add the Home Assistant widget → choose this script.",
   askkey:"API key (from add-on configuration)",search:"Search sounds…",dedupe:"Remove duplicates",removed:"Removed duplicates: ",noDup:"No duplicates found.",
-  rescan:"🔍 Scan speakers",dedupeSpk:"Hide duplicates",showHidden:"Show hidden",spkHint:"Detected media players. ★ favorite · Calibrate measures how the speaker behaves · Remove hides it from the lists (restore any time).",
+  rescan:"Scan speakers",dedupeSpk:"Hide duplicates",showHidden:"Show hidden",spkHint:"Detected media players. ★ favorite · Calibrate measures how the speaker behaves · Remove hides it from the lists (restore any time).",
   calibrate:"Calibrate",calConfirm:"Calibration plays a short test sound on this speaker (quietly) and measures its timing. Continue?",calRunning:"Calibrating…",calDone:"Calibrated ✓",
   calNoMeasure:"Could not measure timing (the player handles announcements itself) - defaults applied.",
   remove:"Remove",restore:"Restore",settings:"Settings",dupOf:"duplicate of",hiddenB:"hidden",announceOk:"announce ✓",announceNo:"no announce",
@@ -328,31 +327,31 @@ const L = {
   dAuto:"Let the player handle it (announce)",dManual:"Restore what was playing (media + position)",dNone:"Do nothing",dBefore:"Wait before playing (s)",dAfter:"Wait after it ends, then restore (s)",
   dPower:"Turn on if off, turn off afterwards",dUnmute:"Unmute during announcement",dQuiet:"Quiet hours",dQFrom:"from",dQTo:"to",dQVol:"Quiet volume % (empty = skip speaker)",
   dSave:"Save",dReset:"Reset",dCopy:"Copy to all speakers",dSaved:"Settings saved ✓"},
- pl:{tagline:"Ogłoszenia na Twoich głośnikach",netTitle:"Sieć",netLocal:"Adres lokalny",netExt:"Adres zewnętrzny",netChecked:"sprawdzono",netRefresh:"Odśwież",netCopy:"Kopiuj",netErr:"Nie udało się sprawdzić zewnętrznego IP",netOff:"Sprawdzanie zewnętrznego IP jest wyłączone (opcja check_external_ip).",netChanged:"IP się zmieniło",netWarn:"Spoza domu potrzebujesz przekierowania portu na routerze (albo VPN, np. Tailscale/WireGuard). Ten adres to zwykłe HTTP – token wysłany przez internet można podsłuchać; lepiej użyć VPN lub reverse proxy z HTTPS.",tokURLext:"Adres (spoza domu)",tabLive:"🏝️ Live",nowPlaying:"Teraz ogłaszam",nowQueued:"W kolejce",nowOn:"na",liveTitle:"Live Activity – Dynamic Island i ekran blokady",
+ pl:{tagline:"Ogłoszenia na Twoich głośnikach",netTitle:"Sieć",netLocal:"Adres lokalny",netExt:"Adres zewnętrzny",netChecked:"sprawdzono",netRefresh:"Odśwież",netCopy:"Kopiuj",netErr:"Nie udało się sprawdzić zewnętrznego IP",netOff:"Sprawdzanie zewnętrznego IP jest wyłączone (opcja check_external_ip).",netChanged:"IP się zmieniło",netWarn:"Spoza domu potrzebujesz przekierowania portu na routerze (albo VPN, np. Tailscale/WireGuard). Ten adres to zwykłe HTTP – token wysłany przez internet można podsłuchać; lepiej użyć VPN lub reverse proxy z HTTPS.",tokURLext:"Adres (spoza domu)",tabLive:"Live",nowPlaying:"Teraz ogłaszam",nowQueued:"W kolejce",nowOn:"na",liveTitle:"Live Activity – Dynamic Island i ekran blokady",
   liveInfo:"Pokazuje trwające ogłoszenie (co, gdzie, odliczanie) na Dynamic Island i ekranie blokady iPhone'a (Android: Live Update) przez aplikację Home Assistant Companion. Wymaga iOS 17.2+, Home Assistant Core 2026.7+ i włączonych Live Activities w aplikacji (Ustawienia → Live Activities). Status jest też publikowany jako sensor.hannounce_status. Admin może dać komuś własny status na żywo: per token (zakładka Tokeny) lub per ogłoszenie (pole live w API).",
   lvOn:"Pokazuj ogłoszenia jako Live Activity na poniższych telefonach",lvPhones:"Telefony (aplikacja Companion)",lvOnly:"Tylko dla ogłoszeń z (puste = wszystkie)",lvOnlyHint:"Źródła: panel/admin albo nazwa tokenu.",
   lvTitle:"Tytuł",lvCrit:"Tekst na wyspie (compact)",lvMsg:"Treść",lvMsgHint:"Symbole: {text} {speakers} {source} {user}",lvHide:"Ukryj mówiony tekst (prywatność – widać tylko, że coś jest ogłaszane)",lvCount:"Licznik odliczający do końca ogłoszenia",
   lvIcon:"Ikona",lvColor:"Kolor",lvAdv:"Zaawansowane",lvEnd:"Zostaw po końcu (s)",lvUrl:"Po dotknięciu otwórz",lvTest:"Test (6 s)",lvNoPhone:"Nie znaleziono telefonu (notify.mobile_app_*). Zainstaluj aplikację Home Assistant na telefonie.",lvSaved:"Zapisano ✓",lvTested:"Test wysłany na telefon",
-  tokLive:"Status na żywo na tych telefonach (daje im Live Activity z ogłoszeń tego tokenu)",tokLiveHint:"Opcjonalnie. Np. osoba, do której należy skrót, widzi swoje ogłoszenie na swojej Dynamic Island.",tokens:"🔑 Tokeny",tokTitle:"Tokeny dla skrótów",tokNew:"+ Nowy token",cancel:"Anuluj",refresh:"Odśwież",
+  tokLive:"Status na żywo na tych telefonach (daje im Live Activity z ogłoszeń tego tokenu)",tokLiveHint:"Opcjonalnie. Np. osoba, do której należy skrót, widzi swoje ogłoszenie na swojej Dynamic Island.",tokens:"Tokeny",tokTitle:"Tokeny dla skrótów",tokNew:"+ Nowy token",cancel:"Anuluj",refresh:"Odśwież",
   tokHint:"Token pozwala jednemu skrótowi (lub aplikacji) ogłaszać bez Twojego klucza administratora. Można go ograniczyć do wybranych głośników i w każdej chwili odwołać.",
   tokName:"Nazwa (np. skrót lub osoba)",tokNamePh:"Skrót na iPhone",tokSup:"Nadzorowany: zapisuj w dzienniku wszystko, co ten token mówi",
   tokSpk:"Głośniki (domyślne cele)",tokAll:"Pozwól ogłaszać także na innych głośnikach",tokTts:"Może używać mowy (TTS)",tokSnd:"Może odtwarzać dźwięki z biblioteki",tokAct:"Może uruchamiać skrypty / sceny",
   tokMax:"Maks. głośność % (puste = bez limitu)",tokTtsHint:"Silnik TTS, język i głos wybrane teraz w zakładce Mów staną się domyślnymi dla tego tokenu, więc skrót wysyła tylko wiadomość.",
   tokCreate:"Utwórz token",tokShown:"Skopiuj token teraz - pokazuje się tylko raz!",tokSteps:"Aplikacja Skróty → + → „Pobierz zawartość URL”: wklej adres, Pokaż więcej → Metoda POST → dodaj oba nagłówki → Treść żądania: JSON z polem tekstowym „message” (jako wartość użyj „Zapytaj o dane” lub „Dyktuj tekst”). Nazwij skrót i dodaj go do ekranu blokady / Siri.",
   tokURL:"Adres URL",tokAuth:"Nagłówek Authorization",tokCT:"Nagłówek Content-Type",tokBody:"Treść JSON (tekst)",tokBody2:"Treść JSON (dźwięk z biblioteki)",tokRevoke:"Odwołaj",tokConfirm:"Odwołać ten token? Skróty, które go używają, przestaną działać.",
-  tokNone:"Brak tokenów.",tokCopy:"Kopiuj token",tokRecURL:"Adres głosowy (nagrywanie z ekranu blokady)",tokRecSteps:"Skrót głosowy: „Nagraj dźwięk” → „Pobierz zawartość URL” z tym adresem, metoda POST, Treść żądania = Plik → Nagrany dźwięk, ten sam nagłówek Authorization (używa głośników tokenu; opcjonalnie ?targets=media_player.x). Ogłoszenie leci raz i nie jest zapisywane.",tokCopyAny:"Token i gotowe wartości do wklejenia",tokOld:"Utworzony zanim kopiowanie było możliwe - usuń i utwórz nowy",tokUsed:"ostatnio użyty",tokNever:"nieużywany",tokUses:"użyć",tokSupB:"👁 nadzorowany",tokLimited:"ograniczone głośniki",tokNeed:"Wpisz nazwę i zaznacz co najmniej jeden głośnik.",
-  logTitle:"Dziennik ogłoszeń",addonLog:"Pokaż log systemowy dodatku (admin)",logClear:"Wyczyść dziennik",logAll:"Wszystkie źródła",logConfirm:"Wyczyścić cały dziennik?",logNoText:"(tekst niezapisany)",logEmpty:"Nic jeszcze nie zapisano.",logViewTok:"Dziennik",stop2:"■ Stop",stopped:"Zatrzymano ■",preparing:"Przygotowuję głos…",playing:"Gra ♪",queued:"W kolejce - zagra za {s} s",updNew:"Dostępna nowa wersja",updHave:"masz",updHow:"Otwórz stronę dodatku i kliknij Aktualizuj.",updOpen:"Otwórz stronę dodatku",updAuto:"automatyczna aktualizacja włączona",updManual:"automatyczna aktualizacja wyłączona (włącz na stronie dodatku)",copy:"Kopiuj",copied:"Skopiowano ✓",allThree:"Wszystkie trzy sposoby otwierania:",w1:"① Skrypt w HA",w2:"② Skrót iOS (Otwórz URL)",w3:"③ Osobna aplikacja (Do ekranu początkowego)",quick:"⚡ Szybkie",qSounds:"Ulubione dźwięki - dotknij, by ogłosić",qMsg:"Powiedz coś",qNoFav:"Brak ulubionych dźwięków. Oznacz dźwięki ★ w Bibliotece.",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
-  setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",speakers:"Głośniki",app:"📱 Aplikacja",
+  tokNone:"Brak tokenów.",tokCopy:"Kopiuj token",tokRecURL:"Adres głosowy (nagrywanie z ekranu blokady)",tokRecSteps:"Skrót głosowy: „Nagraj dźwięk” → „Pobierz zawartość URL” z tym adresem, metoda POST, Treść żądania = Plik → Nagrany dźwięk, ten sam nagłówek Authorization (używa głośników tokenu; opcjonalnie ?targets=media_player.x). Ogłoszenie leci raz i nie jest zapisywane.",tokCopyAny:"Token i gotowe wartości do wklejenia",tokOld:"Utworzony zanim kopiowanie było możliwe - usuń i utwórz nowy",tokUsed:"ostatnio użyty",tokNever:"nieużywany",tokUses:"użyć",tokSupB:"nadzorowany",tokLimited:"ograniczone głośniki",tokNeed:"Wpisz nazwę i zaznacz co najmniej jeden głośnik.",
+  logTitle:"Dziennik ogłoszeń",addonLog:"Pokaż log systemowy dodatku (admin)",logClear:"Wyczyść dziennik",logAll:"Wszystkie źródła",logConfirm:"Wyczyścić cały dziennik?",logNoText:"(tekst niezapisany)",logEmpty:"Nic jeszcze nie zapisano.",logViewTok:"Dziennik",stop2:"■ Stop",stopped:"Zatrzymano ■",preparing:"Przygotowuję głos…",playing:"Gra ♪",queued:"W kolejce - zagra za {s} s",updNew:"Dostępna nowa wersja",updHave:"masz",updHow:"Otwórz stronę dodatku i kliknij Aktualizuj.",updOpen:"Otwórz stronę dodatku",updAuto:"automatyczna aktualizacja włączona",updManual:"automatyczna aktualizacja wyłączona (włącz na stronie dodatku)",copy:"Kopiuj",copied:"Skopiowano ✓",allThree:"Wszystkie trzy sposoby otwierania:",w1:"① Skrypt w HA",w2:"② Skrót iOS (Otwórz URL)",w3:"③ Osobna aplikacja (Do ekranu początkowego)",quick:"Szybkie",qSounds:"Ulubione dźwięki - dotknij, by ogłosić",qMsg:"Powiedz coś",qNoFav:"Brak ulubionych dźwięków. Oznacz dźwięki ★ w Bibliotece.",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
+  setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",speakers:"Głośniki",app:"Aplikacja",
   actBefore:"Uruchom przed (skrypt / scena)",actAfter:"Uruchom po (skrypt / scena)",actNone:"— brak —",
   ttsent:"Silnik TTS",message:"Wiadomość",lang:"Język",voice:"Głos",deflt:"(domyślny)",ttsnone:"Nie znaleziono silnika TTS w Home Assistant",
   announce:"Ogłoś",rec:"● Nagrywaj",stop:"■ Stop",devrec:"Wybierz nagranie (Dyktafon / Pliki)",recCount:"Odliczanie 3-2-1",recNs:"Redukcja szumu",recAgain:"naciśnij Nagrywaj, by powtórzyć",recDenied:"Brak zgody na mikrofon - zezwól w ustawieniach przeglądarki/aplikacji.",recHelpT:"Dlaczego nie ma tu przycisku nagrywania?",recHelp1:"Przeglądarka pozwala na mikrofon tylko na stronach HTTPS. Przez zwykłe http:// (typowe dla HA w aplikacji) jest zablokowany, a iPhone nie umie nagrać dźwięku z okna wyboru pliku (otwiera wtedy kamerę - stąd wideo).",recHelp2:"Prosto: nagraj w aplikacji Dyktafon, potem naciśnij przycisk wyżej i wybierz nagranie. Albo skrót z akcją „Nagraj dźwięk” (zakładka Tokeny: adres głosowy).",recHelp3:"Najlepiej: otwórz HA przez HTTPS (Nabu Casa lub certyfikat Let's Encrypt, np. dodatek HACertTeo) - wtedy pojawia się przycisk nagrywania.",
   nomic:"Mikrofon w przeglądarce wymaga HTTPS - użyj „Nagrywarka urządzenia” albo otwórz HA przez HTTPS.",file:"Plik audio",type:"Dźwięk",freq:"Częstotliwość Hz",dur:"Czas s",rep:"Powtórzenia",
   preview:"▶ Podgląd",name:"Nazwa",once:"Ogłoś jednorazowo",save:"Zapisz w bibliotece",saveAnn:"Zapisz i ogłoś",empty:"Na razie pusto.",del:"Usuń",rename:"Zmień nazwę",
   sel:"Wybierz co najmniej jeden głośnik.",sent:"Ogłoszono ✓",saved:"Zapisano ✓",confirmDel:"Usunąć ten dźwięk?",by:"Stworzone przez",nomsg:"Wpisz wiadomość.",nofile:"Najpierw wybierz lub nagraj dźwięk.",newname:"Nowa nazwa",
-  mkscript:"📱 Utwórz skrypt",scriptOk:"Utworzono skrypt: ",scriptManual:"Nie udało się automatycznie. Wklej do scripts.yaml i przeładuj skrypty:",
+  mkscript:"Utwórz skrypt",scriptOk:"Utworzono skrypt: ",scriptManual:"Nie udało się automatycznie. Wklej do scripts.yaml i przeładuj skrypty:",
   scriptHow:"iPhone: przytrzymaj ekran blokady → Dostosuj → dodaj widżet Home Assistant → wybierz ten skrypt.",
   askkey:"Klucz API (z konfiguracji dodatku)",search:"Szukaj dźwięków…",dedupe:"Usuń duplikaty",removed:"Usunięto duplikaty: ",noDup:"Nie znaleziono duplikatów.",
-  rescan:"🔍 Skanuj głośniki",dedupeSpk:"Ukryj duplikaty",showHidden:"Pokaż ukryte",spkHint:"Wykryte odtwarzacze. ★ ulubiony · Kalibruj mierzy, jak zachowuje się głośnik · Usuń ukrywa go na listach (można przywrócić).",
+  rescan:"Skanuj głośniki",dedupeSpk:"Ukryj duplikaty",showHidden:"Pokaż ukryte",spkHint:"Wykryte odtwarzacze. ★ ulubiony · Kalibruj mierzy, jak zachowuje się głośnik · Usuń ukrywa go na listach (można przywrócić).",
   calibrate:"Kalibruj",calConfirm:"Kalibracja odtworzy krótki dźwięk testowy na tym głośniku (cicho) i zmierzy jego czasy. Kontynuować?",calRunning:"Kalibrowanie…",calDone:"Skalibrowano ✓",
   calNoMeasure:"Nie udało się zmierzyć czasów (odtwarzacz sam obsługuje ogłoszenia) - ustawiono domyślne.",
   remove:"Usuń",restore:"Przywróć",settings:"Ustawienia",dupOf:"duplikat",hiddenB:"ukryty",announceOk:"announce ✓",announceNo:"brak announce",
@@ -444,7 +443,7 @@ function extra(){ const x={targets:targets(),...actions_()}; if($("volOn").check
 function needTargets(){ if(!targets().length){toast(t("sel"),true);return false} return true; }
 async function announce(body){
   if(!needTargets()) return false;
-  if(body.message) toast("⏳ " + t("preparing"));   // TTS is rendered first, so there is a short wait before the sound
+  if(body.message) toast("" + t("preparing"));   // TTS is rendered first, so there is a short wait before the sound
   try{
     const r = await post("announce",{...extra(),...body});
     toast((r.queued > 0.5 ? t("queued").replace("{s}", Math.round(r.queued)) : t("playing")) + (r.skipped?.length ? " (" + r.skipped.length + " skipped)" : ""));
@@ -670,7 +669,7 @@ function drawNow(){
     const left = x.ends ? Math.max(0, x.ends - now) : x.duration, pct = x.ends ? Math.min(100, 100 - left / x.duration * 100) : 0;
     row.innerHTML = `<span class="pulse ${x.state==="queued"?"q":""}"></span><div style="flex:1;min-width:0"><div style="font-weight:500" class="tx"></div>
       <div class="hint sub"></div><div class="bar"><i style="width:${pct}%"></i></div></div><button class="b red sm">${t("stop2")}</button>`;
-    row.querySelector(".tx").textContent = (x.state === "queued" ? "⏳ " + t("nowQueued") + ": " : "📣 ") + (x.hidden ? x.kind.toUpperCase() : x.said);
+    row.querySelector(".tx").textContent = (x.state === "queued" ? "" + t("nowQueued") + ": " : "") + (x.hidden ? x.kind.toUpperCase() : x.said);
     row.querySelector(".sub").textContent = `${t("nowOn")} ${x.names.join(", ")} · ${x.source}` + (x.state === "playing" ? ` · ${Math.ceil(left)} s` : "");
     row.querySelector("button").onclick = async () => { try{ await post("stop", {targets:x.targets}); pollStatus(); }catch(e){ toast(e.message, true); } };
     box.append(row);
@@ -709,7 +708,7 @@ let NET = null;
 async function renderNet(force){
   const box = $("netInfo");
   try{ NET = force ? await post("network/refresh", {}) : await api("network"); }catch(e){ box.textContent = e.message; return; }
-  const n = NET; box.innerHTML = `<div class="sec" style="margin-bottom:6px"><span>🌐 ${t("netTitle")}</span><span class="sp"></span><button class="link" id="netRef">${t("netRefresh")}</button></div>
+  const n = NET; box.innerHTML = `<div class="sec" style="margin-bottom:6px"><span>${t("netTitle")}</span><span class="sp"></span><button class="link" id="netRef">${t("netRefresh")}</button></div>
     <div class="hint" id="netL"></div><div class="hint" id="netE" style="margin-top:2px"></div><div class="hint" id="netW" style="margin-top:8px"></div>`;
   $("netL").textContent = `${t("netLocal")}: ${n.local_base || "—"}`;
   $("netE").textContent = n.enabled ? (n.external_base ? `${t("netExt")}: ${n.external_base}` + (n.external_host ? "" : ` · ${n.source}`) + (n.checked ? ` · ${t("netChecked")} ${new Date(n.checked*1000).toLocaleTimeString()}` : "") + (n.changed ? ` · ${t("netChanged")}: ${n.previous} → ${n.external_ip}` : "") : (n.error ? t("netErr") + ": " + n.error : "…")) : t("netOff");
@@ -723,7 +722,7 @@ const ago = ts => ts ? new Date(ts*1000).toLocaleString() : t("tokNever");
 function showTokenCard(token, fresh = true){
     const box = $("tokResult"); box.innerHTML = "";
     const card = document.createElement("div"); card.className = "prof"; card.style.border = "1.5px solid var(--warn)";
-    const h = document.createElement("div"); h.innerHTML = `<b>${fresh ? "⚠ " + t("tokShown") : t("tokCopyAny")}</b>`; card.append(h);
+    const h = document.createElement("div"); h.innerHTML = `<b>${fresh ? "" + t("tokShown") : t("tokCopyAny")}</b>`; card.append(h);
     card.append(copyRow("Token", token));
     const hint = document.createElement("div"); hint.className = "hint"; hint.style.marginTop = "10px"; hint.textContent = t("tokSteps"); card.append(hint);
     card.append(copyRow(t("tokURL"), S.base_url + "/api/announce"));
@@ -770,10 +769,10 @@ async function renderLog(){
       const d = document.createElement("div"); d.className = "item";
       const names = (e.targets||[]).map(x => (S.players.find(p=>p.entity_id===x)||{name:x}).name).join(", ");
       d.innerHTML = `<div class="n"><div class="badges"><span class="badge">${esc(new Date(e.ts*1000).toLocaleString())}</span>
-        <span class="badge">${esc(e.source)}</span>${e.supervised?`<span class="badge warn">👁</span>`:""}
+        <span class="badge">${esc(e.source)}</span>${e.supervised?`<span class="badge warn"></span>`:""}
         <span class="badge ${e.ok?"ok":"err"}">${e.ok?"✓":"✗ "+esc(e.error)}</span></div>
         <div style="margin-top:4px"></div><small class="hint"></small></div>`;
-      d.querySelector("div[style]").textContent = (e.kind==="tts"?"🗣 ":"🔔 ") + (e.said === "(text not recorded)" ? t("logNoText") : e.said);
+      d.querySelector("div[style]").textContent = (e.kind==="tts"?"":"") + (e.said === "(text not recorded)" ? t("logNoText") : e.said);
       d.querySelector("small").textContent = "→ " + names;
       box.append(d);
     });
@@ -846,7 +845,7 @@ async function renderSpk(){
   try{ D = await api("devices"); }catch(e){ return toast(e.message,true); }
   const box = $("spkList"); box.innerHTML = "";
   const def = document.createElement("div"); def.className = "spk";
-  def.innerHTML = `<div class="head"><div class="n"><b>⚙ ${t("dDefault")}</b></div><button class="b alt sm">${t("settings")}</button></div>`;
+  def.innerHTML = `<div class="head"><div class="n"><b>${t("dDefault")}</b></div><button class="b alt sm">${t("settings")}</button></div>`;
   const defForm = profileForm("_default"); defForm.hidden = !openProfiles.has("_default");
   def.querySelector("button").onclick = () => { defForm.hidden = !defForm.hidden; defForm.hidden ? openProfiles.delete("_default") : openProfiles.add("_default"); };
   def.append(defForm); box.append(def);
@@ -898,13 +897,13 @@ async function renderHelp(){
   let info = {slug:"",path:"",deeplink:"",standalone:S.base_url+"/?quick=1",notify:[],api_enabled:S.api_enabled};
   try{ info = await api("launcher"); }catch{}
   const base = esc(S.base_url || "http://IP_HA:8765");
-  const key = info.api_enabled ? "" : `<p class="rec">${pl?"⚠ Najpierw ustaw „Klucz API” w konfiguracji dodatku.":"⚠ First set the “API key” in the add-on configuration."}</p>`;
+  const key = info.api_enabled ? "" : `<p class="rec">${pl?"Najpierw ustaw „Klucz API” w konfiguracji dodatku.":"First set the “API key” in the add-on configuration."}</p>`;
   const sample = esc(JSON.stringify({targets:["media_player.kuchnia"],message:pl?"Obiad gotowy":"Dinner is ready",tts_entity:(S.tts[0]||{}).entity_id||"tts.piper"},null,1));
   const dl = esc(info.deeplink || "homeassistant://navigate/hassio/ingress/<slug>");
   const opts = info.notify.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("") || `<option value="">—</option>`;
   $("helpBox").innerHTML = pl ? `
-  <h2>⚡ Jeden skrypt, który otwiera cały interfejs</h2>
-  <p>Zamiast skryptów do pojedynczych dźwięków: jeden skrypt/skrót otwiera pełnoekranowy interfejs ogłaszania, a wybór głośników i dźwięków robisz już na miejscu (zakładka ⚡ Szybkie: ulubione dźwięki jako duże kafelki + pole tekstu).</p>
+  <h2>Jeden skrypt, który otwiera cały interfejs</h2>
+  <p>Zamiast skryptów do pojedynczych dźwięków: jeden skrypt/skrót otwiera pełnoekranowy interfejs ogłaszania, a wybór głośników i dźwięków robisz już na miejscu (zakładka Szybkie: ulubione dźwięki jako duże kafelki + pole tekstu).</p>
   <div class="prof" id="lnch">
     <label class="f">Telefon (usługa powiadomień HA)</label><select id="lnPhone">${opts}</select>
     <div class="row"><div class="grow"><label class="f">System</label><select id="lnOs"><option value="ios">iPhone</option><option value="android">Android</option></select></div>
@@ -912,18 +911,18 @@ async function renderHelp(){
     <div class="row"><button class="b" id="lnGo">Utwórz skrypt „HAnnounce: open interface”</button></div>
     <div class="hint">Skrypt wysyła na telefon powiadomienie „dotknij, by otworzyć” (Android: otwiera od razu). Nic nie jest odtwarzane. Uruchom go widżetem „Skrypty” aplikacji HA na ekranie blokady.</div>
   </div>
-  <h2>📲 Bez powiadomienia: skrót iOS otwierający interfejs od razu</h2>
+  <h2>Bez powiadomienia: skrót iOS otwierający interfejs od razu</h2>
   <p>Aplikacja <b>Skróty</b> → nowy skrót → akcja <b>Otwórz URL</b> → <code>${dl}</code>. Dodaj go do ekranu blokady (widżet Skrótów), przycisku Action, Stuknięcia w tył albo powiedz „Hej Siri, ogłoś”.</p>
-  <h2>🖥 Osobna aplikacja</h2>${key}
-  <p>Safari → <code>${base}/?quick=1</code> → <b>Udostępnij → Do ekranu początkowego</b>. Otwiera się na pełnym ekranie, tylko widok ⚡ Szybkie. Przy pierwszym uruchomieniu wpisz Klucz API.</p>
-  <h2>🗣 Siri i Skróty z własnym tekstem (API)</h2>${key}
+  <h2>Osobna aplikacja</h2>${key}
+  <p>Safari → <code>${base}/?quick=1</code> → <b>Udostępnij → Do ekranu początkowego</b>. Otwiera się na pełnym ekranie, tylko widok Szybkie. Przy pierwszym uruchomieniu wpisz Klucz API.</p>
+  <h2>Siri i Skróty z własnym tekstem (API)</h2>${key}
   <p>Akcja <b>Pobierz zawartość URL</b>: URL <code>${base}/api/announce</code>, metoda <b>POST</b>, nagłówki <code>Authorization: Bearer TWÓJ_KLUCZ</code> i <code>Content-Type: application/json</code>, treść JSON:</p>
   <pre>${sample}</pre>
-  <h2>🎬 Skrypt lub scena razem z ogłoszeniem</h2>
+  <h2>Skrypt lub scena razem z ogłoszeniem</h2>
   <p>Pola „Uruchom przed/po” w Opcjach (np. przyciemnij światło przed, przywróć po). W API: <code>before_action</code>, <code>after_action</code>.</p>`
   : `
-  <h2>⚡ One script that opens the whole interface</h2>
-  <p>Instead of scripts for single sounds: one script/shortcut opens the full-screen announcement interface and you pick speakers and sounds there (⚡ Quick tab: favorite sounds as big tiles + a text box).</p>
+  <h2>One script that opens the whole interface</h2>
+  <p>Instead of scripts for single sounds: one script/shortcut opens the full-screen announcement interface and you pick speakers and sounds there (Quick tab: favorite sounds as big tiles + a text box).</p>
   <div class="prof" id="lnch">
     <label class="f">Phone (HA notify service)</label><select id="lnPhone">${opts}</select>
     <div class="row"><div class="grow"><label class="f">System</label><select id="lnOs"><option value="ios">iPhone</option><option value="android">Android</option></select></div>
@@ -931,14 +930,14 @@ async function renderHelp(){
     <div class="row"><button class="b" id="lnGo">Create script “HAnnounce: open interface”</button></div>
     <div class="hint">The script sends a “tap to open” notification to the phone (Android opens it directly). Nothing is played. Run it from the HA app “Scripts” widget on the lock screen.</div>
   </div>
-  <h2>📲 No notification: iOS shortcut that opens it instantly</h2>
+  <h2>No notification: iOS shortcut that opens it instantly</h2>
   <p><b>Shortcuts</b> app → new shortcut → <b>Open URL</b> → <code>${dl}</code>. Add it to the lock screen (Shortcuts widget), Action button, Back Tap, or say “Hey Siri, Announce”.</p>
-  <h2>🖥 Standalone app</h2>${key}
-  <p>Safari → <code>${base}/?quick=1</code> → <b>Share → Add to Home Screen</b>. Opens full screen with the ⚡ Quick view only. Enter the API key on first launch.</p>
-  <h2>🗣 Siri & Shortcuts with your own text (API)</h2>${key}
+  <h2>Standalone app</h2>${key}
+  <p>Safari → <code>${base}/?quick=1</code> → <b>Share → Add to Home Screen</b>. Opens full screen with the Quick view only. Enter the API key on first launch.</p>
+  <h2>Siri & Shortcuts with your own text (API)</h2>${key}
   <p><b>Get Contents of URL</b>: URL <code>${base}/api/announce</code>, method <b>POST</b>, headers <code>Authorization: Bearer YOUR_KEY</code> and <code>Content-Type: application/json</code>, JSON body:</p>
   <pre>${sample}</pre>
-  <h2>🎬 Script or scene together with the announcement</h2>
+  <h2>Script or scene together with the announcement</h2>
   <p>“Run before/after” in Options (e.g. dim lights before, restore after). In the API: <code>before_action</code>, <code>after_action</code>.</p>`;
   $("lnGo").onclick = async () => {
     if(!$("lnPhone").value) return toast(pl?"Nie znaleziono telefonu z aplikacją HA (mobile_app_*).":"No phone with the HA app found (mobile_app_*).",true);
@@ -973,7 +972,7 @@ async function checkVersion(){
     if(v.update_available){
       box.hidden = false;
       const inFrame = window.top !== window;
-      box.innerHTML = `<b>⬆ ${t("updNew")}: v${esc(v.latest)}</b> <small>(${t("updHave")} v${esc(v.version)})</small><div class="hint">${t("updHow")}</div>` +
+      box.innerHTML = `<b>${t("updNew")}: v${esc(v.latest)}</b> <small>(${t("updHave")} v${esc(v.version)})</small><div class="hint">${t("updHow")}</div>` +
         (inFrame && v.addon_path ? `<div class="row"><a class="b sm" style="text-decoration:none" href="${esc(v.addon_path)}" target="_top">${t("updOpen")}</a></div>` : "");
     } else box.hidden = true;
   }catch{}

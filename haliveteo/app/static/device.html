@@ -33,7 +33,7 @@ footer{text-align:center;color:var(--secondary-text-color);font-size:12px;margin
 <div class="bar" id="bar" hidden><span class="ibtn hi" id="devIcon"></span><h1 id="devName"></h1><span class="dot" id="conn" style="margin-right:6px"></span><button class="ibtn" id="feedBtn" title="Live"></button><button class="ibtn" id="menuBtn"></button></div>
 <main>
   <div id="setup" class="card" hidden>
-    <div style="font-size:42px">⚡</div><h2>HALiveTeo</h2>
+    <h2>HALiveTeo</h2>
     <p class="hint" id="setupTxt"></p>
     <input type="password" id="tokIn" placeholder="hl_…" autocomplete="off">
     <p><button class="b" id="tokGo"></button></p>
@@ -155,11 +155,11 @@ function start(){
     liveDlg.showModal(); liveDlg.innerHTML = `<div class="hd-card"><h2>Live Activities</h2><div class="hint">…</div></div>`; live.send({t:"live_list"}); }
   function drawLive(){
     if(!liveDlg || !LIVE) return;
-    const card = liveDlg.querySelector(".hd-card"); card.innerHTML = `<h2>🏝️ Live Activities</h2>`;
+    const card = liveDlg.querySelector(".hd-card"); card.innerHTML = `<h2>Live Activities</h2>`;
     if(liveForm) return drawLiveForm(card);
     const hint = document.createElement("div"); hint.className = "hint"; hint.style.marginBottom = "8px";
     hint.textContent = LIVE.phone ? tr("Pokazują się na Dynamic Island i ekranie blokady Twojego iPhone'a (aplikacja Home Assistant).","They appear on your iPhone's Dynamic Island and Lock Screen (Home Assistant app).")
-      : tr("⚠ Ten użytkownik nie ma przypisanego telefonu – poproś admina, żeby ustawił go w edytorze urządzenia.","⚠ This user has no phone assigned – ask the admin to set it in the device editor.");
+      : tr("Ten użytkownik nie ma przypisanego telefonu – poproś admina, żeby ustawił go w edytorze urządzenia.","This user has no phone assigned – ask the admin to set it in the device editor.");
     card.append(hint);
     if(!LIVE.activities.length){ const e = document.createElement("div"); e.className = "hint"; e.textContent = tr("Nic nie zostało Ci przydzielone.","Nothing has been given to you yet."); card.append(e); }
     LIVE.activities.forEach(a => {

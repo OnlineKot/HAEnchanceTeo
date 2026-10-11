@@ -99,7 +99,7 @@ const T = {
   mdTxt: tr("Nowe i zmienione pliki z folderu QNAP są kopiowane do folderu media HA (jednokierunkowo, nic nie jest kasowane). Plik jest pobierany ponownie tylko, gdy zmieni się rozmiar lub data.",
             "New and changed files from the QNAP folder are copied into the HA media folder (one way, nothing is deleted). A file is downloaded again only when its size or date changes.")};
 Object.assign(T, {cnT1: tr("1. Połącz z QNAP","1. Connect to the QNAP"), cnH1: tr("Znajdź QNAP w sieci albo wpisz adres, podaj użytkownika i hasło (najlepiej osobnego użytkownika z dostępem do jednego udziału) i wybierz udział.","Find the QNAP on your network or type its address, enter the user and password (ideally a dedicated user with access to one share) and pick the share."),
-  scanBtn: tr("🔍 Szukaj w sieci","🔍 Scan the network"), lHost: tr("Adres (IP lub nazwa)","Address (IP or name)"), lUser: tr("Użytkownik","Username"), lPass: tr("Hasło (puste = bez zmian)","Password (empty = keep)"), lDom: tr("Domena (opcjonalnie)","Domain (optional)"),
+  scanBtn: tr("Szukaj w sieci","Scan the network"), lHost: tr("Adres (IP lub nazwa)","Address (IP or name)"), lUser: tr("Użytkownik","Username"), lPass: tr("Hasło (puste = bez zmian)","Password (empty = keep)"), lDom: tr("Domena (opcjonalnie)","Domain (optional)"),
   shBtn: tr("Połącz i pokaż udziały","Connect & list shares"), cSave: tr("Zapisz połączenie","Save connection"), cnT3: tr("2. Foldery i źródło multimediów","2. Folders and media source"), cnH3: tr("Wybierz folder na backupy i folder z multimediami, zapisz, a potem podłącz QNAP jako źródło multimediów w HA.","Choose the backup folder and the media folder, save, then mount the QNAP as a media source in HA."),
   lBk: tr("Folder backupów","Backup folder"), lMd: tr("Folder multimediów (pobieranie)","Media folder (download)"), pkBk: tr("Przeglądaj","Browse"), pkMd: tr("Przeglądaj","Browse"), pkOk: tr("Wybierz ten folder","Use this folder"), pkUp: tr("↑ Wyżej","↑ Up"),
   cSave2: tr("Zapisz foldery","Save folders"), cMount: tr("Zapisz i podłącz jako źródło multimediów","Save & mount as media source"), cReset: tr("Usuń zapisane połączenie","Forget the saved connection"),
@@ -138,7 +138,7 @@ $("cancelBtn").onclick = async () => { await HL.post("cancel"); HL.toast(tr("Anu
 $("testBtn").onclick = async () => {
   $("testOut").textContent = tr("Łączę…","Connecting…");
   const r = await HL.post("test");
-  $("testOut").innerHTML = r.ok ? `✅ ${tr("Połączono","Connected")}${r.free != null ? " · " + tr("wolne miejsce: ","free space: ") + hs(r.free) : ""}${r.backup_dir ? " · " + tr("folder backupów: ","backup folder: ") + HL.esc(r.backup_dir) : ""}${r.media_dir ? " · " + tr("folder multimediów: ","media folder: ") + HL.esc(r.media_dir) : ""}` : "❌ " + HL.esc(r.error);
+  $("testOut").innerHTML = r.ok ? `${tr("Połączono","Connected")}${r.free != null ? " · " + tr("wolne miejsce: ","free space: ") + hs(r.free) : ""}${r.backup_dir ? " · " + tr("folder backupów: ","backup folder: ") + HL.esc(r.backup_dir) : ""}${r.media_dir ? " · " + tr("folder multimediów: ","media folder: ") + HL.esc(r.media_dir) : ""}` : "" + HL.esc(r.error);
 };
 async function loadRemote(){
   $("rmList").innerHTML = `<div class="hint">${tr("Ładuję…","Loading…")}</div>`;
@@ -170,7 +170,7 @@ let cnShare = "", pickFor = null, pickPath = "";
 function fillConn(){ const o = S.options; if(!$("cHost").dataset.t){ $("cHost").dataset.t = 1; $("cHost").value = o.host || ""; $("cUser").value = o.username || ""; $("cDom").value = o.domain || ""; $("cVer").value = o.smb_version || "3"; cnShare = o.share || ""; $("cBk").value = o.backup_dir || ""; $("cMd").value = o.media_remote_dir || ""; } $("cnStep3").hidden = !S.configured; if(S.configured && !$("shares").children.length) showShares([{name:o.share}]); }
 const credBody = () => ({host:$("cHost").value.trim(), username:$("cUser").value.trim(), password:$("cPass").value, domain:$("cDom").value.trim(), smb_version:$("cVer").value});
 function showShares(list){
-  $("shares").innerHTML = ""; list.forEach(x => { const b = document.createElement("button"); b.className = "b sm " + (x.name === cnShare ? "" : "alt"); b.textContent = "📁 " + x.name + (x.comment ? " · " + x.comment : "");
+  $("shares").innerHTML = ""; list.forEach(x => { const b = document.createElement("button"); b.className = "b sm " + (x.name === cnShare ? "" : "alt"); b.textContent = "" + x.name + (x.comment ? " · " + x.comment : "");
     b.onclick = () => { cnShare = x.name; showShares(list); }; $("shares").append(b); });
   $("cSave").hidden = !cnShare; }
 $("scanBtn").onclick = async () => { $("scanRes").innerHTML = `<span class="hint">${tr("Skanuję…","Scanning…")}</span>`;
@@ -178,9 +178,9 @@ $("scanBtn").onclick = async () => { $("scanRes").innerHTML = `<span class="hint
     r.hosts.forEach(h => { const b = document.createElement("button"); b.className = "b alt sm"; b.textContent = h.ip + (h.qnap ? " · QNAP" : ""); b.onclick = () => { $("cHost").value = h.ip; }; $("scanRes").append(b); }); }
   catch(e){ $("scanRes").innerHTML = ""; HL.toast(e.message, true); } };
 $("shBtn").onclick = async () => { $("shOut").textContent = tr("Łączę…","Connecting…");
-  try{ const r = await HL.post("shares", credBody()); if(!r.ok){ $("shOut").innerHTML = "❌ " + HL.esc(r.error); return; }
-    $("shOut").textContent = "✅ " + tr("Połączono. Wybierz udział:","Connected. Pick a share:"); if(!cnShare || !r.shares.some(x => x.name === cnShare)) cnShare = r.shares[0]?.name || ""; showShares(r.shares); }
-  catch(e){ $("shOut").innerHTML = "❌ " + HL.esc(e.message); } };
+  try{ const r = await HL.post("shares", credBody()); if(!r.ok){ $("shOut").innerHTML = "" + HL.esc(r.error); return; }
+    $("shOut").textContent = "" + tr("Połączono. Wybierz udział:","Connected. Pick a share:"); if(!cnShare || !r.shares.some(x => x.name === cnShare)) cnShare = r.shares[0]?.name || ""; showShares(r.shares); }
+  catch(e){ $("shOut").innerHTML = "" + HL.esc(e.message); } };
 async function saveConn(extra){ const r = await HL.post("connection", {...credBody(), share:cnShare, ...extra}); if(!r.ok) throw new Error(r.error); $("cPass").value = ""; return r; }
 $("cSave").onclick = async () => { try{ await saveConn({}); HL.toast(tr("Zapisano ✓","Saved ✓")); await refresh(); $("cnStep3").hidden = false; }catch(e){ HL.toast(e.message, true); } };
 $("cSave2").onclick = async () => { try{ await saveConn({backup_dir:$("cBk").value, media_remote_dir:$("cMd").value}); HL.toast(tr("Zapisano ✓","Saved ✓")); refresh(); }catch(e){ HL.toast(e.message, true); } };
@@ -188,7 +188,7 @@ $("cMount").onclick = async () => { try{ await saveConn({backup_dir:$("cBk").val
 $("cReset").onclick = async () => { if(!confirm(tr("Zapomnieć zapisane połączenie?","Forget the saved connection?"))) return; await HL.api("connection", {method:"DELETE"}); $("cHost").dataset.t = ""; $("shares").innerHTML = ""; refresh(); };
 async function browse(path){ pickPath = path; $("pkPath").textContent = "/" + path; $("pkList").innerHTML = `<div class="hint">${tr("Ładuję…","Loading…")}</div>`;
   try{ const r = await HL.api("browse?path=" + encodeURIComponent(path)); $("pkList").innerHTML = r.dirs.length ? "" : `<div class="hint">${tr("(brak podfolderów)","(no subfolders)")}</div>`;
-    r.dirs.forEach(d => { const b = document.createElement("div"); b.className = "li"; b.style.cursor = "pointer"; b.textContent = "📁 " + d; b.onclick = () => browse(path ? path + "/" + d : d); $("pkList").append(b); }); }
+    r.dirs.forEach(d => { const b = document.createElement("div"); b.className = "li"; b.style.cursor = "pointer"; b.textContent = "" + d; b.onclick = () => browse(path ? path + "/" + d : d); $("pkList").append(b); }); }
   catch(e){ $("pkList").innerHTML = `<div class="hint" style="color:var(--error-color)">${HL.esc(e.message)}</div>`; } }
 document.querySelectorAll("[data-pick]").forEach(b => b.onclick = () => { pickFor = b.dataset.pick; $("picker").hidden = false; browse(""); });
 $("pkOk").onclick = () => { $(pickFor).value = pickPath; $("picker").hidden = true; };

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.3
+- Minimalist pass: decorative emoji removed from the interface and notification texts (plain labels, calmer look). Functional symbols (check, star, arrows) stay.
+
 ## 1.0.2
 - Panel explicitly admin-only (`panel_admin: true`): only Home Assistant administrators can open it, change settings and read logs.
 
