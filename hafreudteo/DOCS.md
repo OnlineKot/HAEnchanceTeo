@@ -19,6 +19,9 @@ Tasks: `feed`, `water`, `litter`, `litter_full`, `flea`, `deworm`, `vaccine`, `v
 ## Home Assistant entities
 `sensor.<name>_last_fed`, `sensor.<name>_water`, `_litter`, `_litter_full`, `_flea`, `_deworm`, `_vaccine`, `_vet` (timestamps with `due_at`), `sensor.<name>_weight`, `binary_sensor.<name>_needs_attention`, and the event `hafreudteo_logged` (`task`, `who`). Use them in automations and dashboards (e.g. light the kitchen blue when the cat has not been fed).
 
+## Senior cat
+Freud is 15, so `cat_age_years` defaults to 15: the add-on sets an approximate birthday on first start (replace it with the real one in Settings). From 11 years it uses gentler defaults – a vet check-up every 6 months and a weight alert at 5 %, because unexplained weight loss or a change in drinking is worth a call to the vet in older cats. This is a reminder tool, not medical advice.
+
 ## Photo
 The default photo is Freud. *Change photo* in Settings uploads another one (cropped to a square on the phone, stored privately in the add-on).
 

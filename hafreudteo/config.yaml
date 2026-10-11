@@ -1,5 +1,5 @@
 name: HAFreudTeo
-version: "1.0.0"
+version: "1.1.0"
 slug: hafreudteo
 description: A small, calm cat companion - feeding log (no double feeding), water, litter, flea / deworming / vaccine reminders and weight, with lock-screen reminders. By TeodorTeo.com
 url: https://teodorteo.com
@@ -22,11 +22,13 @@ ports_description:
   8771/tcp: "Shortcuts / Siri endpoint (only listens when api_enabled is on; token required)"
 options:
   cat_name: Freud
+  cat_age_years: 15
   notify_services: []
   api_enabled: false
   log_level: info
 schema:
   cat_name: str
+  cat_age_years: int(0,30)?
   notify_services:
     - str?
   api_enabled: bool

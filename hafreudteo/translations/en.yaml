@@ -2,6 +2,9 @@ configuration:
   cat_name:
     name: Cat name
     description: Used in the panel, notifications and sensor names (sensor.<name>_last_fed ...). Can also be changed in the panel.
+  cat_age_years:
+    name: Age (years)
+    description: Used once to set an approximate birthday if you have not entered one in the panel. 11+ years switches on gentle senior defaults (vet check-up every 6 months, weight alert at 5 %).
   notify_services:
     name: Phones to remind
     description: Companion app notify services, e.g. mobile_app_iphone. Reminders arrive with a "Done" button, also on the lock screen.

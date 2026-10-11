@@ -2,6 +2,9 @@ configuration:
   cat_name:
     name: Imię kota
     description: Używane w panelu, powiadomieniach i nazwach sensorów (sensor.<imie>_last_fed ...). Można też zmienić w panelu.
+  cat_age_years:
+    name: Wiek (lata)
+    description: Użyte raz do ustawienia przybliżonych urodzin, jeśli nie wpisałeś ich w panelu. Od 11 lat włączają się łagodne ustawienia dla seniora (kontrola u weterynarza co 6 miesięcy, alarm wagi przy 5 %).
   notify_services:
     name: Telefony do przypomnień
     description: Usługi powiadomień aplikacji mobilnej, np. mobile_app_iphone. Przypomnienia mają przycisk „Zrobione”, także na ekranie blokady.

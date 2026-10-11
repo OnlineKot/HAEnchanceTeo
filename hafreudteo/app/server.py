@@ -37,7 +37,7 @@ TICK = int(os.environ.get("HFT_TICK", 60))
 log = logging.getLogger("hafreudteo")
 
 DEFAULT_CFG = {
-    "name": "", "birthday": "", "portion_g": 40, "quiet": ["22:00", "07:00"], "repeat_min": 60, "who": "",
+    "name": "", "birthday": "", "birthday_approx": False, "senior_applied": False, "portion_g": 40, "quiet": ["22:00", "07:00"], "repeat_min": 60, "who": "",
     "tasks": {
         "feed": {"enabled": True, "remind": True, "times": ["07:00", "18:00"], "grace_min": 30},
         "water": {"enabled": True, "remind": False, "every_h": 24},
@@ -136,7 +136,7 @@ def load():
         d = json.loads(STORE.read_text())
         merged = json.loads(json.dumps(DEFAULT_CFG))
         c = d.get("cfg", {})
-        for k in ("name", "birthday", "portion_g", "quiet", "repeat_min", "who"):
+        for k in ("name", "birthday", "birthday_approx", "senior_applied", "portion_g", "quiet", "repeat_min", "who"):
             if k in c:
                 merged[k] = c[k]
         for t in TASK_IDS:
@@ -201,8 +201,46 @@ def all_status(now=None):
     return [status_of(t, now) for t in TASK_IDS if cfg["tasks"][t]["enabled"]]
 
 
+def age_years(now=None):
+    b = cfg.get("birthday")
+    if not b:
+        return None
+    try:
+        d = datetime.strptime(b, "%Y-%m-%d")
+    except ValueError:
+        return None
+    n = now or datetime.now(tz)
+    return n.year - d.year - ((n.month, n.day) < (d.month, d.day))
+
+
+def is_senior():
+    a = age_years()
+    return a is not None and a >= 11
+
+
+def apply_age_option():
+    """First start: turn the 'cat_age_years' option into an approximate birthday, and apply gentle senior defaults once."""
+    changed = False
+    try:
+        yrs = int(OPT.get("cat_age_years") or 0)
+    except (TypeError, ValueError):
+        yrs = 0
+    if not cfg.get("birthday") and yrs > 0:
+        n = datetime.now(tz)
+        cfg["birthday"], cfg["birthday_approx"], changed = f"{n.year - yrs:04d}-{n.month:02d}-{min(n.day, 28):02d}", True, True
+    if is_senior() and not cfg.get("senior_applied"):
+        cfg["tasks"]["vet"]["every_h"] = min(cfg["tasks"]["vet"]["every_h"], 4380)   # senior cats: check-up every 6 months
+        cfg["senior_applied"], changed = True, True
+    if changed:
+        save()
+
+
 def weights():
     return [(e["ts"], e["value"]) for e in events if e["task"] == "weight" and isinstance(e.get("value"), (int, float))]
+
+
+def weight_alert_pct():
+    return 5 if is_senior() else 7
 
 
 def weight_change():
@@ -425,7 +463,7 @@ def request_who(request, body):
 
 def view_state():
     now = datetime.now(tz)
-    return {"name": cat_name(), "cfg": cfg, "status": all_status(now), "now": now.timestamp(), "weight_change": weight_change(),
+    return {"name": cat_name(), "cfg": cfg, "status": all_status(now), "now": now.timestamp(), "weight_change": weight_change(), "weight_alert": weight_alert_pct(), "senior": is_senior(),
             "events": events[-400:][::-1], "has_avatar": AVATAR.exists(), "notify": notify_services(), "api_enabled": bool(OPT.get("api_enabled")),
             "api_port": API_PORT, "lang": lang, "sensors": slug(), "summary": summary_text()}
 
@@ -471,6 +509,8 @@ def clean_cfg(b):
         v = str(b["birthday"]).strip()
         if v and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
             raise err(400, "birthday must be YYYY-MM-DD")
+        if v != cfg.get("birthday"):
+            new["birthday_approx"] = False
         new["birthday"] = v
     if "who" in b:
         new["who"] = str(b["who"]).strip()[:30]
@@ -645,6 +685,7 @@ async def main():
             lang = "pl" if str(c.get("language", "en")).startswith("pl") else "en"
     except Exception:  # noqa: BLE001
         pass
+    apply_age_option()
     ui, api = build_apps()
     r1 = web.AppRunner(ui, access_log=None)
     await r1.setup()
