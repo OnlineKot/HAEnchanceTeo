@@ -9,62 +9,68 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="HALiveTeo">
-<meta name="theme-color" content="#009688">
+<meta name="theme-color" content="#009ac7">
 <link rel="stylesheet" href="static/common.css">
 <style>
-main{max-width:900px;margin:0 auto;padding:16px 16px 90px}
-#banner{display:none;background:var(--warning-color);color:#000;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:14px}
-#drawer{position:fixed;left:0;right:0;bottom:0;max-height:55vh;overflow:auto;background:var(--card-background-color);border-top:1px solid var(--divider-color);box-shadow:0 -8px 24px var(--shadow-color);padding:16px 16px calc(16px + env(safe-area-inset-bottom));transform:translateY(105%);transition:.25s;z-index:5;border-radius:28px 28px 0 0}
-#drawer.on{transform:none}
-.fe{display:flex;gap:12px;align-items:center;padding:8px 0;border-top:1px solid var(--divider-color);font-size:14px}.fe:first-of-type{border:0}
-.fe .sh{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--primary-color) 20%,transparent);color:var(--primary-color);flex:none}.fe .sh svg{width:20px;height:20px;fill:currentColor}
-.fe small{color:var(--secondary-text-color)}.fe .bad{color:var(--error-color)}
-#setup{max-width:380px;margin:16vh auto 0;text-align:center}
-#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%) translateY(-120px);background:#323232;color:#fff;padding:12px 20px;border-radius:8px;transition:.25s;z-index:9;max-width:90%;box-shadow:0 3px 8px var(--shadow-color)}
-#toast.on{transform:translateX(-50%)}
-.menu{position:fixed;right:8px;top:52px;background:var(--card-background-color);border:1px solid var(--divider-color);border-radius:12px;box-shadow:0 4px 16px var(--shadow-color);padding:8px 0;display:none;z-index:6;min-width:230px}
-.menu.on{display:block}.menu button{display:flex;gap:16px;align-items:center;width:100%;text-align:left;background:none;border:0;color:var(--primary-text-color);padding:10px 16px;font:400 14px/20px var(--ha-font);cursor:pointer}
-.menu button:hover{background:rgba(var(--rgb-primary-color),.08)}.menu svg{width:20px;height:20px;fill:var(--secondary-text-color)}
-.bar .ibtn svg{width:24px;height:24px;fill:currentColor}.bar .hi{color:var(--primary-color)}
-footer{text-align:center;color:var(--secondary-text-color);font-size:12px;margin-top:24px}footer a{color:var(--primary-color);text-decoration:none;font-weight:500}
-</style></style>
+body.dv{--fs-1:14px;--fs-2:16px}   /* wall panels and phones: everything one notch larger */
+main{max-width:900px;margin:0 auto;padding:0 16px 24px}
+.bar{border:0;padding:0 8px 0 16px;margin:0 auto;max-width:932px}
+.bar h1{padding-right:8px}
+.dot#conn{margin-right:8px}
+#banner{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));max-width:420px;margin:0 auto;display:none;background:var(--secondary-background-color);border:1px solid var(--divider-color);border-radius:var(--r);padding:12px 16px;z-index:8}
+#banner a{color:var(--primary-color);font-weight:500;margin-left:8px}
+#note{display:none;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;color:var(--secondary-text-color)}#note span{flex:1;min-width:180px}
+.dv .grid{gap:8px}
+.dv .tile .trow{min-height:80px;padding:16px}
+.dv .tile .tshape{width:32px;height:32px}.dv .tile .tshape svg{width:32px;height:32px}
+.dv .tile .tn{font-size:var(--fs-2)}.dv .tile .tst{font-size:var(--fs-1)}
+#drawer{position:fixed;left:0;right:0;bottom:0;max-height:55vh;overflow:auto;background:var(--card-background-color);border-top:1px solid var(--divider-color);padding:16px 16px calc(16px + env(safe-area-inset-bottom));display:none;z-index:5;border-radius:var(--r) var(--r) 0 0}
+#drawer.on{display:block}
+#setup{max-width:360px;margin:16vh auto 0;text-align:center}#setup h2{margin-bottom:8px}#setup input{margin:16px 0}
+.menu{position:fixed;right:8px;top:52px;background:var(--card-background-color);border:1px solid var(--divider-color);border-radius:var(--r);padding:8px 0;display:none;z-index:6;min-width:220px}
+.menu.on{display:block}.menu button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--primary-text-color);padding:12px 16px;font:400 var(--fs-2)/20px var(--ha-font);cursor:pointer}
+.menu button:hover{background:rgba(var(--rgb-primary-color),.08)}
+.bar .ibtn svg{width:24px;height:24px}
+footer{text-align:center;color:var(--secondary-text-color);font-size:var(--fs-1);margin-top:24px}footer a{color:var(--primary-color);text-decoration:none;font-weight:500}
+.dlg-h{display:flex;align-items:center;gap:16px;margin-bottom:8px}
+</style>
 </head>
-<body>
-<div class="bar" id="bar" hidden><span class="ibtn hi" id="devIcon"></span><h1 id="devName"></h1><span class="dot" id="conn" style="margin-right:6px"></span><button class="ibtn" id="feedBtn" title="Live"></button><button class="ibtn" id="menuBtn"></button></div>
+<body class="dv">
+<header class="bar" id="bar" hidden><h1 id="devName"></h1><span class="dot" id="conn"></span><button class="ibtn" id="feedBtn" title="Live"></button><button class="ibtn" id="menuBtn"></button></header>
 <main>
-  <div id="setup" class="card" hidden>
+  <section id="setup" hidden>
     <h2>HALiveTeo</h2>
     <p class="hint" id="setupTxt"></p>
     <input type="password" id="tokIn" placeholder="hl_…" autocomplete="off">
-    <p><button class="b" id="tokGo"></button></p>
-  </div>
+    <button class="b" id="tokGo"></button>
+  </section>
   <div id="app" hidden>
     <div class="menu" id="menu">
       <button id="mLive"></button><button id="mInst"></button><button id="mWake"></button><button id="mFull"></button><button id="mTok"></button>
     </div>
-    <div id="banner"></div>
-    <div class="card" id="hint" hidden style="display:none;align-items:center;gap:10px;flex-wrap:wrap"><span id="hintTxt" style="flex:1;min-width:180px"></span><button class="b sm" id="hintHow"></button><button class="b alt sm" id="hintOk"></button></div>
+    <div id="note"><span id="hintTxt"></span><button class="b alt sm" id="hintHow"></button><button class="b alt sm" id="hintOk"></button></div>
     <div class="grid" id="grid"></div>
     <footer><span id="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
   </div>
 </main>
 <div id="drawer"></div>
-<div id="toast"></div>
+<div class="toast" id="toast"></div>
+<div id="banner"></div>
 <script src="static/common.js"></script>
 <script src="static/icons.js"></script>
 <script>
 const tr = HL.tr, $ = id => document.getElementById(id);
 const store = {get:k=>{try{return localStorage.getItem(k)}catch{return null}}, set:(k,v)=>{try{localStorage.setItem(k,v)}catch{}}, del:k=>{try{localStorage.removeItem(k)}catch{}}};
-let toastT; const toast = (m,bad)=>{const e=$("toast");e.textContent=m;e.style.background=bad?"var(--err)":"";e.style.color=bad?"#fff":"";e.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),2600)};
+let toastT; const toast = (m,bad)=>{const e=$("toast");e.textContent=m;e.classList.toggle("bad",!!bad);e.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),2600)};
 $("by").textContent = tr("Stworzone przez","Created by");
-$("feedBtn").innerHTML = HL.icon("mdi:lightning-bolt-circle"); $("menuBtn").innerHTML = HL.icon("mdi:dots-vertical");
+$("feedBtn").innerHTML = HL.icon("mdi:lightning-bolt-circle"); $("menuBtn").innerHTML = HL.icon("mdi:dots-vertical"); $("menuBtn").title = tr("Menu","Menu");
 $("setupTxt").textContent = tr("Wklej token urządzenia z panelu HALiveTeo (lub otwórz link z tokenem).","Paste the device token from the HALiveTeo panel (or open the link that contains it).");
 $("tokGo").textContent = tr("Połącz","Connect");
-$("mLive").innerHTML = HL.icon("mdi:lightning-bolt-circle") + "<span>" + tr("Live Activities (Dynamic Island)","Live Activities (Dynamic Island)") + "</span>";
-$("mInst").innerHTML = HL.icon("mdi:cellphone") + "<span>" + tr("Dodaj do ekranu głównego","Add to Home Screen") + "</span>";
-$("mWake").innerHTML = HL.icon("mdi:brightness-6") + "<span>" + tr("Nie wygaszaj ekranu","Keep screen on") + "</span>";
-$("mFull").innerHTML = HL.icon("mdi:monitor") + "<span>" + tr("Pełny ekran","Fullscreen") + "</span>";
-$("mTok").innerHTML = HL.icon("mdi:key") + "<span>" + tr("Zmień token","Change token") + "</span>";
+$("mLive").textContent = "Live Activities";
+$("mInst").textContent = tr("Dodaj do ekranu głównego","Add to Home Screen");
+$("mWake").textContent = tr("Nie wygaszaj ekranu","Keep screen on");
+$("mFull").textContent = tr("Pełny ekran","Fullscreen");
+$("mTok").textContent = tr("Zmień token","Change token");
 
 // token from ?t=… link is stored, then removed from the address bar
 const q = new URLSearchParams(location.search);
@@ -85,11 +91,11 @@ function installDialog(){
   const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
   const d = document.createElement("dialog"); d.className = "hd";
   d.innerHTML = `<div class="hd-card"><h2>${tr("Przypnij do ekranu","Pin to your screen")}</h2>
-    ${ios ? `<ol style="padding-left:20px;line-height:24px"><li>${tr("Otwórz tę stronę w <b>Safari</b> i dotknij <b>Udostępnij</b> (kwadrat ze strzałką).","Open this page in <b>Safari</b> and tap <b>Share</b> (square with an arrow).")}</li>
+    ${ios ? `<ol style="padding-left:24px;margin:0 0 8px"><li>${tr("Otwórz tę stronę w <b>Safari</b> i dotknij <b>Udostępnij</b> (kwadrat ze strzałką).","Open this page in <b>Safari</b> and tap <b>Share</b> (square with an arrow).")}</li>
       <li>${tr("Wybierz <b>Do ekranu początkowego</b>.","Choose <b>Add to Home Screen</b>.")}</li><li>${tr("Dotknij <b>Dodaj</b> – ikona z nazwą urządzenia pojawi się na ekranie.","Tap <b>Add</b> – an icon with the device name appears on your screen.")}</li></ol>`
-    : `<p>${tr("W Chrome: menu <b>⋮</b> → <b>Zainstaluj aplikację</b> (lub <b>Dodaj do ekranu głównego</b>).","In Chrome: menu <b>⋮</b> → <b>Install app</b> (or <b>Add to Home screen</b>).")}</p>${deferredInstall ? `<p><button class="b" id="doInst">${tr("Zainstaluj teraz","Install now")}</button></p>` : ""}`}
-    <p class="hint"><b>${tr("Ekran blokady (iPhone)","Lock Screen (iPhone)")}:</b> ${tr("aplikacja Skróty → nowy skrót → <b>Otwórz URL</b> (wklej ten adres) → dodaj widżet <b>Skróty</b> na ekran blokady lub przypisz do przycisku Action.","Shortcuts app → new shortcut → <b>Open URL</b> (paste this address) → add a <b>Shortcuts</b> widget to the Lock Screen or assign it to the Action button.")}</p>
-    <div class="row" style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end"><button class="b alt" id="cpUrl">${tr("Kopiuj adres","Copy address")}</button><button class="b" id="clDlg">${tr("Zamknij","Close")}</button></div></div>`;
+    : `<p>${tr("W Chrome: menu <b>⋮</b> → <b>Zainstaluj aplikację</b> (lub <b>Dodaj do ekranu głównego</b>).","In Chrome: menu <b>⋮</b> → <b>Install app</b> (or <b>Add to Home screen</b>).")}</p>${deferredInstall ? `<p><button class="b alt" id="doInst">${tr("Zainstaluj teraz","Install now")}</button></p>` : ""}`}
+    <details class="help"><summary>${tr("Ekran blokady (iPhone)","Lock Screen (iPhone)")}</summary><p>${tr("Aplikacja Skróty → nowy skrót → <b>Otwórz URL</b> (wklej ten adres) → dodaj widżet <b>Skróty</b> na ekran blokady lub przypisz do przycisku Action.","Shortcuts app → new shortcut → <b>Open URL</b> (paste this address) → add a <b>Shortcuts</b> widget to the Lock Screen or assign it to the Action button.")}</p></details>
+    <div class="acts"><button class="b alt" id="cpUrl">${tr("Kopiuj adres","Copy address")}</button><button class="b" id="clDlg">${tr("Zamknij","Close")}</button></div></div>`;
   document.body.append(d); d.showModal(); d.onclose = () => d.remove();
   d.querySelector("#clDlg").onclick = () => d.close();
   d.querySelector("#cpUrl").onclick = async () => { try{ await navigator.clipboard.writeText(location.href); toast(tr("Skopiowano ✓","Copied ✓")); }catch{ toast(location.href); } };
@@ -97,6 +103,7 @@ function installDialog(){
 }
 function start(){
   $("app").hidden = false; $("bar").hidden = false;
+  $("feedBtn").style.display = "none";   // shown once the server says this device may see the feed
   let layout = {cols:2,tiles:[]}, st = {}, els = {}, pending = {}, seq = 0, live;
   const handlers = {
     press:(tile, el) => act({tile:tile.id}, el),
@@ -110,17 +117,19 @@ function start(){
   }
   function build(msg){
     layout = msg.device.layout; st = msg.states || {};
-    $("devName").textContent = msg.device.name; $("devIcon").innerHTML = HL.icon(msg.device.icon || "mdi:cellphone"); document.title = msg.device.name;
+    $("devName").textContent = msg.device.name; document.title = msg.device.name;
     els = HL.renderGrid($("grid"), layout, st, handlers);
     $("feedBtn").style.display = msg.device.show_feed ? "" : "none";
     if(msg.feed) renderFeed(msg.feed);
   }
   let feedRows = [];
   function renderFeed(rows){ feedRows = rows.slice(-40); drawFeed(); }
-  function drawFeed(){
-    const d = $("drawer");
-    d.innerHTML = `<div class="sec" style="font-weight:500;color:var(--secondary-text-color)">Live</div>` + (feedRows.length ? "" : `<div class="hint">${tr("Brak akcji.","No actions yet.")}</div>`) +
-      feedRows.slice().reverse().map(e => `<div class="fe"><span class="sh">${HL.icon(e.type==="live"?"mdi:lightning-bolt-circle":e.type==="event"?"mdi:bullhorn-outline":"mdi:gesture-tap")}</span><span><b>${HL.esc(e.label||e.type)}</b> <small>${HL.esc(e.device)} · ${HL.time(e.ts)}</small>${e.ok?"":` <span class="bad">${HL.esc(e.error)}</span>`}</span></div>`).join("");
+  function drawFeed(){   // only while the drawer is open; scroll position is kept
+    const d = $("drawer"); if(!d.classList.contains("on")) return;
+    const y = d.scrollTop;
+    d.innerHTML = (feedRows.length ? "" : `<div class="hint">${tr("Brak akcji.","No actions yet.")}</div>`) +
+      feedRows.slice().reverse().map(e => `<div class="li"><div class="n"><b>${HL.esc(e.label||e.type)}</b><div class="hint">${HL.esc(e.device)} · ${HL.time(e.ts)}${e.ok?"":` · <span class="bad">${HL.esc(e.error)}</span>`}</div></div></div>`).join("");
+    d.scrollTop = y;
   }
   live = HL.live({
     query: "?t=" + encodeURIComponent(token),
@@ -131,7 +140,7 @@ function start(){
       if(ok) b.style.display = "none";
       else { b.style.display = "block";
         b.innerHTML = (everOpen || retry < 2) ? tr("Łączenie…","Reconnecting…")
-          : tr("Nie można połączyć. Sprawdź token lub adres.","Cannot connect. Check the token or address.") + ` <a href="#" id="bTok" style="color:#fff;font-weight:700">${tr("Zmień token","Change token")}</a>`;
+          : tr("Nie można połączyć. Sprawdź token lub adres.","Cannot connect. Check the token or address.") + ` <a href="#" id="bTok">${tr("Zmień token","Change token")}</a>`;
         const l = $("bTok"); if(l) l.onclick = e => { e.preventDefault(); store.del("hl_token"); location.reload(); }; }
     },
     onMsg: msg => {
@@ -155,38 +164,39 @@ function start(){
     liveDlg.showModal(); liveDlg.innerHTML = `<div class="hd-card"><h2>Live Activities</h2><div class="hint">…</div></div>`; live.send({t:"live_list"}); }
   function drawLive(){
     if(!liveDlg || !LIVE) return;
-    const card = liveDlg.querySelector(".hd-card"); card.innerHTML = `<h2>Live Activities</h2>`;
-    if(liveForm) return drawLiveForm(card);
+    const card = liveDlg.querySelector(".hd-card"), y = card.scrollTop; card.innerHTML = `<h2>Live Activities</h2>`;
+    if(liveForm){ drawLiveForm(card); card.scrollTop = y; return; }
     const hint = document.createElement("div"); hint.className = "hint"; hint.style.marginBottom = "8px";
-    hint.textContent = LIVE.phone ? tr("Pokazują się na Dynamic Island i ekranie blokady Twojego iPhone'a (aplikacja Home Assistant).","They appear on your iPhone's Dynamic Island and Lock Screen (Home Assistant app).")
-      : tr("Ten użytkownik nie ma przypisanego telefonu – poproś admina, żeby ustawił go w edytorze urządzenia.","This user has no phone assigned – ask the admin to set it in the device editor.");
+    hint.textContent = LIVE.phone ? tr("Dynamic Island i ekran blokady Twojego iPhone'a.","Shown on your iPhone's Dynamic Island and Lock Screen.")
+      : tr("Brak przypisanego telefonu – poproś admina o ustawienie go w edytorze urządzenia.","No phone assigned – ask the admin to set it in the device editor.");
     card.append(hint);
     if(!LIVE.activities.length){ const e = document.createElement("div"); e.className = "hint"; e.textContent = tr("Nic nie zostało Ci przydzielone.","Nothing has been given to you yet."); card.append(e); }
     LIVE.activities.forEach(a => {
-      const row = document.createElement("div"); row.style.cssText = "display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--divider-color)";
-      row.innerHTML = `<div style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none;color:${HL.esc(a.color)};background:color-mix(in srgb,${HL.esc(a.color)} 20%,transparent)">${HL.icon(a.icon)}</div>
-        <div style="flex:1;min-width:0"><div style="font-weight:500" class="nm"></div><div class="hint sb"></div></div>`;
-      row.querySelector(".nm").textContent = a.name; row.querySelector(".sb").textContent = a.entity_id + (a.owner ? " · " + tr("moja","mine") : tr(" · od admina"," · from admin")) + (a.running ? " · ●" : "");
-      if(!a.owner){ const sw = document.createElement("input"); sw.type = "checkbox"; sw.checked = !a.muted;
+      const row = document.createElement("div"); row.className = "li";
+      row.innerHTML = `<span class="shape" style="color:${HL.esc(a.color)}">${HL.icon(a.icon)}</span><div class="n"><b class="nm"></b><div class="hint sb"></div></div>`;
+      row.querySelector(".nm").textContent = a.name; row.querySelector(".sb").textContent = a.entity_id + (a.owner ? " · " + tr("moja","mine") : tr(" · od admina"," · from admin")) + (a.running ? " · " + tr("działa","running") : "");
+      if(!a.owner){ const sw = document.createElement("input"); sw.type = "checkbox"; sw.checked = !a.muted; sw.setAttribute("aria-label", a.name);
         sw.onchange = () => live.send({t:"live_follow", id:a.id, on:sw.checked}); row.append(sw); }
-      else { const ed = document.createElement("button"); ed.className = "b alt sm"; ed.textContent = tr("Edytuj","Edit"); ed.onclick = () => { liveForm = a.raw; drawLive(); };
-        const dl = document.createElement("button"); dl.className = "b red sm"; dl.textContent = tr("Usuń","Delete"); dl.onclick = () => { if(confirm(tr("Usunąć?","Delete?"))) live.send({t:"live_delete", id:a.id}); };
-        row.append(ed, dl); }
+      else { const kb = HL.kebab([["ed", tr("Edytuj","Edit")], ["dl", tr("Usuń","Delete"), "red"]]);
+        kb.querySelector("[data-a=ed]").onclick = () => { liveForm = a.raw; drawLive(); };
+        kb.querySelector("[data-a=dl]").onclick = () => { if(confirm(tr("Usunąć?","Delete?"))) live.send({t:"live_delete", id:a.id}); };
+        row.append(kb); }
       card.append(row);
     });
-    const bar = document.createElement("div"); bar.style.cssText = "display:flex;gap:8px;justify-content:flex-end;margin-top:16px";
-    if(LIVE.mode === "create"){ const nb = document.createElement("button"); nb.className = "b alt"; nb.textContent = tr("+ Nowa","+ New"); nb.onclick = () => { liveForm = {}; drawLive(); }; bar.append(nb); }
-    const cl = document.createElement("button"); cl.className = "b"; cl.textContent = tr("Zamknij","Close"); cl.onclick = () => liveDlg.close(); bar.append(cl); card.append(bar);
+    const bar = document.createElement("div"); bar.className = "acts";
+    const cl = document.createElement("button"); cl.className = "b alt"; cl.textContent = tr("Zamknij","Close"); cl.onclick = () => liveDlg.close(); bar.append(cl);
+    if(LIVE.mode === "create"){ const nb = document.createElement("button"); nb.className = "b"; nb.textContent = tr("+ Nowa","+ New"); nb.onclick = () => { liveForm = {}; drawLive(); }; bar.append(nb); }
+    card.append(bar); card.scrollTop = y;
   }
   function drawLiveForm(card){
     const A = liveForm, ents = LIVE.entities;
-    card.insertAdjacentHTML("beforeend", `<label class="f">${tr("Nazwa","Name")}</label><input type="text" id="lfName">
+    card.insertAdjacentHTML("beforeend", `<label class="f" style="margin-top:0">${tr("Nazwa","Name")}</label><input type="text" id="lfName">
       <label class="f">${tr("Encja (tylko dozwolone)","Entity (allowed only)")}</label><select id="lfEnt">${ents.map(e => `<option value="${HL.esc(e.id)}">${HL.esc(e.name)} (${HL.esc(e.id)})</option>`).join("")}</select>
       <label class="f">${tr("Szablon","Preset")}</label><select id="lfPre">${Object.entries(PRE).map(([k, v]) => `<option value="${k}">${HL.esc(v[0])}</option>`).join("")}</select>
       <label class="f">${tr("Treść ({state} {name} {attr.nazwa})","Message ({state} {name} {attr.name})")}</label><input type="text" id="lfMsg">
-      <div style="display:flex;gap:8px"><div style="flex:1"><label class="f">${tr("Start gdy stan ∈","Start when state ∈")}</label><input type="text" id="lfStart"></div><div style="flex:1"><label class="f">${tr("Koniec gdy stan ∈","End when state ∈")}</label><input type="text" id="lfEnd"></div></div>
-      <div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:1"><label class="f">${tr("Ikona","Icon")}</label><select id="lfIcon">${ICONS.map(i => `<option value="mdi:${i}">${i}</option>`).join("")}</select></div><input type="color" id="lfColor" value="#03A9F4"></div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button class="b alt" id="lfCancel">${tr("Anuluj","Cancel")}</button><button class="b" id="lfSave">${tr("Zapisz","Save")}</button></div>`);
+      <div class="row"><div class="grow"><label class="f">${tr("Start gdy stan ∈","Start when state ∈")}</label><input type="text" id="lfStart"></div><div class="grow"><label class="f">${tr("Koniec gdy stan ∈","End when state ∈")}</label><input type="text" id="lfEnd"></div></div>
+      <div class="row"><div class="grow"><label class="f">${tr("Ikona","Icon")}</label><select id="lfIcon">${ICONS.map(i => `<option value="mdi:${i}">${i}</option>`).join("")}</select></div><input type="color" id="lfColor" value="#03A9F4"></div>
+      <div class="acts"><button class="b alt" id="lfCancel">${tr("Anuluj","Cancel")}</button><button class="b" id="lfSave">${tr("Zapisz","Save")}</button></div>`);
     const $$ = id => card.querySelector("#" + id), fillPre = k => { const p = PRE[k][1]; $$("lfMsg").value = p.message; $$("lfStart").value = p.start_states; $$("lfEnd").value = p.end_states; };
     $$("lfName").value = A.name || ""; if(A.entity_id) $$("lfEnt").value = A.entity_id; $$("lfPre").onchange = () => fillPre($$("lfPre").value);
     if(A.id){ $$("lfMsg").value = A.message || ""; $$("lfStart").value = (A.start_states || []).join(","); $$("lfEnd").value = (A.end_states || []).join(","); $$("lfIcon").value = A.icon || "mdi:lightbulb"; $$("lfColor").value = A.color || "#03A9F4";
@@ -201,14 +211,15 @@ function start(){
   $("mInst").onclick = installDialog;
   if(isStandalone()) $("mInst").style.display = "none";
   else if(/iPhone|iPad|iPod/.test(navigator.userAgent) && !store.get("hl_hint")){   // one-time hint on iOS
-    const h = $("hint"); h.style.display = "flex"; h.hidden = false;
+    const h = $("note"); h.style.display = "flex";
     $("hintTxt").textContent = tr("Dodaj do ekranu głównego: Udostępnij → Do ekranu początkowego.","Add to your Home Screen: Share → Add to Home Screen.");
     $("hintHow").textContent = tr("Jak?","How?"); $("hintOk").textContent = tr("Ukryj","Hide");
     $("hintHow").onclick = installDialog; $("hintOk").onclick = () => { h.style.display = "none"; store.set("hl_hint", "1"); };
   }
-  $("feedBtn").onclick = () => $("drawer").classList.toggle("on");
-  $("drawer").onclick = e => { if(e.target.id === "drawer") $("drawer").classList.remove("on"); };
+  $("feedBtn").onclick = () => { $("drawer").classList.toggle("on"); drawFeed(); };
+  document.addEventListener("click", e => { if(!e.target.closest("#drawer,#feedBtn")) $("drawer").classList.remove("on"); });
   $("menuBtn").onclick = () => $("menu").classList.toggle("on");
+  $("menu").addEventListener("click", () => $("menu").classList.remove("on"));
   document.addEventListener("click", e => { if(!e.target.closest("#menu,#menuBtn")) $("menu").classList.remove("on"); });
   $("mTok").onclick = () => { if(confirm(tr("Usunąć token z tego urządzenia?","Remove the token from this device?"))){ store.del("hl_token"); location.reload(); } };
   $("mFull").onclick = () => { (document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen)?.call(document.documentElement); };

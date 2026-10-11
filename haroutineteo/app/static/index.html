@@ -6,54 +6,52 @@
 <title>HARoutineTeo</title>
 <link rel="stylesheet" href="static/common.css">
 <style>
-.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px}
-.rt{padding:12px;display:block;cursor:default}.rt .top{display:flex;gap:10px;align-items:center}
-.pbar{height:6px;border-radius:3px;background:rgba(var(--rgb-primary-color),.2);overflow:hidden;margin-top:8px}.pbar i{display:block;height:100%;background:var(--primary-color);transition:width .3s}
-.stp{display:flex;gap:6px;align-items:center;padding:8px 0;border-top:1px solid var(--divider-color);flex-wrap:wrap}.stp:first-child{border-top:0}.stp .n{flex:1;min-width:140px}
-.sbox{background:var(--primary-background-color);border-radius:12px;padding:4px 12px 12px;margin:8px 0}
+.li{position:relative}
+.li.dim .n,.li.dim .shape{opacity:.5}
+.li .pb{position:absolute;left:0;right:0;bottom:-1px;height:2px;background:rgba(var(--rgb-primary-color),.2)}.li .pb i{display:block;height:100%;background:var(--primary-color);transition:width .12s}
+.sbox{border-top:1px solid var(--divider-color);border-bottom:1px solid var(--divider-color);padding:8px 0 16px;margin:8px 0}
+.sbox>.sec{min-height:28px}
+.logl{font:var(--fs-1)/16px ui-monospace,monospace;color:var(--secondary-text-color);white-space:pre-wrap;margin-top:4px}
 dialog.hd{max-width:min(680px,95vw)}
-.days{display:flex;gap:4px;flex-wrap:wrap}.days label{display:flex;gap:4px;align-items:center;border:1px solid var(--outline-color);border-radius:14px;padding:2px 10px;font-size:13px}
-.logl{font:12px/18px ui-monospace,monospace;color:var(--secondary-text-color);white-space:pre-wrap}
+#tplBox{margin:0 0 8px}
+#tplBox .hint{margin-bottom:8px}
+.dlg-sec{margin-top:24px}
 </style>
 </head>
 <body>
-<div class="bar"><span class="ibtn" id="barIcon"></span><h1>HARoutineTeo</h1><small class="hint" id="tag" style="margin-right:12px"></small></div>
+<div class="bar"><h1>HARoutineTeo</h1></div>
 <main>
 <div class="tabs" id="tabs"></div>
 
 <div class="view" id="v-rt">
-  <div class="row" style="margin:0 0 12px"><button class="b" id="newBtn"></button><button class="b alt" id="tplBtn"></button></div>
-  <div id="tplBox" hidden class="card" style="padding:12px"><div class="hint" id="tplHint" style="margin-bottom:8px"></div>
-    <div class="row" style="margin-top:0"><button class="b alt sm" data-t="goodnight"></button><button class="b alt sm" data-t="leaving"></button><button class="b alt sm" data-t="movie"></button></div></div>
-  <div class="rgrid" id="rgrid"></div>
-  <div class="hint" id="rempty" hidden style="padding:24px 0;text-align:center"></div>
+  <div class="tb"><button class="b alt" id="tplBtn"></button><span class="sp"></span><button class="b" id="newBtn"></button></div>
+  <div id="tplBox" hidden class="panel"><div class="hint" id="tplHint"></div>
+    <div class="chips"><button class="b alt sm" data-t="goodnight"></button><button class="b alt sm" data-t="leaving"></button><button class="b alt sm" data-t="movie"></button></div></div>
+  <div id="rgrid"></div>
+  <div class="hint" id="rempty" hidden style="padding:16px 0"></div>
 </div>
 
 <div class="view" id="v-act">
-  <div class="card"><div class="sec" id="tRun"></div><div id="runList"></div></div>
-  <div class="card"><div class="sec" id="tHist"></div><div id="histList"></div></div>
+  <div class="sec" id="tRun"></div><div id="runList"></div><div class="hint" id="runEmpty" hidden style="min-height:40px;padding:12px 0"></div>
+  <div class="sec" id="tHist" style="margin-top:24px"></div><div id="histList"></div><div class="hint" id="histEmpty" hidden style="padding:12px 0"></div>
 </div>
 
 <div class="view" id="v-tok">
-  <div class="card">
-    <div class="sec"><span id="tTok"></span><span class="sp"></span><button class="b sm" id="tokNew"></button></div>
-    <div class="hint" id="tokHint" style="margin-bottom:10px"></div>
-    <div id="tokForm" hidden class="card" style="background:var(--primary-background-color)">
-      <label class="f" id="lTokName"></label><input type="text" id="tkName"><label class="f" id="lTokR"></label><div class="chips" id="tkR"></div>
-      <div class="row"><button class="b" id="tkCreate"></button><button class="b alt" id="tkCancel"></button></div></div>
-    <div id="tokResult"></div><div id="tokList"></div>
-  </div>
+  <div class="tb"><span class="sp"></span><button class="b" id="tokNew"></button></div>
+  <div id="tokForm" hidden class="panel">
+    <label class="f" id="lTokName" style="margin-top:0"></label><input type="text" id="tkName"><label class="f" id="lTokR"></label><div class="chips" id="tkR"></div>
+    <div class="acts"><button class="b alt" id="tkCancel"></button><button class="b" id="tkCreate"></button></div></div>
+  <div id="tokResult"></div><div id="tokList"></div><div class="hint" id="tokEmpty" hidden style="padding:12px 0"></div>
+  <details class="help"><summary id="tokHelpS"></summary><div class="hint" id="tokHint"></div></details>
 </div>
 
 <div class="view" id="v-set">
-  <div class="card">
-    <div class="sec" id="sDef"></div>
-    <label class="f" id="lPhones"></label><div class="chips" id="phones"></div>
-    <label class="f" id="lSpk"></label><div class="chips" id="spk"></div>
-    <div class="row"><div class="grow"><label class="f" id="lTts"></label><select id="tts"></select></div><div class="grow"><label class="f" id="lLang"></label><input type="text" id="lang" placeholder="pl, en"></div></div>
-    <label class="chk"><input type="checkbox" id="dLive"> <span id="tdLive"></span></label>
-    <div class="row"><button class="b" id="saveBtn"></button></div>
-  </div>
+  <label class="f" id="lPhones" style="margin-top:0"></label><div class="chips" id="phones"></div>
+  <label class="f" id="lSpk"></label><div class="chips" id="spk"></div>
+  <div class="row"><div class="grow"><label class="f" id="lTts"></label><select id="tts"></select></div><div class="grow"><label class="f" id="lLang"></label><input type="text" id="lang" placeholder="pl, en"></div></div>
+  <label class="chk"><input type="checkbox" id="dLive"> <span id="tdLive"></span></label>
+  <div class="acts"><button class="b" id="saveBtn"></button></div>
+  <details class="help"><summary id="setHelpS"></summary><div class="hint" id="setHelp"></div></details>
 </div>
 
 <footer><span id="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
@@ -65,19 +63,20 @@ dialog.hd{max-width:min(680px,95vw)}
 <script>
 const tr = HL.tr, esc = HL.esc, $ = id => document.getElementById(id);
 let S = null, off = 0;
-$("barIcon").innerHTML = HL.icon("mdi:play-circle"); $("tag").textContent = tr("Rutyny z krokami","Step-based routines"); $("by").textContent = tr("Stworzone przez","Created by");
-[["rt",tr("Rutyny","Routines")],["act",tr("Aktywność","Activity")],["tok",tr("Skróty (tokeny)","Shortcuts (tokens)")],["set",tr("Ustawienia","Settings")]].forEach(([id, l]) => { const b = document.createElement("button"); b.textContent = l; b.dataset.id = id; b.onclick = () => show(id); $("tabs").append(b); });
+$("by").textContent = tr("Stworzone przez","Created by");
+[["rt",tr("Rutyny","Routines")],["act",tr("Aktywność","Activity")],["tok",tr("Skróty","Shortcuts")],["set",tr("Ustawienia","Settings")]].forEach(([id, l]) => { const b = document.createElement("button"); b.textContent = l; b.dataset.id = id; b.onclick = () => show(id); $("tabs").append(b); });
 function show(id){ document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.id === id)); document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + id));
   if(id === "set") fillSettings(); if(id === "tok") renderTokens(); if(id === "act") renderAct(); }
-const T = {newBtn:tr("+ Nowa rutyna","+ New routine"), tpl:tr("Gotowe przykłady","Examples"), tplHint:tr("Tworzy rutynę z przykładowymi krokami – dopasuj encje do swojego domu.","Creates a routine with sample steps – adjust the entities to your home."),
-  goodnight:tr("Dobranoc","Good night"), leaving:tr("Wychodzę","Leaving"), movie:tr("Seans","Movie"), rempty:tr("Brak rutyn. Utwórz własną albo wypróbuj gotowy przykład.","No routines yet. Create your own or try an example."),
-  tRun:tr("Teraz działa","Running now"), tHist:tr("Historia","History"), tTok:tr("Tokeny dla Skrótów","Tokens for Shortcuts"), tokNew:tr("+ Nowy token","+ New token"),
+const T = {newBtn:tr("+ Nowa rutyna","+ New routine"), tpl:tr("Przykłady","Examples"), tplHint:tr("Tworzy rutynę z przykładowymi krokami – dopasuj encje do swojego domu.","Creates a routine with sample steps – adjust the entities to your home."),
+  goodnight:tr("Dobranoc","Good night"), leaving:tr("Wychodzę","Leaving"), movie:tr("Seans","Movie"), rempty:tr("Brak rutyn. Utwórz własną albo wypróbuj przykład.","No routines yet. Create your own or try an example."),
+  tRun:tr("Teraz działa","Running now"), tHist:tr("Historia","History"), tokNew:tr("+ Nowy token","+ New token"),
   tokHint:tr("Token pozwala skrótowi iPhone'a uruchamiać rutyny („Hej Siri, Dobranoc”). Możesz ograniczyć go do wybranych rutyn.","A token lets an iPhone shortcut run routines (“Hey Siri, Good night”). You can limit it to selected routines."),
   lTokName:tr("Nazwa","Name"), lTokR:tr("Dozwolone rutyny (puste = wszystkie)","Allowed routines (empty = all)"), tkCreate:tr("Utwórz token","Create token"), cancel:tr("Anuluj","Cancel"),
-  sDef:tr("Domyślne ustawienia","Defaults"), lPhones:tr("Telefony (powiadomienia i Dynamic Island)","Phones (notifications and Dynamic Island)"), lSpk:tr("Domyślne głośniki do głosu","Default speakers for speech"), lTts:tr("Silnik TTS","TTS engine"), lLang:tr("Język (opcjonalnie)","Language (optional)"),
-  tdLive:tr("Pokazuj postęp kroków na Dynamic Island (iOS 17.2+, Core 2026.7+)","Show step progress on the Dynamic Island (iOS 17.2+, Core 2026.7+)"), save:tr("Zapisz","Save")};
-for(const k of ["tplHint","rempty","tRun","tHist","tTok","tokHint","lTokName","lTokR","sDef","lPhones","lSpk","lTts","lLang","tdLive"]) $(k).textContent = T[k];
+  lPhones:tr("Telefony (powiadomienia i Dynamic Island)","Phones (notifications and Dynamic Island)"), lSpk:tr("Domyślne głośniki do głosu","Default speakers for speech"), lTts:tr("Silnik TTS","TTS engine"), lLang:tr("Język (opcjonalnie)","Language (optional)"),
+  tdLive:tr("Postęp kroków na Dynamic Island","Step progress on the Dynamic Island"), setHelp:tr("Dynamic Island wymaga iOS 17.2+ i Home Assistant Core 2026.7+ oraz włączonych Live Activities w aplikacji Companion.","The Dynamic Island needs iOS 17.2+, Home Assistant Core 2026.7+ and Live Activities enabled in the Companion app."), save:tr("Zapisz","Save"), help:tr("Pomoc","Help")};
+for(const k of ["tplHint","rempty","tRun","tHist","tokHint","lTokName","lTokR","lPhones","lSpk","lTts","lLang","tdLive","setHelp"]) $(k).textContent = T[k];
 $("newBtn").textContent = T.newBtn; $("tplBtn").textContent = T.tpl; $("tokNew").textContent = T.tokNew; $("tkCreate").textContent = T.tkCreate; $("tkCancel").textContent = T.cancel; $("saveBtn").textContent = T.save;
+$("tokHelpS").textContent = $("setHelpS").textContent = T.help;
 [["goodnight"],["leaving"],["movie"]].forEach(([k]) => document.querySelector(`[data-t=${k}]`).textContent = T[k]);
 
 const DAYS = [tr("Pn","Mo"),tr("Wt","Tu"),tr("Śr","We"),tr("Cz","Th"),tr("Pt","Fr"),tr("Sb","Sa"),tr("Nd","Su")];
@@ -87,43 +86,67 @@ const stepText = s => s.label || ({service:s.service + (s.entity_id ? " → " + 
   wait_state:`${s.entity_id} = ${s.state}`, fade:`${s.entity_id} → ${s.to}% (${fmtDur(s.seconds)})`, stop_if:`${tr("jeśli","if")} ${s.when ? s.when.entity_id + " " + s.when.op + " " + s.when.value : ""}`}[s.type] || s.type);
 const fmtDur = sec => sec >= 3600 ? (sec/3600).toFixed(sec % 3600 ? 1 : 0) + " h" : sec >= 60 ? (sec/60).toFixed(sec % 60 ? 1 : 0) + " min" : Math.round(sec) + " s";
 const trigText = t => t.type === "time" ? "" + t.at + (t.days.length < 7 ? " (" + t.days.map(d => DAYS[d]).join(",") + ")" : "") : `${t.entity_id}${t.to ? " → " + t.to : ""}${t.for ? " " + tr("przez","for") + " " + fmtDur(t.for) : ""}`;
+const shortDate = ts => new Date(ts * 1000).toLocaleString(undefined, {dateStyle:"short", timeStyle:"short"});
 
+// The panel polls every 2.5 s. Nothing is redrawn unless it really changed: lists are synced row by row, datalists only when their content changed.
+let dlSig = "";
 async function load(){
   try{ S = await HL.api("state"); }catch(e){ return HL.toast(e.message, true); }
   off = S.now - Date.now()/1000;
-  $("dlEnt").innerHTML = S.entities.map(e => `<option value="${esc(e.id)}">${esc(e.name)}</option>`).join(""); $("dlSvc").innerHTML = S.services.map(s => `<option value="${esc(s)}">`).join("");
+  const sig = S.entities.length + ":" + S.entities.map(e => e.id + e.name).join("|") + "#" + S.services.join("|");
+  if(sig !== dlSig){ dlSig = sig;
+    $("dlEnt").innerHTML = S.entities.map(e => `<option value="${esc(e.id)}">${esc(e.name)}</option>`).join(""); $("dlSvc").innerHTML = S.services.map(s => `<option value="${esc(s)}">`).join(""); }
   renderRt(); if($("v-act").classList.contains("on")) renderAct();
 }
 function chipset(box, items, sel){ box.innerHTML = ""; if(!items.length){ box.innerHTML = `<span class="hint">—</span>`; return; }
   items.forEach(it => { const id = it.id || it, l = document.createElement("label"); l.innerHTML = `<input type="checkbox" value="${esc(id)}" ${sel.includes(id) ? "checked" : ""}> ${esc(it.name || it)}`; box.append(l); }); }
 const vals = box => [...box.querySelectorAll("input:checked")].map(i => i.value);
 
+// ---- routines list: one line per routine; a running routine shows its step in the same line + a thin progress line (the row never changes height)
+function rtRow(r){
+  const run = S.runs.find(x => x.routine_id === r.id), el = document.createElement("div"); el.className = "li click" + (r.enabled ? "" : " dim");
+  const pct = run ? Math.round(run.step / Math.max(1, run.total) * 100) : 0;
+  el.innerHTML = `<span class="shape">${HL.icon(r.icon)}</span><div class="n"><b><span class="dot ${run ? "on" : ""}" style="margin-right:8px"></span><span class="nm"></span></b><div class="hint sb"></div></div>
+    <button class="b alt sm go ${run ? "red" : ""}">${run ? tr("Stop","Stop") : tr("Uruchom","Run")}</button><button class="b alt sm mut ed">${tr("Edytuj","Edit")}</button>${run ? `<span class="pb"><i style="width:${pct}%"></i></span>` : ""}`;
+  el.querySelector(".nm").textContent = r.name + (r.enabled ? "" : " (" + tr("wyłączona","disabled") + ")");
+  el.querySelector(".sb").textContent = run ? `${run.step + 1}/${run.total} · ${run.current || ""}`
+    : `${r.steps.length} ${tr("kroków","steps")}` + (r.triggers.length ? " · " + r.triggers.map(trigText).join(" · ") : "") + (r.last_run ? " · " + tr("ostatnio","last") + " " + HL.ago(r.last_run) : "");
+  const go = el.querySelector(".go");
+  go.onclick = async e => { e.stopPropagation(); if(el._busy) return; el._busy = true;
+    // instant feedback: the row already shows the new state while the request is in flight
+    go.textContent = run ? tr("Uruchom","Run") : tr("Stop","Stop"); go.classList.toggle("red", !run); el.querySelector(".dot").classList.toggle("on", !run);
+    try{ await HL.post(`routines/${r.id}/${run ? "stop" : "run"}`); }catch(err){ HL.toast(err.message, true); }
+    el._sig = ""; load(); setTimeout(load, 400); };
+  el.querySelector(".ed").onclick = e => { e.stopPropagation(); editor(r); };
+  el.onclick = e => { if(!e.target.closest("button")) editor(r); };
+  return el;
+}
 function renderRt(){
-  const box = $("rgrid"); box.innerHTML = ""; $("rempty").hidden = S.routines.length > 0;
-  S.routines.forEach(r => { const run = S.runs.find(x => x.routine_id === r.id), el = document.createElement("div"); el.className = "tile rt" + (r.enabled ? "" : " unavail");
-    const pct = run ? Math.round(run.step / Math.max(1, run.total) * 100) : 0;
-    el.innerHTML = `<div class="top"><div class="shape" style="color:${esc(r.color)};background:color-mix(in srgb,${esc(r.color)} 20%,transparent)">${HL.icon(r.icon)}</div>
-      <div style="flex:1;min-width:0"><div style="font-weight:500" class="nm"></div><div class="hint sb" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div></div>
-      <button class="b sm ${run ? "red" : ""} go">${run ? "■" : "▶"}</button><button class="b alt sm ed">${tr("Edytuj","Edit")}</button></div>
-      ${run ? `<div class="pbar"><i style="width:${pct}%"></i></div><div class="hint" style="margin-top:4px">${run.step + 1}/${run.total} · ${esc(run.current || "")}</div>` : ""}`;
-    el.querySelector(".nm").textContent = r.name + (r.enabled ? "" : " (" + tr("wyłączona","disabled") + ")");
-    el.querySelector(".sb").textContent = `${r.steps.length} ${tr("kroków","steps")}` + (r.triggers.length ? " · " + r.triggers.map(trigText).join(" · ") : "") + (r.last_run ? " · " + tr("ostatnio","last") + " " + HL.ago(r.last_run) : "");
-    el.querySelector(".go").onclick = async () => { try{ await HL.post(`routines/${r.id}/${run ? "stop" : "run"}`); setTimeout(load, 300); }catch(e){ HL.toast(e.message, true); } };
-    el.querySelector(".ed").onclick = () => editor(r); box.append(el); });
+  $("rempty").hidden = S.routines.length > 0;
+  HL.sync($("rgrid"), S.routines, r => r.id, rtRow, r => { const run = S.runs.find(x => x.routine_id === r.id); return JSON.stringify([r, run ? [run.step, run.total, run.current] : null, r.last_run ? HL.ago(r.last_run) : ""]); });
 }
 setInterval(() => { if(!document.hidden) load(); }, 2500);
 
+function runRow(x){
+  const el = document.createElement("div"); el.className = "li"; const pct = Math.round(x.step / Math.max(1, x.total) * 100);
+  el.innerHTML = `<div class="n"><b></b><div class="hint"></div></div><button class="b red sm">${tr("Stop","Stop")}</button><span class="pb"><i style="width:${pct}%"></i></span>`;
+  el.querySelector("b").textContent = x.name; el.querySelector(".hint").textContent = `${x.step + 1}/${x.total} · ${x.current || ""} · ${x.source}`;
+  const bt = el.querySelector("button"); bt.onclick = async () => { bt.disabled = true; try{ await HL.post(`routines/${x.routine_id}/stop`); }catch(e){ HL.toast(e.message, true); } load(); };
+  return el;
+}
+function histRow(h){
+  const ok = h.status === "done", el = document.createElement("div"); el.className = "li"; el.style.alignItems = "flex-start";
+  el.innerHTML = `<span class="shape" style="${h.status === "error" ? "color:var(--error-color)" : ""}">${HL.icon(ok ? "mdi:check-circle" : h.status === "error" ? "mdi:alert-circle" : "mdi:cancel")}</span><div class="n"><b></b><div class="hint"></div><details><summary class="hint" style="cursor:pointer">${tr("Szczegóły","Details")}</summary><div class="logl"></div></details></div><span class="badge">${shortDate(h.started)}</span>`;
+  el.querySelector("b").textContent = h.name; el.querySelector(".n > .hint").textContent = `${h.status} · ${h.source} · ${fmtDur(Math.max(1, (h.ended || h.started) - h.started))}`;
+  el.querySelector(".logl").textContent = h.log.map(l => new Date(l.ts*1000).toLocaleTimeString() + "  " + l.msg).join("\n");
+  return el;
+}
 function renderAct(){
-  if(!S) return; const rl = $("runList"); rl.innerHTML = S.runs.length ? "" : `<div class="hint">${tr("Nic teraz nie działa.","Nothing is running.")}</div>`;
-  S.runs.forEach(x => { const el = document.createElement("div"); el.className = "item"; const pct = Math.round(x.step / Math.max(1, x.total) * 100);
-    el.innerHTML = `<div class="n"><b></b><div class="hint"></div><div class="pbar"><i style="width:${pct}%"></i></div></div><button class="b red sm">■ Stop</button>`;
-    el.querySelector("b").textContent = x.name; el.querySelector(".hint").textContent = `${x.step + 1}/${x.total} · ${x.current || ""} · ${x.source}`;
-    el.querySelector("button").onclick = async () => { try{ await HL.post(`routines/${x.routine_id}/stop`); load(); }catch(e){ HL.toast(e.message, true); } }; rl.append(el); });
-  const hl = $("histList"); hl.innerHTML = S.history.length ? "" : `<div class="hint">${tr("Brak historii.","No history yet.")}</div>`;
-  S.history.forEach(h => { const ok = h.status === "done", col = ok ? "var(--success-color)" : h.status === "error" ? "var(--error-color)" : "var(--warning-color)", el = document.createElement("div"); el.className = "item";
-    el.innerHTML = `<div class="shape" style="color:${col};background:color-mix(in srgb,${col} 20%,transparent)">${HL.icon(ok ? "mdi:check-circle" : h.status === "error" ? "mdi:alert-circle" : "mdi:cancel")}</div><div class="n"><b></b><div class="hint"></div><details><summary class="hint" style="cursor:pointer">${tr("Szczegóły","Details")}</summary><div class="logl"></div></details></div><span class="badge">${new Date(h.started*1000).toLocaleString()}</span>`;
-    el.querySelector("b").textContent = h.name; el.querySelector(".hint").textContent = `${h.status} · ${h.source} · ${fmtDur(Math.max(1, (h.ended || h.started) - h.started))}`;
-    el.querySelector(".logl").textContent = h.log.map(l => new Date(l.ts*1000).toLocaleTimeString() + "  " + l.msg).join("\n"); hl.append(el); });
+  if(!S) return;
+  $("runEmpty").textContent = tr("Nic teraz nie działa.","Nothing is running."); $("runEmpty").hidden = S.runs.length > 0;
+  HL.sync($("runList"), S.runs, x => x.id, runRow, x => JSON.stringify([x.step, x.total, x.current, x.source, x.name]));
+  $("histEmpty").textContent = tr("Brak historii.","No history yet."); $("histEmpty").hidden = S.history.length > 0;
+  HL.sync($("histList"), S.history, h => h.id, histRow);
 }
 
 // ---------------- editor
@@ -136,42 +159,46 @@ const readCond = p => { const e = $(p + "E").value.trim(); return e ? {entity_id
 
 function editor(r){
   const R = r ? JSON.parse(JSON.stringify(r)) : {id:"", name:"", icon:"mdi:play-circle", color:"#03A9F4", enabled:true, mode:"single", live:true, phones:[], steps:[], triggers:[]};
-  let stepEdit = null, trigEdit = false;
-  const draw = () => { const b = $("dlgBody");
+  let stepEdit = null, trigEdit = false, reveal = null;
+  const draw = () => { const b = $("dlgBody"), y = b.scrollTop, fid = document.activeElement && document.activeElement.id;   // keep scroll position and focus across redraws
     b.innerHTML = `<h2>${r ? tr("Edytuj rutynę","Edit routine") : tr("Nowa rutyna","New routine")}</h2>
-    <div class="row" style="margin-top:0"><div class="grow"><label class="f">${tr("Nazwa","Name")}</label><input type="text" id="rName"></div><div><label class="f">${tr("Kolor","Color")}</label><input type="color" id="rColor"></div></div>
-    <label class="f">${tr("Ikona (mdi:nazwa)","Icon (mdi:name)")}</label><div class="row" style="margin-top:0"><div class="shape" id="rIconP"></div><input type="text" id="rIcon" class="grow"></div>
-    <div class="row"><label class="chk" style="margin:0"><input type="checkbox" id="rOn"> ${tr("Włączona","Enabled")}</label><label class="chk" style="margin:0"><input type="checkbox" id="rLive"> ${tr("Postęp na Dynamic Island","Island progress")}</label>
-      <div class="grow"><select id="rMode"><option value="single">${tr("Ponowne uruchomienie ignorowane, gdy trwa","Ignore a new start while running")}</option><option value="restart">${tr("Ponowne uruchomienie restartuje","A new start restarts it")}</option></select></div></div>
+    <div class="row" style="margin-top:0"><div class="grow"><label class="f">${tr("Nazwa","Name")}</label><input type="text" id="rName"></div><div><label class="f">${tr("Kolor (Dynamic Island)","Color (Dynamic Island)")}</label><input type="color" id="rColor"></div></div>
+    <label class="f">${tr("Ikona (mdi:nazwa)","Icon (mdi:name)")}</label><div class="tl-n"><span class="shape" id="rIconP"></span><input type="text" id="rIcon"></div>
+    <label class="chk"><input type="checkbox" id="rOn"> ${tr("Włączona","Enabled")}</label><label class="chk"><input type="checkbox" id="rLive"> ${tr("Postęp na Dynamic Island","Island progress")}</label>
+    <label class="f">${tr("Gdy rutyna już działa","When it is already running")}</label><select id="rMode"><option value="single">${tr("Ponowne uruchomienie ignorowane, gdy trwa","Ignore a new start while running")}</option><option value="restart">${tr("Ponowne uruchomienie restartuje","A new start restarts it")}</option></select>
     <label class="f">${tr("Telefony dla tej rutyny (puste = domyślne)","Phones for this routine (empty = defaults)")}</label><div class="chips" id="rPhones"></div>
-    <div class="sec" style="margin-top:18px"><span>${tr("Kroki","Steps")}</span><span class="sp"></span><select id="addType" style="width:auto;min-height:36px;padding:4px 10px">${Object.entries(STEPT).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join("")}</select><button class="b sm" id="addStep">+</button></div>
-    <div id="stepList"></div><div id="stepForm"></div>
-    <div class="sec" style="margin-top:18px"><span>${tr("Wyzwalacze (opcjonalnie – bez nich uruchamiasz ręcznie / ze Skrótu)","Triggers (optional – otherwise start manually / from a Shortcut)")}</span><span class="sp"></span><button class="b alt sm" id="addTrig">+ ${tr("Wyzwalacz","Trigger")}</button></div>
-    <div id="trigList"></div><div id="trigForm"></div>
-    <div class="row" style="justify-content:space-between;margin-top:20px"><span>${r ? `<button class="b red sm" id="rDel">${tr("Usuń","Delete")}</button>` : ""}</span><span style="display:flex;gap:8px"><button class="b alt" id="rCancel">${tr("Anuluj","Cancel")}</button><button class="b" id="rSave">${tr("Zapisz","Save")}</button></span></div>`;
+    <div class="sect"><div class="tb" style="margin:0"><span class="sec">${tr("Kroki","Steps")}</span><span class="sp"></span><select id="addType" style="width:auto">${Object.entries(STEPT).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join("")}</select><button class="b alt sm" id="addStep">${tr("+ Dodaj","+ Add")}</button></div>
+    <div id="stepList"></div><div id="stepForm"></div></div>
+    <div class="sect"><div class="tb" style="margin:0"><span class="sec">${tr("Wyzwalacze","Triggers")}</span><span class="sp"></span><button class="b alt sm" id="addTrig">${tr("+ Dodaj","+ Add")}</button></div>
+    <div class="hint">${tr("Opcjonalnie – bez wyzwalacza uruchamiasz ręcznie lub ze Skrótu.","Optional – otherwise start manually or from a Shortcut.")}</div>
+    <div id="trigList"></div><div id="trigForm"></div></div>
+    <div class="acts" style="margin-top:24px">${r ? `<button class="b red" id="rDel">${tr("Usuń","Delete")}</button>` : ""}<span class="sp"></span><button class="b alt" id="rCancel">${tr("Anuluj","Cancel")}</button><button class="b" id="rSave">${tr("Zapisz","Save")}</button></div>`;
     $("rName").value = R.name; $("rColor").value = R.color; $("rIcon").value = R.icon; $("rOn").checked = R.enabled; $("rLive").checked = R.live; $("rMode").value = R.mode; chipset($("rPhones"), S.notify, R.phones);
-    const prev = () => { $("rIconP").innerHTML = HL.icon($("rIcon").value); $("rIconP").style.cssText = `background:color-mix(in srgb,${$("rColor").value} 20%,transparent);color:${$("rColor").value}`; }; $("rIcon").oninput = prev; $("rColor").oninput = prev; prev();
+    const prev = () => { $("rIconP").innerHTML = HL.icon($("rIcon").value); $("rIconP").style.color = $("rColor").value; }; $("rIcon").oninput = prev; $("rColor").oninput = prev; prev();
     const sync = () => { R.name = $("rName").value; R.color = $("rColor").value; R.icon = $("rIcon").value.trim(); R.enabled = $("rOn").checked; R.live = $("rLive").checked; R.mode = $("rMode").value; R.phones = vals($("rPhones")); };
-    // steps list
-    const sl = $("stepList"); sl.innerHTML = R.steps.length ? "" : `<div class="hint">${tr("Brak kroków – dodaj pierwszy.","No steps yet – add the first one.")}</div>`;
-    R.steps.forEach((s, i) => { const el = document.createElement("div"); el.className = "stp";
-      el.innerHTML = `<span class="shape" style="color:var(--primary-color)">${HL.icon(STEPT[s.type][1])}</span><div class="n"><b></b><div class="hint"></div></div><button class="b alt sm" data-a="up">↑</button><button class="b alt sm" data-a="dn">↓</button><button class="b alt sm" data-a="ed">${tr("Edytuj","Edit")}</button><button class="b alt sm" data-a="cp">⧉</button><button class="b red sm" data-a="rm">${tr("Usuń","Delete")}</button>`;
+    // steps list: one line each; click = edit
+    const sl = $("stepList"); sl.innerHTML = R.steps.length ? "" : `<div class="hint" style="padding:8px 0">${tr("Brak kroków – dodaj pierwszy.","No steps yet – add the first one.")}</div>`;
+    R.steps.forEach((s, i) => { const el = document.createElement("div"); el.className = "li click";
+      el.innerHTML = `<span class="shape">${HL.icon(STEPT[s.type][1])}</span><div class="n"><b></b><div class="hint"></div></div><button class="b alt sm ic" data-a="up" aria-label="${tr("W górę","Move up")}"${i === 0 ? " disabled" : ""}>${HL.icon("mdi:arrow-up")}</button><button class="b alt sm ic" data-a="dn" aria-label="${tr("W dół","Move down")}"${i === R.steps.length - 1 ? " disabled" : ""}>${HL.icon("mdi:arrow-down")}</button>`;
+      el.append(HL.kebab([["ed", tr("Edytuj","Edit")], ["cp", tr("Duplikuj","Duplicate")], ["rm", tr("Usuń","Delete"), "red"]]));
       el.querySelector("b").textContent = (i + 1) + ". " + stepText(s); el.querySelector(".hint").textContent = STEPT[s.type][0] + (s.when ? " · " + tr("tylko jeśli","only if") + " " + s.when.entity_id + " " + s.when.op + " " + s.when.value : "");
-      el.onclick = e => { const a = e.target.dataset.a; if(!a) return; sync();
+      el.onclick = e => { const a = (e.target.closest("[data-a]") || {dataset:{}}).dataset.a; if(!a && e.target.closest("summary,details")) return; sync();
         if(a === "up" && i > 0) [R.steps[i-1], R.steps[i]] = [R.steps[i], R.steps[i-1]]; else if(a === "dn" && i < R.steps.length - 1) [R.steps[i+1], R.steps[i]] = [R.steps[i], R.steps[i+1]];
-        else if(a === "cp") R.steps.splice(i + 1, 0, {...JSON.parse(JSON.stringify(s)), id:""}); else if(a === "rm") R.steps.splice(i, 1); else if(a === "ed"){ stepEdit = {i, s:JSON.parse(JSON.stringify(s))}; } else return; draw(); };
+        else if(a === "cp") R.steps.splice(i + 1, 0, {...JSON.parse(JSON.stringify(s)), id:""}); else if(a === "rm") R.steps.splice(i, 1); else if(!a || a === "ed"){ stepEdit = {i, s:JSON.parse(JSON.stringify(s))}; reveal = "stepForm"; } else return; draw(); };
       sl.append(el); });
     if(stepEdit) stepForm(stepEdit, sync);
-    $("addStep").onclick = () => { sync(); const t = $("addType").value; stepEdit = {i:null, s:{type:t, label:"", when:null, ...({service:{service:"", entity_id:"", data:{}}, scene:{entity_id:""}, script:{entity_id:""}, announce:{text:"", speakers:[], volume:null}, notify:{text:"", title:"", phones:[]}, wait:{seconds:10}, wait_state:{entity_id:"", state:"on", timeout:600, on_timeout:"continue"}, fade:{entity_id:"", kind:"light", from:null, to:0, seconds:60}, stop_if:{when:{entity_id:"", op:"=", value:""}}}[t])}}; draw(); };
+    $("addStep").onclick = () => { sync(); const t = $("addType").value; stepEdit = {i:null, s:{type:t, label:"", when:null, ...({service:{service:"", entity_id:"", data:{}}, scene:{entity_id:""}, script:{entity_id:""}, announce:{text:"", speakers:[], volume:null}, notify:{text:"", title:"", phones:[]}, wait:{seconds:10}, wait_state:{entity_id:"", state:"on", timeout:600, on_timeout:"continue"}, fade:{entity_id:"", kind:"light", from:null, to:0, seconds:60}, stop_if:{when:{entity_id:"", op:"=", value:""}}}[t])}}; reveal = "stepForm"; draw(); };
     // triggers
-    const tl = $("trigList"); tl.innerHTML = R.triggers.length ? "" : `<div class="hint">${tr("Brak – rutyna uruchamia się tylko ręcznie.","None – the routine only starts manually.")}</div>`;
-    R.triggers.forEach((t, i) => { const el = document.createElement("div"); el.className = "stp"; el.innerHTML = `<div class="n"></div><button class="b red sm">${tr("Usuń","Delete")}</button>`; el.querySelector(".n").textContent = trigText(t); el.querySelector("button").onclick = () => { sync(); R.triggers.splice(i, 1); draw(); }; tl.append(el); });
+    const tl = $("trigList"); tl.innerHTML = R.triggers.length ? "" : `<div class="hint" style="padding:8px 0">${tr("Brak – rutyna uruchamia się tylko ręcznie.","None – the routine only starts manually.")}</div>`;
+    R.triggers.forEach((t, i) => { const el = document.createElement("div"); el.className = "li"; el.innerHTML = `<div class="n"><b></b></div><button class="b red sm">${tr("Usuń","Delete")}</button>`; el.querySelector("b").textContent = trigText(t); el.querySelector("button").onclick = () => { sync(); R.triggers.splice(i, 1); draw(); }; tl.append(el); });
     if(trigEdit) trigForm(sync);
-    $("addTrig").onclick = () => { sync(); trigEdit = true; draw(); };
+    $("addTrig").onclick = () => { sync(); trigEdit = true; reveal = "trigForm"; draw(); };
     $("rCancel").onclick = () => $("dlg").close();
     if(r) $("rDel").onclick = async () => { if(!confirm(tr("Usunąć rutynę?","Delete this routine?"))) return; try{ await HL.api("routines/" + r.id, {method:"DELETE"}); $("dlg").close(); load(); }catch(e){ HL.toast(e.message, true); } };
     $("rSave").onclick = async () => { sync(); if(!R.name.trim()) return HL.toast(tr("Wpisz nazwę","Enter a name"), true);
       try{ const out = await HL.post("routines", R); if(out.steps.length < R.steps.length) HL.toast(tr("Część kroków była nieprawidłowa i została pominięta","Some invalid steps were dropped"), true); else HL.toast(tr("Zapisano ✓","Saved ✓")); $("dlg").close(); load(); }catch(e){ HL.toast(e.message, true); } };
+    b.scrollTop = y; if(fid && $(fid)) $(fid).focus({preventScroll:true});
+    if(reveal){ const f = $(reveal); reveal = null; if(f) f.scrollIntoView({block:"nearest"}); }
   };
   const stepForm = (ed, sync) => { const s = ed.s, t = s.type, box = $("stepForm"); const ent = (id, v, ph) => `<input type="text" id="${id}" list="dlEnt" value="${esc(v || "")}" placeholder="${ph || "light.salon"}">`;
     let f = "";
@@ -183,9 +210,10 @@ function editor(r){
     else if(t === "wait_state") f = `<label class="f">${tr("Czekaj, aż encja…","Wait until entity…")}</label>${ent("fEnt", s.entity_id)}<div class="row"><div class="grow"><label class="f">${tr("…ma stan","…has state")}</label><input type="text" id="fState" value="${esc(s.state)}"></div><div class="grow"><label class="f">${tr("Limit czasu (s)","Timeout (s)")}</label><input type="number" id="fTo" value="${s.timeout}"></div><div class="grow"><label class="f">${tr("Po limicie","On timeout")}</label><select id="fOt"><option value="continue">${tr("kontynuuj","continue")}</option><option value="stop">${tr("zatrzymaj rutynę","stop the routine")}</option></select></div></div>`;
     else if(t === "fade") f = `<label class="f">${tr("Encja (światło lub odtwarzacz)","Entity (light or media player)")}</label>${ent("fEnt", s.entity_id)}<div class="row"><div class="grow"><label class="f">${tr("Co zmieniać","What")}</label><select id="fKind"><option value="light">${tr("jasność światła %","light brightness %")}</option><option value="volume">${tr("głośność %","volume %")}</option></select></div><div class="grow"><label class="f">${tr("Od % (puste = obecna)","From % (empty = current)")}</label><input type="number" id="fFrom" min="0" max="100" value="${s.from ?? ""}"></div><div class="grow"><label class="f">${tr("Do %","To %")}</label><input type="number" id="fToV" min="0" max="100" value="${s.to}"></div><div class="grow"><label class="f">${tr("Czas (s)","Duration (s)")}</label><input type="number" id="fSecs" min="2" value="${s.seconds}"></div></div>`;
     else if(t === "stop_if") f = `<div class="hint">${tr("Rutyna zatrzyma się, jeśli warunek jest spełniony.","The routine stops if this condition is true.")}</div>` + condForm("fc", s.when);
-    box.innerHTML = `<div class="sbox"><div class="sec" style="margin-top:8px"><b>${esc(STEPT[t][0])}</b></div>${f}<label class="f">${tr("Własny opis (opcjonalnie, widoczny na wyspie)","Custom label (optional, shown on the island)")}</label><input type="text" id="fLabel" value="${esc(s.label || "")}">
-      ${t !== "stop_if" ? `<details style="margin-top:8px"><summary class="hint" style="cursor:pointer">${tr("Wykonaj ten krok tylko, jeśli…","Run this step only if…")}</summary>${condForm("fw", s.when)}</details>` : ""}
-      <div class="row" style="justify-content:flex-end"><button class="b alt sm" id="fTest">${tr("Wypróbuj krok","Try step")}</button><button class="b alt sm" id="fCancel">${tr("Anuluj","Cancel")}</button><button class="b sm" id="fOk">OK</button></div></div>`;
+    box.innerHTML = `<div class="sbox"><div class="sec">${esc(STEPT[t][0])}</div>${f}<label class="f">${tr("Własny opis (opcjonalnie, widoczny na wyspie)","Custom label (optional, shown on the island)")}</label><input type="text" id="fLabel" value="${esc(s.label || "")}">
+      ${t !== "stop_if" ? `<details class="help" style="margin-top:8px"><summary>${tr("Wykonaj ten krok tylko, jeśli…","Run this step only if…")}</summary>${condForm("fw", s.when)}</details>` : ""}
+      <div class="acts" style="margin-top:16px"><button class="b alt sm" id="fTest">${tr("Wypróbuj krok","Try step")}</button><button class="b alt sm" id="fCancel">${tr("Anuluj","Cancel")}</button><button class="b alt sm" id="fOk">OK</button></div></div>`;
+    if(t !== "stop_if" && s.when) box.querySelector("details.help").open = true;
     if(t === "announce"){ $("fText").value = s.text || ""; chipset($("fSpk"), S.speakers, s.speakers || []); } if(t === "notify"){ $("fTitle").value = s.title || ""; $("fText").value = s.text || ""; chipset($("fPh"), S.notify, s.phones || []); }
     if(t === "wait") $("fUnit").value = String(s.seconds >= 3600 && s.seconds % 3600 === 0 ? 3600 : s.seconds >= 60 && s.seconds % 60 === 0 ? 60 : 1);
     if(t === "wait_state") $("fOt").value = s.on_timeout || "continue"; if(t === "fade") $("fKind").value = s.kind || "light";
@@ -200,9 +228,9 @@ function editor(r){
     $("fTest").onclick = async () => { const o = read(); if(!o) return; try{ await HL.post("step/test", {step:o}); HL.toast(tr("Krok wykonany ✓","Step executed ✓")); }catch(e){ HL.toast(e.message, true); } };
     $("fOk").onclick = () => { const o = read(); if(!o) return; sync(); if(ed.i == null) R.steps.push(o); else R.steps[ed.i] = o; stepEdit = null; draw(); }; };
   const trigForm = sync => { const box = $("trigForm");
-    box.innerHTML = `<div class="sbox"><label class="f">${tr("Typ","Type")}</label><select id="tType"><option value="time">${tr("Godzina","Time of day")}</option><option value="state">${tr("Zmiana stanu encji","Entity state change")}</option></select><div id="tBody"></div>
-      <div class="row" style="justify-content:flex-end"><button class="b alt sm" id="tCancel">${tr("Anuluj","Cancel")}</button><button class="b sm" id="tOk">OK</button></div></div>`;
-    const body = () => { $("tBody").innerHTML = $("tType").value === "time" ? `<div class="row" style="margin-top:0"><div><label class="f">${tr("Godzina","Time")}</label><input type="time" id="tAt" value="07:00"></div></div><label class="f">${tr("Dni tygodnia","Weekdays")}</label><div class="days">${DAYS.map((d, i) => `<label><input type="checkbox" value="${i}" checked> ${d}</label>`).join("")}</div>`
+    box.innerHTML = `<div class="sbox"><label class="f" style="margin-top:8px">${tr("Typ","Type")}</label><select id="tType"><option value="time">${tr("Godzina","Time of day")}</option><option value="state">${tr("Zmiana stanu encji","Entity state change")}</option></select><div id="tBody"></div>
+      <div class="acts" style="margin-top:16px"><button class="b alt sm" id="tCancel">${tr("Anuluj","Cancel")}</button><button class="b alt sm" id="tOk">OK</button></div></div>`;
+    const body = () => { $("tBody").innerHTML = $("tType").value === "time" ? `<div class="row"><div><label class="f">${tr("Godzina","Time")}</label><input type="time" id="tAt" value="07:00"></div></div><label class="f">${tr("Dni tygodnia","Weekdays")}</label><div class="chips days">${DAYS.map((d, i) => `<label><input type="checkbox" value="${i}" checked> ${d}</label>`).join("")}</div>`
       : `<label class="f">${tr("Encja","Entity")}</label><input type="text" id="tEnt" list="dlEnt"><div class="row"><div class="grow"><label class="f">${tr("Zmienia się na (puste = każda zmiana)","Changes to (empty = any change)")}</label><input type="text" id="tTo"></div><div class="grow"><label class="f">${tr("Z (opcjonalnie)","From (optional)")}</label><input type="text" id="tFrom"></div><div class="grow"><label class="f">${tr("Przez (s)","For (s)")}</label><input type="number" id="tFor" min="0" value="0"></div></div>`; };
     $("tType").onchange = body; body(); $("tCancel").onclick = () => { trigEdit = false; sync(); draw(); };
     $("tOk").onclick = () => { sync(); if($("tType").value === "time") R.triggers.push({type:"time", at:$("tAt").value, days:[...document.querySelectorAll(".days input:checked")].map(i => +i.value)});
@@ -217,15 +245,24 @@ function fillSettings(){ if(!S) return; const c = S.settings; chipset($("phones"
 $("saveBtn").onclick = async () => { try{ await HL.post("settings", {phones:vals($("phones")), speakers:vals($("spk")), tts_entity:$("tts").value, language:$("lang").value.trim(), live:$("dLive").checked}); HL.toast(tr("Zapisano ✓","Saved ✓")); load(); }catch(e){ HL.toast(e.message, true); } };
 
 function showTokenCard(token, fresh){ const box = $("tokResult"); box.innerHTML = "";
-    const first = (S.routines[0] || {name:"Dobranoc"}).name, c = document.createElement("div"); c.className = "card"; c.style.borderColor = "var(--warning-color)";
-    c.innerHTML = `<b>${fresh ? "" + tr("Skopiuj teraz – token możesz skopiować też później.","Copy now – you can also copy the token later.") : tr("Token i gotowe wartości","Token and ready-to-paste values")}</b><div class="hint" style="margin:6px 0">${tr("Skróty → + → „Pobierz zawartość URL”: wklej adres, metoda POST, dwa nagłówki, treść JSON. Nazwij skrót jak rutynę i powiedz „Hej Siri, <nazwa>”. Lista rutyn: GET na /api/routines.","Shortcuts → + → “Get Contents of URL”: paste the URL, method POST, the two headers, JSON body. Name the shortcut like the routine and say “Hey Siri, <name>”. List routines: GET /api/routines.")}</div>`;
+    const first = (S.routines[0] || {name:"Dobranoc"}).name, c = document.createElement("div"); c.className = "panel";
+    c.innerHTML = `<b>${fresh ? tr("Skopiuj teraz – token możesz skopiować też później.","Copy now – you can also copy the token later.") : tr("Token i gotowe wartości","Token and ready-to-paste values")}</b>`;
     c.append(HL.copyRow("Token", token), HL.copyRow("URL", `http://${location.hostname}:${S.public_port}/api/run`), HL.copyRow("Header Authorization", "Bearer " + token), HL.copyRow("Header Content-Type", "application/json"), HL.copyRow(tr("Treść JSON","JSON body"), JSON.stringify({routine:first})));
-    box.append(c); c.scrollIntoView({behavior:"smooth"}); }
-function renderTokens(){ if(!S) return; const box = $("tokList"); box.innerHTML = S.tokens.length ? "" : `<div class="hint">${tr("Brak tokenów.","No tokens yet.")}</div>`;
-  S.tokens.forEach(k => { const el = document.createElement("div"); el.className = "item"; el.innerHTML = `<div class="n"><b></b> <small class="hint">${esc(k.prefix)}…</small><div class="hint"></div></div><button class="b alt sm cp"${k.can_copy ? "" : " disabled"} title="${k.can_copy ? "" : tr("Utworzony przed aktualizacją - odwołaj i utwórz nowy","Created before the update - revoke and create a new one")}">${tr("Kopiuj token","Copy token")}</button><button class="b red sm rv">${tr("Odwołaj","Revoke")}</button>`;
-    el.querySelector("b").textContent = k.name; el.querySelector(".hint:last-child").textContent = (k.routines.length ? k.routines.map(id => (S.routines.find(r => r.id === id) || {name:id}).name).join(", ") : tr("wszystkie rutyny","all routines")) + " · " + tr("ostatnio: ","last used: ") + (k.last_used ? new Date(k.last_used * 1000).toLocaleString() : tr("nigdy","never"));
-    el.querySelector(".cp").onclick = async () => { try{ showTokenCard((await HL.api("tokens/" + k.id + "/secret")).token, false); }catch(e){ HL.toast(e.message, true); } };
-    el.querySelector(".rv").onclick = async () => { if(!confirm(tr("Odwołać token?","Revoke this token?"))) return; try{ await HL.api("tokens/" + k.id, {method:"DELETE"}); await load(); renderTokens(); }catch(e){ HL.toast(e.message, true); } }; box.append(el); }); }
+    const h = document.createElement("details"); h.className = "help"; h.innerHTML = `<summary>${tr("Jak użyć w Skrótach","How to use in Shortcuts")}</summary><div class="hint">${tr("Skróty → + → „Pobierz zawartość URL”: wklej adres, metoda POST, dwa nagłówki, treść JSON. Nazwij skrót jak rutynę i powiedz „Hej Siri, <nazwa>”. Lista rutyn: GET na /api/routines.","Shortcuts → + → “Get Contents of URL”: paste the URL, method POST, the two headers, JSON body. Name the shortcut like the routine and say “Hey Siri, <name>”. List routines: GET /api/routines.")}</div>`;
+    const a = document.createElement("div"); a.className = "acts"; a.innerHTML = `<button class="b alt sm">${tr("Zamknij","Close")}</button>`; a.firstChild.onclick = () => { box.innerHTML = ""; };
+    c.append(h, a); box.append(c); c.scrollIntoView({block:"nearest"}); }
+function tokRow(k){
+  const el = document.createElement("div"); el.className = "li";
+  el.innerHTML = `<div class="n"><b></b><div class="hint"></div></div>`;
+  el.querySelector("b").textContent = k.name; el.querySelector(".hint").textContent = k.prefix + "… · " + (k.routines.length ? k.routines.map(id => (S.routines.find(r => r.id === id) || {name:id}).name).join(", ") : tr("wszystkie rutyny","all routines")) + " · " + tr("ostatnio: ","last used: ") + (k.last_used ? shortDate(k.last_used) : tr("nigdy","never"));
+  const kb = HL.kebab([["cp", tr("Kopiuj token","Copy token"), "", !k.can_copy], ["rv", tr("Odwołaj","Revoke"), "red"]]);
+  if(!k.can_copy) kb.querySelector("[data-a=cp]").title = tr("Utworzony przed aktualizacją - odwołaj i utwórz nowy","Created before the update - revoke and create a new one");
+  kb.querySelector("[data-a=cp]").onclick = async () => { try{ showTokenCard((await HL.api("tokens/" + k.id + "/secret")).token, false); }catch(e){ HL.toast(e.message, true); } };
+  kb.querySelector("[data-a=rv]").onclick = async () => { if(!confirm(tr("Odwołać token?","Revoke this token?"))) return; try{ await HL.api("tokens/" + k.id, {method:"DELETE"}); await load(); renderTokens(); }catch(e){ HL.toast(e.message, true); } };
+  el.append(kb); return el;
+}
+function renderTokens(){ if(!S) return; $("tokEmpty").textContent = tr("Brak tokenów.","No tokens yet."); $("tokEmpty").hidden = S.tokens.length > 0;
+  HL.sync($("tokList"), S.tokens, k => k.id, tokRow, k => JSON.stringify([k, S.routines.map(r => r.id + r.name)])); }
 $("tokNew").onclick = () => { $("tokForm").hidden = !$("tokForm").hidden; chipset($("tkR"), S.routines.map(r => ({id:r.id, name:r.name})), []); };
 $("tkCancel").onclick = () => { $("tokForm").hidden = true; };
 $("tkCreate").onclick = async () => { const name = $("tkName").value.trim(); if(!name) return HL.toast(tr("Wpisz nazwę","Enter a name"), true);

@@ -6,121 +6,116 @@
 <title>HALiveTeo</title>
 <link rel="stylesheet" href="static/common.css">
 <style>
-main{max-width:1000px;margin:0 auto;padding:16px 16px 30px}
-.bar .ibtn svg{width:24px;height:24px;fill:var(--primary-color)}
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--divider-color);margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
-.tabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--secondary-text-color);padding:12px 16px;cursor:pointer;font:500 14px/20px var(--ha-font);letter-spacing:.0892857143em;text-transform:uppercase;white-space:nowrap}
+main{max-width:960px;margin:0 auto;padding:16px 16px 24px}
+.tabs{display:flex;border-bottom:1px solid var(--divider-color);margin:0 0 16px;overflow-x:auto;scrollbar-width:none}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--secondary-text-color);padding:0 12px;height:48px;cursor:pointer;font:500 var(--fs-2)/20px var(--ha-font);white-space:nowrap}
+.tabs button:hover{color:var(--primary-text-color)}
 .tabs button.on{color:var(--primary-color);border-bottom-color:var(--primary-color)}
-.shape{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none}.shape svg{width:24px;height:24px;fill:currentColor}
-.ipick{margin-top:6px}.ipick .grid8{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:4px;max-height:150px;overflow:auto;margin-top:6px}
-.ipick button{background:var(--input-fill-color);border:0;border-radius:8px;height:40px;cursor:pointer;color:var(--primary-text-color);display:grid;place-items:center}.ipick button svg{width:22px;height:22px;fill:currentColor}.ipick button:hover{background:rgba(var(--rgb-primary-color),.15)}
+@media (max-width:480px){.tabs button{padding:0 8px}}
 .view{display:none}.view.on{display:block}
-.sec{font-size:14px;line-height:20px;color:var(--secondary-text-color);margin:0 0 12px;display:flex;align-items:center;gap:8px;font-weight:500;letter-spacing:.0071em}
-.sec .sp{flex:1}
-label.f{display:block;margin:10px 0 4px;color:var(--mut);font-size:13px}
-label.chk{display:flex;gap:8px;align-items:center;margin:9px 0;font-size:14px}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:10px}.row>.grow{flex:1;min-width:110px}
-.dev{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--bd)}.dev:first-child{border:0}
-.dev .n{flex:1;min-width:150px}
-.badge{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--bg);border:1px solid var(--bd);color:var(--mut)}
-.tl{display:flex;gap:6px;align-items:center;padding:8px 0;border-top:1px solid var(--bd);flex-wrap:wrap}.tl:first-child{border:0}
-.tl .n{flex:1;min-width:130px}.tl .n b{font-size:14px}
-.split{display:grid;grid-template-columns:1fr;gap:14px}
-@media (min-width:860px){.split{grid-template-columns:1fr 360px;align-items:start}.split .sticky{position:sticky;top:10px}}
-.icons{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}.icons button{background:var(--bg);border:1px solid var(--bd);border-radius:8px;font-size:18px;cursor:pointer;padding:2px 6px}
-.fe{display:flex;gap:8px;align-items:baseline;padding:7px 0;border-top:1px solid var(--bd);font-size:14px}.fe:first-child{border:0}
-.fe small{color:var(--mut)}.fe .bad{color:var(--err)}
-.ent{display:flex;gap:8px;align-items:center;padding:4px 0;font-size:14px}.ent small{color:var(--mut)}
-.chips{display:flex;gap:6px;flex-wrap:wrap}.chips label{display:flex;gap:5px;align-items:center;border:1.5px solid var(--bd);border-radius:18px;padding:4px 10px;font-size:13px;cursor:pointer}
-pre{background:var(--bg);padding:10px;border-radius:10px;overflow:auto;font-size:12px}code{background:var(--bg);padding:1px 5px;border-radius:5px;word-break:break-all}
-.copy{display:flex;gap:6px;margin-top:6px}.copy input{flex:1}
-#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;max-width:90%;z-index:9}
-#toast.on{opacity:1}
-footer{text-align:center;color:var(--mut);font-size:13px;margin:18px 0 6px}footer a{color:var(--acc);text-decoration:none;font-weight:700}
+.tb{display:flex;align-items:center;gap:8px;min-height:36px;margin-bottom:8px}.sp{flex:1}
+.sec{display:flex;align-items:center;gap:8px;min-height:36px;font-weight:500;color:var(--secondary-text-color)}
+.sect{border-top:1px solid var(--divider-color);margin-top:24px;padding-top:8px}
+details.sub{border-top:1px solid var(--divider-color);margin-top:24px}
+details.sub>summary{cursor:pointer;padding:12px 0;font-weight:500;color:var(--secondary-text-color)}
+details.sub>div{padding-bottom:8px}
+.panel{background:var(--card-background-color);border:1px solid var(--divider-color);border-radius:var(--r);padding:16px;margin:8px 0 16px}
+.split{display:grid;grid-template-columns:minmax(0,1fr)}.split>*{min-width:0}
+@media (min-width:860px){.split{grid-template-columns:minmax(0,1fr) 340px;column-gap:24px;align-items:start}.split .sticky{position:sticky;top:16px}}
+button.b.ic{width:32px;padding:0;display:grid;place-items:center;color:var(--secondary-text-color)}button.b.ic svg{width:18px;height:18px}
+.ipick .grid8{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:4px;max-height:160px;overflow:auto;margin-top:8px}
+.ipick .grid8 button{background:var(--input-fill-color);border:0;border-radius:var(--r);height:40px;cursor:pointer;color:var(--primary-text-color);display:grid;place-items:center}.ipick .grid8 button:hover{background:rgba(var(--rgb-primary-color),.15)}
+.copy{display:flex;gap:8px;align-items:center}.copy input{flex:1}
+#netInfo{min-height:40px;margin-top:16px}#netInfo .hint{display:block}
+footer{text-align:center;color:var(--secondary-text-color);font-size:var(--fs-1);margin:24px 0 8px}footer a{color:var(--primary-color);text-decoration:none;font-weight:500}
+.tl-n{display:flex;align-items:center;gap:8px;min-height:40px}
+.bar{padding-left:max(16px,calc((100vw - 960px)/2 + 16px))}
+#helpBox p{margin:0 0 8px}#helpBox .sec{margin-top:24px!important}#helpBox .sec:first-child{margin-top:0!important}
+dialog details.sub{margin-top:16px}
 </style>
 </head>
 <body>
-<main>
-</main>
-<div class="bar"><span class="ibtn" id="barIcon"></span><h1>HALiveTeo</h1><small class="hint" id="tag" style="margin-right:12px"></small></div>
+<div class="bar"><h1>HALiveTeo</h1></div>
 <main>
 <div class="tabs" id="tabs"></div>
 
 <div class="view" id="v-devices">
-  <div class="card">
-    <div class="sec"><span id="tDevices"></span><span class="sp"></span><button class="b sm" id="newBtn"></button></div>
-    <div id="newForm" hidden>
-      <div class="row"><div class="grow"><label class="f" id="lName"></label><input type="text" id="nName"></div>
-        <div class="grow"><label class="f" id="lUser"></label><input type="text" id="nUser"></div>
-        <div><label class="f" id="lIcon"></label><select id="nIcon"></select></div></div>
-      <div class="row"><button class="b" id="nCreate"></button><button class="b alt" id="nCancel"></button></div>
-    </div>
-    <div class="prof" id="netInfo" style="margin:0 0 12px"></div>
-    <div id="created"></div>
-    <div id="devList"></div>
+  <div class="tb"><span class="sp"></span><button class="b" id="newBtn"></button></div>
+  <div id="newForm" class="panel" hidden>
+    <div class="row" style="margin-top:0"><div class="grow"><label class="f" id="lName"></label><input type="text" id="nName"></div>
+      <div class="grow"><label class="f" id="lUser"></label><input type="text" id="nUser"></div>
+      <div><label class="f" id="lIcon"></label><select id="nIcon"></select></div></div>
+    <div class="acts"><button class="b alt" id="nCancel"></button><button class="b" id="nCreate"></button></div>
   </div>
+  <div id="created"></div>
+  <div id="devList"></div>
+  <div class="hint" id="devEmpty" hidden style="padding:16px 0"></div>
+  <div id="netInfo"></div>
+  <details class="help"><summary id="devHelpS"></summary><div class="hint" id="devHelp"></div></details>
 </div>
 
 <div class="view" id="v-edit">
-  <div class="card">
-    <div class="sec"><button class="b alt sm" id="back"></button><span class="sp"></span><span class="badge" id="dirty" hidden></span><button class="b" id="save"></button></div>
-    <div class="row">
-      <div class="grow"><label class="f" id="eName"></label><input type="text" id="eNameIn"></div>
-      <div class="grow"><label class="f" id="eUser"></label><input type="text" id="eUserIn"></div>
-      <div><label class="f" id="eIcon"></label><select id="eIconIn"></select></div>
-      <div><label class="f" id="eCols"></label><select id="eColsIn"></select></div>
-    </div>
-    <div class="sec" style="margin-top:14px" id="eLiveSec"></div>
-    <div class="row"><div class="grow"><label class="f" id="ePhoneL"></label><select id="ePhone"></select></div>
+  <div class="tb"><button class="b alt" id="back"></button><span class="sp"></span><span class="badge" id="dirty" hidden></span><button class="b" id="save"></button></div>
+  <div class="row">
+    <div class="grow"><label class="f" id="eName"></label><input type="text" id="eNameIn"></div>
+    <div class="grow"><label class="f" id="eUser"></label><input type="text" id="eUserIn"></div>
+  </div>
+  <div class="row">
+    <div class="grow"><label class="f" id="eIcon"></label><select id="eIconIn"></select></div>
+    <div class="grow"><label class="f" id="eCols"></label><select id="eColsIn"></select></div>
+  </div>
+  <label class="chk"><input type="checkbox" id="eFeed"> <span id="eFeedT"></span></label>
+  <label class="chk"><input type="checkbox" id="eOn"> <span id="eOnT"></span></label>
+  <details class="sub" id="liveDet"><summary id="eLiveSec"></summary><div>
+    <div class="row" style="margin-top:0"><div class="grow"><label class="f" id="ePhoneL"></label><select id="ePhone"></select></div>
       <div class="grow"><label class="f" id="eLiveL"></label><select id="eLive"></select></div></div>
     <label class="f" id="eLiveEntL"></label><input type="text" id="eLiveEnt" list="dlEnt" placeholder="sensor.pralka, sensor.auto">
-    <div class="hint" id="eLiveHint"></div>
-    <label class="chk"><input type="checkbox" id="eFeed"> <span id="eFeedT"></span></label>
-    <label class="chk"><input type="checkbox" id="eOn"> <span id="eOnT"></span></label>
-  </div>
+    <div class="hint" id="eLiveHint" style="margin-top:4px"></div>
+  </div></details>
   <div class="split">
-    <div>
-      <div class="card">
-        <div class="sec"><span id="tTiles"></span><span class="sp"></span>
-          <button class="b alt sm" id="addAuto"></button><button class="b alt sm" id="addJson">JSON</button><button class="b sm" id="addTile"></button></div>
-        <div id="auto" hidden></div>
-        <div id="jsonBox" hidden><textarea id="jsonTa" style="min-height:240px;font-family:monospace;font-size:12px"></textarea>
-          <div class="row"><button class="b sm" id="jsonApply"></button></div></div>
-        <div id="tileList"></div>
-      </div>
-    </div>
-    <div class="sticky"><div class="card"><div class="sec" id="tPrev"></div><div class="grid inert" id="prev"></div></div></div>
+    <section class="sect">
+      <div class="tb"><span class="sec" id="tTiles"></span><span class="sp"></span>
+        <button class="b alt sm" id="addAuto"></button><button class="b alt sm" id="addJson">JSON</button><button class="b alt sm" id="addTile"></button></div>
+      <div id="auto" hidden></div>
+      <div id="jsonBox" hidden class="panel"><textarea id="jsonTa" style="min-height:240px;font-family:monospace;font-size:12px"></textarea>
+        <div class="acts" style="margin-top:8px"><button class="b alt sm" id="jsonApply"></button></div></div>
+      <div id="tileList"></div>
+    </section>
+    <section class="sect sticky"><div class="sec" id="tPrev"></div><div class="grid inert" id="prev"></div></section>
   </div>
 </div>
 
 <div class="view" id="v-live">
-  <div class="card"><div class="sec"><span id="tLive"></span><span class="sp"></span><button class="b sm" id="actNew"></button></div>
-    <div class="hint" id="liveInfo" style="margin-bottom:12px"></div><div id="actList"></div></div>
+  <div class="tb"><span class="sp"></span><button class="b" id="actNew"></button></div>
+  <div id="actList"></div>
+  <div class="hint" id="actEmpty" hidden style="padding:16px 0"></div>
+  <details class="help"><summary id="liveHelpS"></summary><div class="hint" id="liveInfo"></div></details>
 </div>
 
 <div class="view" id="v-usage">
-  <div class="card"><div class="sec"><span id="tUsage"></span><span class="sp"></span>
-    <a class="b alt sm" id="logbookLink" href="/logbook" target="_top" style="text-decoration:none;display:inline-flex;align-items:center"></a><button class="b alt sm" id="usageClear"></button></div>
-    <div class="hint" id="usageInfo" style="margin-bottom:12px"></div><div id="usageList"></div></div>
+  <div class="tb"><span class="sp"></span><a class="b" id="logbookLink" href="/logbook" target="_top"></a><button class="b alt sm" id="usageClear"></button></div>
+  <div id="usageList"></div>
+  <details class="help"><summary id="usageHelpS"></summary><div class="hint" id="usageInfo"></div></details>
 </div>
 
 <div class="view" id="v-feed">
-  <div class="card"><div class="sec"><span id="tFeed"></span><span class="sp"></span><button class="b alt sm" id="feedClear"></button></div><div id="feedList"></div></div>
+  <div class="tb"><span class="sp"></span><button class="b alt sm" id="feedClear"></button></div>
+  <div id="feedList"></div><div class="hint" id="feedEmpty" hidden style="padding:16px 0"></div>
 </div>
 
-<div class="view" id="v-help"><div class="card" id="helpBox"></div></div>
+<div class="view" id="v-help"><div id="helpBox"></div></div>
 
 <footer><span id="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
 </main>
 <dialog class="hd" id="tileDlg"><div class="hd-card" id="tileForm"></div></dialog>
 <dialog class="hd" id="actDlg"><div class="hd-card" id="actForm"></div></dialog>
 <datalist id="dlEnt"></datalist><datalist id="dlSvc"></datalist>
-<div id="toast"></div>
+<div class="toast" id="toast"></div>
 <script src="static/common.js"></script>
 <script src="static/icons.js"></script>
 <script>
 const tr = HL.tr, esc = HL.esc, $ = id => document.getElementById(id);
-let toastT; const toast = (m,bad)=>{const e=$("toast");e.textContent=m;e.style.background=bad?"var(--err)":"";e.style.color=bad?"#fff":"";e.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),3200)};
+let toastT; const toast = (m,bad)=>{const e=$("toast");e.textContent=m;e.classList.toggle("bad",!!bad);e.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),3200)};
 async function api(p, o = {}){
   const r = await fetch("api/admin/" + p, {...o, headers:{"Content-Type":"application/json"}});
   const j = await r.json().catch(()=>({}));
@@ -129,42 +124,40 @@ async function api(p, o = {}){
 }
 const post = (p, b) => api(p, {method:"POST", body:JSON.stringify(b)});
 const ICONS = ["cellphone","tablet","monitor","television","laptop","home","sofa","bed","silverware-fork-knife","door","car","gamepad-variant","bell","tune","speaker","lightbulb"];
-const TILE_ICONS = ["💡","🔆","🔌","🌡️","🎵","🔊","🔒","🚪","🪟","🌀","▶️","⏹️","⏭️","🏠","🌙","☀️","🔥","❄️","🔔","🚨","📺","🎬","🎮","🧹","☕","🛏️"];
 
 // ---------- state
 let B = {devices:[],entities:[],services:[],feed:[],prefix:"haliveteo",public_port:8766};
 let cur = null, W = null, dirty = false, prevEls = {}, liveStates = {}, live;
-$("tag").textContent = tr("Akcje na żywo z Twoich urządzeń","Live actions from your devices");
 $("by").textContent = tr("Stworzone przez","Created by");
-$("tDevices").textContent = tr("Urządzenia","Devices"); $("newBtn").textContent = tr("+ Nowe urządzenie","+ New device");
+$("newBtn").textContent = tr("+ Nowe urządzenie","+ New device");
 $("lName").textContent = tr("Nazwa (np. Tablet w kuchni)","Name (e.g. Kitchen tablet)"); $("lIcon").textContent = tr("Ikona","Icon");
-$("lUser").textContent = tr("Użytkownik (kto tego używa – trafia do logów)","User (who uses it – goes into the logs)"); $("eUser").textContent = $("lUser").textContent;
+$("lUser").textContent = tr("Użytkownik (trafia do logów)","User (shown in the logs)"); $("eUser").textContent = $("lUser").textContent;
 $("nCreate").textContent = tr("Utwórz","Create"); $("nCancel").textContent = tr("Anuluj","Cancel");
 $("back").textContent = "← " + tr("Urządzenia","Devices"); $("save").textContent = tr("Zapisz","Save");
 $("eName").textContent = tr("Nazwa","Name"); $("eIcon").textContent = tr("Ikona","Icon"); $("eCols").textContent = tr("Kolumny","Columns");
 $("eFeedT").textContent = tr("Pokazuj na tym urządzeniu feed akcji na żywo","Show the live action feed on this device");
 $("eOnT").textContent = tr("Urządzenie włączone","Device enabled");
-$("eLiveSec").textContent = tr("🏝️ Live Activities tego urządzenia / użytkownika","🏝️ Live Activities of this device / user");
+$("eLiveSec").textContent = tr("Live Activities tego urządzenia","Live Activities of this device");
 $("ePhoneL").textContent = tr("Telefon użytkownika (Dynamic Island)","User's phone (Dynamic Island)");
 $("eLiveL").textContent = tr("Uprawnienia do Live Activities","Live Activity permissions");
 $("eLive").innerHTML = `<option value="off">${tr("brak – tylko to, co da admin","none – only what the admin gives")}</option><option value="follow">${tr("może włączać/wyłączać przydzielone","can turn given ones on/off")}</option><option value="create">${tr("może tworzyć własne z dozwolonych encji","can create own from allowed entities")}</option>`;
-$("eLiveEntL").textContent = tr("Dodatkowe encje dozwolone dla własnych Live Activities (poza kafelkami urządzenia)","Extra entities allowed for own Live Activities (besides this device's tiles)");
-$("eLiveHint").textContent = tr("Własne aktywności użytkownika mogą dotyczyć tylko encji z kafelków tego urządzenia i z tej listy; szablony HA są dla nich wyłączone (tylko {state} {name} {attr.x}).","Own activities may only use entities from this device's tiles and this list; HA templates are disabled for them (only {state} {name} {attr.x}).");
-$("tTiles").textContent = tr("Kafelki","Tiles"); $("addTile").textContent = tr("+ Kafelek","+ Tile"); $("addAuto").textContent = tr("Auto z encji","Auto from entities");
-$("jsonApply").textContent = tr("Zastosuj JSON","Apply JSON"); $("tPrev").textContent = tr("Podgląd na żywo","Live preview");
-$("tFeed").textContent = tr("Akcje na żywo","Live actions"); $("feedClear").textContent = tr("Wyczyść","Clear");
+$("eLiveEntL").textContent = tr("Dodatkowe encje dla własnych aktywności","Extra entities for own activities");
+$("eLiveHint").textContent = tr("Własne aktywności: tylko encje z kafelków i z tej listy, bez szablonów HA ({state} {name} {attr.x}).","Own activities: only entities from the tiles and this list, no HA templates ({state} {name} {attr.x}).");
+$("tTiles").textContent = tr("Kafelki","Tiles"); $("addTile").textContent = tr("+ Kafelek","+ Tile"); $("addAuto").textContent = tr("Z encji","From entities");
+$("jsonApply").textContent = tr("Zastosuj JSON","Apply JSON"); $("tPrev").textContent = tr("Podgląd","Preview");
+$("feedClear").textContent = tr("Wyczyść","Clear"); $("devHelpS").textContent = $("liveHelpS").textContent = $("usageHelpS").textContent = tr("Pomoc","Help");
 [$("nIcon"), $("eIconIn")].forEach(s => s.innerHTML = ICONS.map(i => `<option value="mdi:${i}">${i}</option>`).join(""));
-$("barIcon").innerHTML = HL.icon("mdi:lightning-bolt-circle");
 $("eColsIn").innerHTML = [1,2,3,4,5,6].map(i => `<option>${i}</option>`).join("");
 
 // ---------- tabs
-[["devices",tr("Urządzenia","Devices")],["live","🏝️ Live Activities"],["usage",tr("Użycie","Usage")],["feed",tr("Na żywo","Live")],["help",tr("Pomoc","Help")]].forEach(([id,l]) => {
+[["devices",tr("Urządzenia","Devices")],["live",tr("Aktywności","Activities")],["usage",tr("Użycie","Usage")],["feed",tr("Na żywo","Live")],["help",tr("Pomoc","Help")]].forEach(([id,l]) => {
   const b = document.createElement("button"); b.textContent = l; b.dataset.id = id; b.onclick = () => show(id); $("tabs").append(b);
 });
 function show(id){
   document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.id === id));
   document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + id));
-  if(id === "feed") renderFeed(); if(id === "help") renderHelp(); if(id === "live") renderActs(); if(id === "usage") renderUsage();
+  if(id === "feed") renderFeed(); if(id === "help") renderHelp(); if(id === "usage") renderUsage();
+  if(id === "live"){ renderActs(); load().then(renderActs).catch(() => {}); }   // activities can be created from devices meanwhile
 }
 function showEdit(){ document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-edit")); document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("on")); }
 
@@ -180,7 +173,7 @@ live = HL.live({
     if(m.t === "hello"){ B.feed = m.feed || B.feed; }
     else if(m.t === "states"){ liveStates = {...liveStates, ...m.states}; drawPrev(); }
     else if(m.t === "state"){ liveStates[m.e] = m.st; (prevEls[m.e] || []).forEach(([t, el]) => el.update(m.st)); }
-    else if(m.t === "feed"){ B.feed.push(m.entry); B.feed = B.feed.slice(-200); if($("v-feed").classList.contains("on")) renderFeed(); }
+    else if(m.t === "feed"){ B.feed.push(m.entry); B.feed = B.feed.slice(-200); if($("v-feed").classList.contains("on")) addFeed(m.entry); }
   },
   onStatus: ok => { lastWatch = null; if(ok && cur) watchPrev(); }
 });
@@ -194,14 +187,14 @@ const NT = {
   extLink:tr("Link do urządzenia (spoza domu)","Device link (from outside the home)")
 };
 let NET = null;
+$("devHelp").innerHTML = NT.netWarn + "<br><br>" + tr("W linku zmień adres IP, jeśli urządzenie łączy się z HA pod innym adresem.","Replace the host in the link if the device reaches HA under another address.");
 async function renderNet(force){
   const box = $("netInfo");
   try{ NET = force ? await post("network/refresh", {}) : await api("network"); }catch(e){ box.textContent = e.message; return; }
-  const n = NET; box.innerHTML = `<div class="sec" style="margin-bottom:6px"><span>🌐 ${NT.netTitle}</span><span class="sp"></span><button class="link" id="netRef" style="background:none;border:0;color:var(--primary-color);cursor:pointer;font:inherit">${NT.netRefresh}</button></div>
-    <div class="hint" id="netL"></div><div class="hint" id="netE" style="margin-top:2px"></div><div class="hint" id="netW" style="margin-top:8px"></div>`;
+  const n = NET; box.innerHTML = `<div class="tb" style="margin:0"><span class="sec">${NT.netTitle}</span><span class="sp"></span><button class="b alt sm" id="netRef">${NT.netRefresh}</button></div>
+    <div class="hint one" id="netL"></div><div class="hint one" id="netE"></div>`;
   $("netL").textContent = `${NT.netLocal}: ${n.local_base || "—"}`;
   $("netE").textContent = n.enabled ? (n.external_base ? `${NT.netExt}: ${n.external_base}` + (n.external_host ? "" : ` · ${n.source}`) + (n.checked ? ` · ${NT.netChecked} ${new Date(n.checked*1000).toLocaleTimeString()}` : "") + (n.changed ? ` · ${NT.netChanged}: ${n.previous} → ${n.external_ip}` : "") : (n.error ? NT.netErr + ": " + n.error : "…")) : NT.netOff;
-  $("netW").textContent = NT.netWarn;
   $("netRef").onclick = () => renderNet(true);
 }
 
@@ -215,33 +208,36 @@ function copyRow(label, value){
 }
 function showCreated(d, fresh = true){
   const box = $("created"); box.innerHTML = "";
-  const c = document.createElement("div"); c.className = "card"; c.style.border = "1.5px solid var(--warn)";
-  c.innerHTML = `<b>${fresh ? "⚠ " + tr("Skopiuj teraz - ale token możesz skopiować też później.","Copy now - you can also copy the token later.") : tr("Link i token urządzenia","Device link and token")}</b>
-    <div class="hint">${tr("Otwórz link na urządzeniu (telefon, tablet, panel ścienny) i dodaj go do ekranu głównego. Zmień IP w linku, jeśli to inny adres niż HA.","Open the link on the device (phone, tablet, wall panel) and add it to the home screen. Replace the host in the link if the device reaches HA under another address.")}</div>`;
+  const c = document.createElement("div"); c.className = "panel";
+  c.innerHTML = `<b>${fresh ? tr("Skopiuj teraz - token możesz skopiować też później.","Copy now - you can also copy the token later.") : tr("Link i token urządzenia","Device link and token")}</b>
+    <div class="hint">${tr("Otwórz link na urządzeniu i dodaj go do ekranu głównego.","Open the link on the device and add it to the home screen.")}</div>`;
   c.append(copyRow(tr("Link do urządzenia","Device link"), linkFor(d.token)));
   if(NET && NET.external_base) c.append(copyRow(NT.extLink, NET.external_base + "/?t=" + d.token));
   c.append(copyRow("Token", d.token));
-  box.append(c); c.scrollIntoView({behavior:"smooth"});
+  const a = document.createElement("div"); a.className = "acts"; a.innerHTML = `<button class="b alt sm">${tr("Zamknij","Close")}</button>`; a.firstChild.onclick = () => { box.innerHTML = ""; }; c.append(a);
+  box.append(c); c.scrollIntoView({block:"nearest"});
+}
+function devRow(d){
+  const el = document.createElement("div"); el.className = "li click";
+  el.innerHTML = `<span class="shape">${HL.icon(d.icon)}</span><div class="n"><b title="${esc(d.prefix)}…"><span class="dot ${d.online ? "on" : ""}" style="margin-right:8px"></span><span class="nm"></span></b><div class="hint"></div></div>
+    <button class="b alt sm ed">${tr("Edytuj","Edit")}</button>`;
+  el.querySelector(".nm").textContent = d.name;
+  el.querySelector(".hint").textContent = [d.user, d.layout.tiles.length + " " + tr("kafelków","tiles"), d.last_seen ? tr("ostatnio","last seen") + " " + new Date(d.last_seen*1000).toLocaleString(undefined, {dateStyle:"short", timeStyle:"short"}) : tr("jeszcze nie połączone","never connected"), d.enabled ? "" : tr("wyłączone","disabled")].filter(Boolean).join(" · ");
+  const kb = HL.kebab([["cp", tr("Kopiuj token / link","Copy token / link"), "", !d.can_copy], ["tk", tr("Nowy token / link","New token / link")], ["dl", tr("Usuń","Delete"), "red"]]);
+  if(!d.can_copy) kb.querySelector("[data-a=cp]").title = tr("Utworzony przed aktualizacją - wygeneruj nowy token raz","Created before the update - generate a new token once");
+  el.append(kb);
+  el.onclick = e => { if(!e.target.closest("button,summary,details")) edit(d.id); };
+  el.querySelector(".ed").onclick = () => edit(d.id);
+  kb.querySelector("[data-a=cp]").onclick = async () => { try{ const r = await api(`devices/${d.id}/secret`); showCreated({token: r.token}, false); }catch(e){ toast(e.message,true); } };
+  kb.querySelector("[data-a=tk]").onclick = async () => { if(!confirm(tr("Wygenerować nowy token? Stary przestanie działać.","Generate a new token? The old one stops working."))) return;
+    try{ const r = await post(`devices/${d.id}/token`, {}); showCreated(r); await load(); }catch(e){ toast(e.message,true); } };
+  kb.querySelector("[data-a=dl]").onclick = async () => { if(!confirm(tr("Usunąć urządzenie?","Delete this device?"))) return;
+    try{ await api("devices/" + d.id, {method:"DELETE"}); await load(); }catch(e){ toast(e.message,true); } };
+  return el;
 }
 function renderDevices(){
-  const box = $("devList");
-  box.innerHTML = B.devices.length ? "" : `<div class="hint">${tr("Brak urządzeń. Utwórz pierwsze.","No devices yet. Create the first one.")}</div>`;
-  B.devices.forEach(d => {
-    const el = document.createElement("div"); el.className = "dev";
-    el.innerHTML = `<div class="shape" style="background:color-mix(in srgb,var(--primary-color) 20%,transparent);color:var(--primary-color)">${HL.icon(d.icon)}</div><div class="n"><span class="dot ${d.online ? "on" : ""}"></span> <b></b>
-      <div class="hint">${d.user ? "👤 " + esc(d.user) + " · " : ""}${d.layout.tiles.length} ${tr("kafelków","tiles")} · ${esc(d.prefix)}… · ${d.last_seen ? tr("ostatnio","last seen") + " " + new Date(d.last_seen*1000).toLocaleString() : tr("jeszcze nie połączone","never connected")}
-      ${d.enabled ? "" : ` · <span class="badge">${tr("wyłączone","disabled")}</span>`}</div></div>
-      <button class="b sm ed">${tr("Edytuj","Edit")}</button><button class="b alt sm cp"${d.can_copy ? "" : " disabled"} title="${d.can_copy ? "" : tr("Utworzony przed aktualizacją - wygeneruj nowy token raz","Created before the update - generate a new token once")}">${tr("Kopiuj token / link","Copy token / link")}</button><button class="b alt sm tk">${tr("Nowy token / link","New token / link")}</button>
-      <button class="b red sm dl">${tr("Usuń","Delete")}</button>`;
-    el.querySelector("b").textContent = d.name;
-    el.querySelector(".ed").onclick = () => edit(d.id);
-    el.querySelector(".cp").onclick = async () => { try{ const r = await api(`devices/${d.id}/secret`); showCreated({token: r.token}, false); }catch(e){ toast(e.message,true); } };
-    el.querySelector(".tk").onclick = async () => { if(!confirm(tr("Wygenerować nowy token? Stary przestanie działać.","Generate a new token? The old one stops working."))) return;
-      try{ const r = await post(`devices/${d.id}/token`, {}); showCreated(r); await load(); }catch(e){ toast(e.message,true); } };
-    el.querySelector(".dl").onclick = async () => { if(!confirm(tr("Usunąć urządzenie?","Delete this device?"))) return;
-      try{ await api("devices/" + d.id, {method:"DELETE"}); await load(); }catch(e){ toast(e.message,true); } };
-    box.append(el);
-  });
+  $("devEmpty").textContent = tr("Brak urządzeń. Utwórz pierwsze.","No devices yet. Create the first one."); $("devEmpty").hidden = B.devices.length > 0;
+  HL.sync($("devList"), B.devices, d => d.id, devRow);
 }
 $("newBtn").onclick = () => { $("newForm").hidden = !$("newForm").hidden; };
 $("nCancel").onclick = () => { $("newForm").hidden = true; };
@@ -259,7 +255,7 @@ function edit(id){
   $("eNameIn").value = cur.name; $("eUserIn").value = cur.user || "";
   $("ePhone").innerHTML = `<option value="">—</option>` + [...new Set([...B.notify, cur.phone].filter(Boolean))].map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("");
   $("ePhone").value = cur.phone || ""; $("eLive").value = cur.live || "off"; $("eLiveEnt").value = (cur.live_entities || []).join(", "); if(![...$("eIconIn").options].some(o => o.value === cur.icon)) $("eIconIn").add(new Option(cur.icon, cur.icon)); $("eIconIn").value = cur.icon; $("eColsIn").value = W.cols;
-  $("eFeed").checked = cur.show_feed; $("eOn").checked = cur.enabled;
+  $("eFeed").checked = cur.show_feed; $("eOn").checked = cur.enabled; $("liveDet").open = !!(cur.phone || (cur.live && cur.live !== "off") || (cur.live_entities || []).length);
   ["auto","jsonBox"].forEach(x => $(x).hidden = true); closeTile();
   setDirty(false); renderTiles(); showEdit(); watchPrev();
 }
@@ -281,15 +277,16 @@ function tileSummary(t){
   return t.entity_id + (t.type === "slider" ? " · " + t.mode : "") + (t.attribute ? " · " + t.attribute : "");
 }
 function renderTiles(){
-  const box = $("tileList"); box.innerHTML = W.tiles.length ? "" : `<div class="hint">${tr("Brak kafelków. Dodaj ręcznie albo „Auto z encji”.","No tiles yet. Add one or use “Auto from entities”.")}</div>`;
+  const box = $("tileList"); box.innerHTML = W.tiles.length ? "" : `<div class="hint" style="padding:16px 0">${tr("Brak kafelków. Dodaj ręcznie albo „Z encji”.","No tiles yet. Add one or use “From entities”.")}</div>`;
   W.tiles.forEach((t, i) => {
-    const el = document.createElement("div"); el.className = "tl";
-    el.innerHTML = `<span class="shape" style="color:var(--primary-color)">${HL.icon(HL.tileIcon(t))}</span><div class="n"><b></b><div class="hint"></div></div>
-      <button class="b alt sm" data-a="up">↑</button><button class="b alt sm" data-a="dn">↓</button><button class="b alt sm" data-a="ed">✎</button>
-      <button class="b alt sm" data-a="cp">⧉</button>${t.type === "slider" || t.type === "state" ? "" : `<button class="b alt sm" data-a="ts">▶</button>`}<button class="b red sm" data-a="rm">🗑</button>`;
+    const el = document.createElement("div"); el.className = "li click";
+    el.innerHTML = `<span class="shape">${HL.icon(HL.tileIcon(t))}</span><div class="n"><b></b><div class="hint"></div></div>
+      <button class="b alt sm ic" data-a="up" aria-label="${tr("W górę","Move up")}"${i === 0 ? " disabled" : ""}>${HL.icon("mdi:arrow-up")}</button><button class="b alt sm ic" data-a="dn" aria-label="${tr("W dół","Move down")}"${i === W.tiles.length - 1 ? " disabled" : ""}>${HL.icon("mdi:arrow-down")}</button>`;
     el.querySelector("b").textContent = t.label || t.entity_id || "—"; el.querySelector(".hint").textContent = typeName(t.type) + " · " + tileSummary(t) + (t.width === 2 ? " · 2×" : "");
+    el.append(HL.kebab([["ed", tr("Edytuj","Edit")], ["cp", tr("Duplikuj","Duplicate")], ...(t.type === "slider" || t.type === "state" ? [] : [["ts", tr("Wykonaj teraz","Run now")]]), ["rm", tr("Usuń","Delete"), "red"]]));
     el.onclick = async e => {
-      const a = e.target.dataset.a; if(!a) return;
+      const a = (e.target.closest("[data-a]") || {dataset:{}}).dataset.a;
+      if(!a){ if(!e.target.closest("summary,details")) tileForm(t, i); return; }
       if(a === "up" && i > 0) [W.tiles[i-1], W.tiles[i]] = [W.tiles[i], W.tiles[i-1]];
       else if(a === "dn" && i < W.tiles.length - 1) [W.tiles[i+1], W.tiles[i]] = [W.tiles[i], W.tiles[i+1]];
       else if(a === "ed") return tileForm(t, i);
@@ -298,7 +295,7 @@ function renderTiles(){
       else if(a === "ts"){
         if(dirty){ toast(tr("Najpierw zapisz zmiany","Save your changes first"), true); return; }
         if(!confirm(tr("Wykonać tę akcję teraz w Home Assistant?","Run this action in Home Assistant now?"))) return;
-        try{ const r = await post("test", {device_id:cur.id, tile:t.id}); toast(r.ok ? "▶ OK" : r.error, !r.ok); }catch(err){ toast(err.message,true); } return;
+        try{ const r = await post("test", {device_id:cur.id, tile:t.id}); toast(r.ok ? "OK" : r.error, !r.ok); }catch(err){ toast(err.message,true); } return;
       } else return;
       setDirty(); renderTiles();
     };
@@ -310,12 +307,12 @@ function renderTiles(){
 // ---------- icon picker (Material Design Icons, same set as Home Assistant)
 function iconPicker(host, input, onPick){
   host.className = "ipick";
-  host.innerHTML = `<input type="text" placeholder="${tr("Szukaj ikony…","Search icons…")}"><div class="grid8"></div>`;
-  const q = host.querySelector("input"), g = host.querySelector(".grid8");
+  host.innerHTML = `<details class="help" style="margin-top:8px"><summary>${tr("Wybierz z listy ikon","Pick from the icon list")}</summary><input type="text" placeholder="${tr("Szukaj ikony…","Search icons…")}" style="margin-top:8px"><div class="grid8"></div></details>`;
+  const det = host.firstChild, q = host.querySelector("input"), g = host.querySelector(".grid8");
   const draw = () => { const f = q.value.trim().toLowerCase(); g.innerHTML = "";
     Object.keys(HL.MDI).filter(n => !f || n.includes(f)).slice(0, 120).forEach(n => { const b = document.createElement("button"); b.type = "button"; b.title = n; b.innerHTML = HL.icon(n);
       b.onclick = () => { input.value = "mdi:" + n; onPick && onPick("mdi:" + n); }; g.append(b); }); };
-  q.oninput = draw; draw();
+  q.oninput = draw; det.ontoggle = () => { if(det.open && !g.firstChild) draw(); };
 }
 
 // ---------- tile form (dialog)
@@ -325,16 +322,16 @@ function tileForm(tile, idx){
   const box = $("tileForm"); if(!$("tileDlg").open) $("tileDlg").showModal(); $("auto").hidden = true; $("jsonBox").hidden = true;
   const draw = () => {
     box.innerHTML = `<h2>${tile ? tr("Edytuj kafelek","Edit tile") : tr("Nowy kafelek","New tile")}</h2>
-      <div class="row"><div class="grow"><label class="f">${tr("Typ","Type")}</label><select id="fType">${["button","toggle","slider","state"].map(x => `<option value="${x}" ${T.type===x?"selected":""}>${typeName(x)}</option>`).join("")}</select></div>
+      <div class="row" style="margin-top:0"><div class="grow"><label class="f">${tr("Typ","Type")}</label><select id="fType">${["button","toggle","slider","state"].map(x => `<option value="${x}" ${T.type===x?"selected":""}>${typeName(x)}</option>`).join("")}</select></div>
       <div class="grow"><label class="f">${tr("Nazwa","Label")}</label><input type="text" id="fLabel" value="${esc(T.label)}"></div></div>
       <label class="f">${tr("Ikona (puste = automatyczna)","Icon (empty = automatic)")}</label>
-      <div class="row" style="margin-top:0"><div class="shape" id="fIconPrev" style="background:color-mix(in srgb,var(--primary-color) 20%,transparent);color:var(--primary-color)"></div><input type="text" id="fIcon" value="${esc(T.icon)}" placeholder="mdi:lightbulb" class="grow"></div>
+      <div class="tl-n"><span class="shape" id="fIconPrev" style="color:var(--primary-color)"></span><input type="text" id="fIcon" value="${esc(T.icon)}" placeholder="mdi:lightbulb"></div>
       <div id="fPick"></div>
-      <div class="row"><div><label class="f">${tr("Kolor","Color")}</label><input type="color" id="fColor" value="${T.color || "#009ac7"}"> <label class="chk" style="display:inline-flex;margin-left:8px"><input type="checkbox" id="fNoColor" ${T.color?"":"checked"}> ${tr("domyślny","default")}</label></div>
-      <div><label class="f">${tr("Szerokość","Width")}</label><select id="fWidth"><option value="1" ${T.width!==2?"selected":""}>1</option><option value="2" ${T.width===2?"selected":""}>2</option></select></div></div>
+      <div class="row"><div><label class="f">${tr("Kolor","Color")}</label><div class="tl-n"><input type="color" id="fColor" value="${T.color || "#009ac7"}"><label class="chk" style="margin:0"><input type="checkbox" id="fNoColor" ${T.color?"":"checked"}> ${tr("domyślny","default")}</label></div></div>
+      <div class="grow"><label class="f">${tr("Szerokość","Width")}</label><select id="fWidth"><option value="1" ${T.width!==2?"selected":""}>1</option><option value="2" ${T.width===2?"selected":""}>2</option></select></div></div>
       <label class="chk"><input type="checkbox" id="fConfirm" ${T.confirm?"checked":""}> ${tr("Pytaj o potwierdzenie przed wykonaniem","Ask for confirmation before running")}</label>
       <div id="fType2"></div>
-      <div class="row" style="justify-content:flex-end"><button class="b alt" id="fCancel">${tr("Anuluj","Cancel")}</button><button class="b" id="fOk">${tr("Zapisz","Save")}</button></div>`;
+      <div class="acts"><button class="b alt" id="fCancel">${tr("Anuluj","Cancel")}</button><button class="b" id="fOk">${tr("Zapisz","Save")}</button></div>`;
     const ent = (id, val, ph) => `<input type="text" id="${id}" list="dlEnt" value="${esc(val)}" placeholder="${ph||"light.salon"}">`;
     const sp = $("fType2");
     if(T.type === "button"){
@@ -346,7 +343,7 @@ function tileForm(tile, idx){
             <label class="f">${tr("Encja (opcjonalnie)","Entity (optional)")}</label>${ent("aEnt", a.entity_id)}
             <label class="f">${tr("Dane (JSON, opcjonalnie)","Data (JSON, optional)")}</label><textarea id="aData" style="min-height:60px;font-family:monospace">${esc(JSON.stringify(a.data || {}))}</textarea>`
           : k === "event" ? `<label class="f">${tr("Nazwa zdarzenia","Event type")}</label><input type="text" id="aEvt" value="${esc(a.event_type)}" placeholder="my_event">`
-          : k === "live" ? `<label class="f">Live Activity</label><select id="aAct"><option value="">—</option>${B.activities.map(x => `<option value="${esc(x.id)}" ${a.activity===x.id?"selected":""}>${esc(x.name)}</option>`).join("")}</select><div class="hint">${tr("Dotknięcie włącza lub kończy tę aktywność na telefonie.","Tapping starts or ends this activity on the phone.")}</div>`
+          : k === "live" ? `<label class="f">Live Activity</label><select id="aAct"><option value="">—</option>${B.activities.map(x => `<option value="${esc(x.id)}" ${a.activity===x.id?"selected":""}>${esc(x.name)}</option>`).join("")}</select><div class="hint" style="margin-top:4px">${tr("Dotknięcie włącza lub kończy tę aktywność na telefonie.","Tapping starts or ends this activity on the phone.")}</div>`
           : `<label class="f">${k}</label>${ent("aEnt", a.entity_id, k + ".nazwa")}`; };
       $("aKind").onchange = body; body();
     } else if(T.type === "toggle"){ sp.innerHTML = `<label class="f">${tr("Encja","Entity")}</label>${ent("tEnt", T.entity_id)}`; }
@@ -395,9 +392,9 @@ const AUTO = {light:"toggle",switch:"toggle",input_boolean:"toggle",fan:"toggle"
 $("addAuto").onclick = () => {
   const box = $("auto"); box.hidden = !box.hidden; closeTile(); $("jsonBox").hidden = true; if(box.hidden) return;
   const doms = Object.keys(AUTO), on = new Set(["light","scene","script"]);
-  box.innerHTML = `<div class="card" style="border-color:var(--acc)"><div class="chips" id="aDoms">${doms.map(d => `<label><input type="checkbox" value="${d}" ${on.has(d)?"checked":""}> ${d}</label>`).join("")}</div>
-    <input type="text" id="aFilter" placeholder="${tr("Filtr (nazwa lub id)…","Filter (name or id)…")}" style="margin-top:10px"><div id="aList" style="max-height:260px;overflow:auto;margin-top:8px"></div>
-    <div class="row"><button class="b" id="aAdd">${tr("Dodaj zaznaczone","Add selected")}</button><button class="b alt" id="aAll">${tr("Zaznacz wszystkie","Select all")}</button></div></div>`;
+  box.innerHTML = `<div class="panel"><div class="chips" id="aDoms">${doms.map(d => `<label><input type="checkbox" value="${d}" ${on.has(d)?"checked":""}> ${d}</label>`).join("")}</div>
+    <input type="text" id="aFilter" placeholder="${tr("Filtr (nazwa lub id)…","Filter (name or id)…")}" style="margin-top:16px"><div id="aList" style="max-height:260px;overflow:auto;margin-top:8px"></div>
+    <div class="acts" style="margin-top:8px"><button class="b alt" id="aAll">${tr("Zaznacz wszystkie","Select all")}</button><button class="b alt" id="aAdd">${tr("Dodaj zaznaczone","Add selected")}</button></div></div>`;
   const list = () => { const ds = new Set([...box.querySelectorAll("#aDoms input:checked")].map(i => i.value)), f = $("aFilter").value.toLowerCase();
     const rows = B.entities.filter(e => ds.has(e.id.split(".")[0]) && (!f || e.id.includes(f) || e.name.toLowerCase().includes(f))).slice(0, 200);
     $("aList").innerHTML = rows.map(e => `<label class="ent"><input type="checkbox" value="${esc(e.id)}"> <span>${esc(e.name)} <small>${esc(e.id)}</small></span></label>`).join("") || `<div class="hint">${tr("Brak encji.","No entities.")}</div>`; };
@@ -408,8 +405,8 @@ $("addAuto").onclick = () => {
     picked.forEach(id => { const e = B.entities.find(x => x.id === id), d = id.split(".")[0], kind = AUTO[d], name = e.name;
       const base = {id:"", label:name, icon:"", color:"", width:1, confirm:false};
       if(kind === "toggle") W.tiles.push({...base, type:"toggle", entity_id:id});
-      else if(kind === "scene" || kind === "script") W.tiles.push({...base, type:"button", icon:kind==="scene"?"🎬":"▶️", entity_id:"", action:{kind, service:"", entity_id:id, data:{}, event_type:""}});
-      else if(kind === "volume") W.tiles.push({...base, type:"slider", entity_id:id, mode:"volume", min:0, max:100, step:1, icon:"🔊", width:2});
+      else if(kind === "scene" || kind === "script") W.tiles.push({...base, type:"button", icon:"", entity_id:"", action:{kind, service:"", entity_id:id, data:{}, event_type:""}});
+      else if(kind === "volume") W.tiles.push({...base, type:"slider", entity_id:id, mode:"volume", min:0, max:100, step:1, width:2});
       else if(kind === "number") W.tiles.push({...base, type:"slider", entity_id:id, mode:"number", min:0, max:100, step:1, width:2});
       else W.tiles.push({...base, type:"state", entity_id:id, attribute:"", unit:""}); n++; });
     if(n){ setDirty(); renderTiles(); toast(tr(`Dodano ${n}`, `Added ${n}`)); box.hidden = true; }
@@ -436,7 +433,7 @@ function drawPrev(){
 function refreshPrev(){ drawPrev(); watchPrev(); }
 
 // ---------- Live Activities (Dynamic Island / Lock Screen via the Companion app)
-$("tLive").textContent = "🏝️ Live Activities"; $("actNew").textContent = tr("+ Nowa aktywność","+ New activity");
+$("actNew").textContent = tr("+ Nowa aktywność","+ New activity");
 $("liveInfo").innerHTML = tr(
   "Pokazuje stan encji na <b>Dynamic Island</b> i ekranie blokady iPhone'a (Android: Live Updates) przez aplikację Home Assistant Companion. Wymaga: iOS 17.2+, Home Assistant Core 2026.7+ i aplikacji Companion z włączonymi Live Activities (Ustawienia → Live Activities). iPad nie obsługuje Live Activities. iOS kończy aktywność po ok. 8 h (HALiveTeo uruchamia ją wtedy od nowa).",
   "Shows an entity's state on the iPhone <b>Dynamic Island</b> and Lock Screen (Android: Live Updates) through the Home Assistant Companion app. Requires iOS 17.2+, Home Assistant Core 2026.7+ and the Companion app with Live Activities enabled (Settings → Live Activities). iPad does not support Live Activities. iOS ends an activity after about 8 h (HALiveTeo restarts it then).");
@@ -446,22 +443,28 @@ const PRESETS = [
   ["timer", tr("Odliczanie (timer.*)","Countdown (timer.*)"), e => ({start_states:"active", end_states:"idle,paused", message:tr("Odliczanie","Countdown"), icon:"mdi:timer-outline", progress_mode:"none", chrono_attr:"finishes_at", relevance:0.9, min_interval:30})],
   ["media", tr("Odtwarzacz (tytuł)","Media player (title)"), e => ({start_states:"playing", end_states:"idle,off,paused,standby", message:`{{ state_attr('${e}','media_title') }} – {{ state_attr('${e}','media_artist') }}`, icon:"mdi:music", color:"#03A9F4", progress_mode:"none", min_interval:20})]
 ];
+function actRow(a){
+  const el = document.createElement("div"); el.className = "li click";
+  el.innerHTML = `<span class="shape" style="color:${esc(a.color)}">${HL.icon(a.icon)}</span>
+    <div class="n"><b><span class="dot ${a.running ? "on" : ""}" style="margin-right:8px"></span><span class="nm"></span></b><div class="hint"></div></div>
+    <button class="b alt sm ${a.running ? "en" : "st"}">${a.running ? tr("Zakończ","End") : tr("Start","Start")}</button>`;
+  el.querySelector(".nm").textContent = a.name + (a.enabled ? "" : " (" + tr("wyłączona","disabled") + ")");
+  const who = B.devices.filter(d => (a.devices || []).includes(d.id)).map(d => d.user || d.name);
+  el.querySelector(".hint").textContent = a.entity_id + " → " + ([...a.phones, ...who].join(", ") || tr("nikt","nobody")) + (a.owner ? " · " + tr("własna, utworzona przez użytkownika","own, created by the user") : "");
+  const start = async () => { try{ await post(`activities/${a.id}/start`, {}); toast(tr("Wysłano start do telefonu","Start sent to the phone")); await load(); renderActs(); }catch(e){ toast(e.message,true); } };
+  const end = async () => { try{ await post(`activities/${a.id}/end`, {}); await load(); renderActs(); }catch(e){ toast(e.message,true); } };
+  const kb = HL.kebab([["ed", tr("Edytuj","Edit")], a.running ? ["st", tr("Uruchom ponownie","Start again")] : ["en", tr("Zakończ","End")], ["dl", tr("Usuń","Delete"), "red"]]);
+  el.append(kb);
+  (el.querySelector(".st") || el.querySelector(".en")).onclick = a.running ? end : start;
+  const k = x => kb.querySelector(`[data-a=${x}]`);
+  k("ed").onclick = () => actForm(a); if(k("st")) k("st").onclick = start; if(k("en")) k("en").onclick = end;
+  k("dl").onclick = async () => { if(!confirm(tr("Usunąć tę aktywność?","Delete this activity?"))) return; try{ await api("activities/" + a.id, {method:"DELETE"}); await load(); renderActs(); }catch(e){ toast(e.message,true); } };
+  el.onclick = e => { if(!e.target.closest("button,summary,details")) actForm(a); };
+  return el;
+}
 function renderActs(){
-  const box = $("actList"); box.innerHTML = B.activities.length ? "" : `<div class="hint">${tr("Brak aktywności. Utwórz pierwszą – np. status pralki lub odliczanie timera.","No activities yet. Create one – e.g. washer status or a timer countdown.")}</div>`;
-  B.activities.forEach(a => {
-    const el = document.createElement("div"); el.className = "dev";
-    el.innerHTML = `<div class="shape" style="background:color-mix(in srgb,${esc(a.color)} 20%,transparent);color:${esc(a.color)}">${HL.icon(a.icon)}</div>
-      <div class="n"><span class="dot ${a.running ? "on" : ""}"></span> <b></b><div class="hint"></div></div>
-      <button class="b sm st">${tr("Start","Start")}</button><button class="b alt sm en">${tr("Zakończ","End")}</button><button class="b alt sm ed">${tr("Edytuj","Edit")}</button><button class="b red sm dl">${tr("Usuń","Delete")}</button>`;
-    el.querySelector("b").textContent = a.name + (a.enabled ? "" : " (" + tr("wyłączona","disabled") + ")");
-    const who = B.devices.filter(d => (a.devices || []).includes(d.id)).map(d => d.user || d.name);
-    el.querySelector(".hint").textContent = a.entity_id + " → " + ([...a.phones, ...who].join(", ") || tr("nikt","nobody")) + (a.owner ? " · " + tr("własna, utworzona przez użytkownika","own, created by the user") : "");
-    el.querySelector(".st").onclick = async () => { try{ await post(`activities/${a.id}/start`, {}); toast(tr("Wysłano start do telefonu","Start sent to the phone")); await load(); renderActs(); }catch(e){ toast(e.message,true); } };
-    el.querySelector(".en").onclick = async () => { try{ await post(`activities/${a.id}/end`, {}); await load(); renderActs(); }catch(e){ toast(e.message,true); } };
-    el.querySelector(".ed").onclick = () => actForm(a);
-    el.querySelector(".dl").onclick = async () => { if(!confirm(tr("Usunąć tę aktywność?","Delete this activity?"))) return; try{ await api("activities/" + a.id, {method:"DELETE"}); await load(); renderActs(); }catch(e){ toast(e.message,true); } };
-    box.append(el);
-  });
+  $("actEmpty").textContent = tr("Brak aktywności. Utwórz pierwszą – np. status pralki lub odliczanie timera.","No activities yet. Create one – e.g. washer status or a timer countdown."); $("actEmpty").hidden = B.activities.length > 0;
+  HL.sync($("actList"), B.activities, a => a.id, actRow, a => JSON.stringify([a, B.devices.map(d => [d.id, d.user, d.name])]));
 }
 $("actNew").onclick = () => actForm(null);
 function actForm(act){
@@ -469,42 +472,45 @@ function actForm(act){
   const csv = v => Array.isArray(v) ? v.join(",") : (v || "");
   const box = $("actForm"); $("actDlg").showModal();
   box.innerHTML = `<h2>${act ? tr("Edytuj Live Activity","Edit Live Activity") : tr("Nowa Live Activity","New Live Activity")}</h2>
-    <label class="f">${tr("Nazwa","Name")}</label><input type="text" id="aName" value="${esc(A.name)}">
+    <label class="f" style="margin-top:0">${tr("Nazwa","Name")}</label><input type="text" id="aName" value="${esc(A.name)}">
     <label class="f">${tr("Telefony (aplikacja Companion)","Phones (Companion app)")}</label>
-    <div class="chips" id="aPhones" style="display:flex;flex-wrap:wrap;gap:6px">${[...new Set([...B.notify, ...A.phones])].map(n => `<label><input type="checkbox" value="${esc(n)}" ${A.phones.includes(n) ? "checked" : ""}> ${esc(n)}</label>`).join("") || `<span class="hint">${tr("Nie znaleziono telefonu (notify.mobile_app_*). Zainstaluj aplikację Home Assistant na telefonie.","No phone found (notify.mobile_app_*). Install the Home Assistant app on the phone.")}</span>`}</div>
-    <label class="f">${tr("Dla kogo – urządzenia/użytkownicy, którym dajesz tę aktywność na ich telefon","Given to – devices/users who get this activity on their phone")}</label>
-    <div class="chips" id="aDevs" style="display:flex;flex-wrap:wrap;gap:6px">${B.devices.map(d => `<label><input type="checkbox" value="${esc(d.id)}" ${(A.devices || []).includes(d.id) ? "checked" : ""}> ${esc((d.user ? d.user + " – " : "") + d.name)}${d.phone ? "" : " ⚠"}</label>`).join("") || `<span class="hint">${tr("Brak urządzeń.","No devices.")}</span>`}</div>
-    <div class="hint">${tr("⚠ = urządzenie nie ma przypisanego telefonu (ustaw w edytorze urządzenia). Użytkownik z uprawnieniami może wyłączyć daną aktywność u siebie.","⚠ = the device has no phone assigned (set it in the device editor). A user with permission can turn the activity off for themselves.")}</div>
+    <div class="chips" id="aPhones">${[...new Set([...B.notify, ...A.phones])].map(n => `<label><input type="checkbox" value="${esc(n)}" ${A.phones.includes(n) ? "checked" : ""}> ${esc(n)}</label>`).join("") || `<span class="hint">${tr("Nie znaleziono telefonu (notify.mobile_app_*). Zainstaluj aplikację Home Assistant na telefonie.","No phone found (notify.mobile_app_*). Install the Home Assistant app on the phone.")}</span>`}</div>
+    <label class="f">${tr("Dla kogo (urządzenia / użytkownicy)","Given to (devices / users)")}</label>
+    <div class="chips" id="aDevs">${B.devices.map(d => `<label><input type="checkbox" value="${esc(d.id)}" ${(A.devices || []).includes(d.id) ? "checked" : ""}> ${esc((d.user ? d.user + " – " : "") + d.name)}${d.phone ? "" : " (" + tr("brak telefonu","no phone") + ")"}</label>`).join("") || `<span class="hint">${tr("Brak urządzeń.","No devices.")}</span>`}</div>
+    <div class="hint" style="margin-top:4px">${tr("Urządzenie bez telefonu nie wyświetli aktywności. Użytkownik z uprawnieniami może ją u siebie wyłączyć.","A device without a phone cannot show it. A user with permission can turn it off for themselves.")}</div>
     <label class="f">${tr("Encja, która steruje aktywnością","Entity that drives the activity")}</label><input type="text" id="aEnt" list="dlEnt" value="${esc(A.entity_id)}" placeholder="sensor.pralka">
     <label class="f">${tr("Szablon (wypełnia pola)","Preset (fills the fields)")}</label>
-    <div class="row" style="margin-top:0">${PRESETS.map(([id, l]) => `<button type="button" class="b alt sm" data-p="${id}">${esc(l)}</button>`).join("")}</div>
+    <div class="chips">${PRESETS.map(([id, l]) => `<button type="button" class="b alt sm" data-p="${id}">${esc(l)}</button>`).join("")}</div>
     <div class="row"><div class="grow"><label class="f">${tr("Start gdy stan ∈ (po przecinku; puste = każdy poza końcowymi)","Start when state ∈ (comma list; empty = any except end states)")}</label><input type="text" id="aStart" value="${esc(csv(A.start_states))}"></div>
     <div class="grow"><label class="f">${tr("Koniec gdy stan ∈ (po przecinku)","End when state ∈ (comma list)")}</label><input type="text" id="aEnd" value="${esc(csv(A.end_states))}"></div></div>
     <label class="f">${tr("Tytuł (stały, ustawiany przy starcie)","Title (fixed, set at start)")}</label><input type="text" id="aTitle" value="${esc(A.title)}">
     <label class="f">${tr("Treść (zwykły tekst lub szablon HA)","Message (plain text or HA template)")}</label><textarea id="aMsg" style="min-height:64px">${esc(A.message)}</textarea>
-    <label class="f">${tr("Tekst na wyspie (compact) – opcjonalnie","Dynamic Island compact text – optional")}</label><input type="text" id="aCrit" value="${esc(A.critical_text)}" placeholder="{{ states('sensor.x') }}%">
-    <div class="row"><div class="grow"><label class="f">${tr("Pasek postępu","Progress bar")}</label><select id="aPm"><option value="none" ${A.progress_mode==="none"?"selected":""}>${tr("brak","none")}</option><option value="range" ${A.progress_mode==="range"?"selected":""}>${tr("z wartości encji (min–max)","from entity value (min–max)")}</option></select></div>
-    <div class="grow"><label class="f">${tr("Atrybut (puste = stan)","Attribute (empty = state)")}</label><input type="text" id="aPa" value="${esc(A.progress_attr)}"></div>
-    <div class="grow"><label class="f">min</label><input type="number" id="aPmin" value="${A.progress_min}"></div><div class="grow"><label class="f">max</label><input type="number" id="aPmax" value="${A.progress_max}"></div></div>
-    <div class="row"><div class="grow"><label class="f">${tr("Odliczanie: atrybut z czasem końca (np. finishes_at)","Countdown: attribute with end time (e.g. finishes_at)")}</label><input type="text" id="aCh" value="${esc(A.chrono_attr)}"></div></div>
-    <label class="chk"><input type="checkbox" id="aChS" ${A.chrono_state?"checked":""}> ${tr("Stan encji jest czasem końca (timestamp)","Entity state is the end time (timestamp)")}</label>
-    <label class="f">${tr("Ikona","Icon")}</label>
-    <div class="row" style="margin-top:0"><div class="shape" id="aIconPrev"></div><input type="text" id="aIcon" value="${esc(A.icon)}" class="grow"><input type="color" id="aColor" value="${esc(A.color)}"></div><div id="aPick"></div>
-    <details style="margin-top:12px"><summary class="hint" style="cursor:pointer">${tr("Zaawansowane","Advanced")}</summary>
-      <div class="row"><div class="grow"><label class="f">tag</label><input type="text" id="aTag" value="${esc(A.tag)}" placeholder="${tr("auto","auto")}"></div>
+    <details class="sub" style="margin-top:16px"><summary>${tr("Wygląd: tekst na wyspie, postęp, odliczanie, ikona","Display: island text, progress, countdown, icon")}</summary><div>
+      <label class="f" style="margin-top:0">${tr("Tekst na wyspie (compact) – opcjonalnie","Dynamic Island compact text – optional")}</label><input type="text" id="aCrit" value="${esc(A.critical_text)}" placeholder="{{ states('sensor.x') }}%">
+      <div class="row"><div class="grow"><label class="f">${tr("Pasek postępu","Progress bar")}</label><select id="aPm"><option value="none" ${A.progress_mode==="none"?"selected":""}>${tr("brak","none")}</option><option value="range" ${A.progress_mode==="range"?"selected":""}>${tr("z wartości encji (min–max)","from entity value (min–max)")}</option></select></div>
+      <div class="grow"><label class="f">${tr("Atrybut (puste = stan)","Attribute (empty = state)")}</label><input type="text" id="aPa" value="${esc(A.progress_attr)}"></div>
+      <div class="grow" style="min-width:80px"><label class="f">min</label><input type="number" id="aPmin" value="${A.progress_min}"></div><div class="grow" style="min-width:80px"><label class="f">max</label><input type="number" id="aPmax" value="${A.progress_max}"></div></div>
+      <label class="f">${tr("Odliczanie: atrybut z czasem końca (np. finishes_at)","Countdown: attribute with end time (e.g. finishes_at)")}</label><input type="text" id="aCh" value="${esc(A.chrono_attr)}">
+      <label class="chk"><input type="checkbox" id="aChS" ${A.chrono_state?"checked":""}> ${tr("Stan encji jest czasem końca (timestamp)","Entity state is the end time (timestamp)")}</label>
+      <label class="f">${tr("Ikona","Icon")}</label>
+      <div class="tl-n"><span class="shape" id="aIconPrev"></span><input type="text" id="aIcon" value="${esc(A.icon)}"><input type="color" id="aColor" value="${esc(A.color)}"></div><div id="aPick"></div>
+    </div></details>
+    <details class="sub"><summary>${tr("Zaawansowane","Advanced")}</summary><div>
+      <div class="row" style="margin-top:0"><div class="grow"><label class="f">tag</label><input type="text" id="aTag" value="${esc(A.tag)}" placeholder="${tr("auto","auto")}"></div>
       <div class="grow"><label class="f">${tr("Min. odstęp aktualizacji (s)","Min. update interval (s)")}</label><input type="number" id="aInt" min="5" max="3600" value="${A.min_interval}"></div>
       <div class="grow"><label class="f">relevance_score 0–1</label><input type="number" id="aRel" step="0.1" min="0" max="1" value="${A.relevance ?? ""}"></div></div>
       <div class="row"><div class="grow"><label class="f">background_color</label><input type="text" id="aBg" value="${esc(A.background_color)}" placeholder="#101820"></div>
       <div class="grow"><label class="f">text_color</label><input type="text" id="aTx" value="${esc(A.text_color)}" placeholder="#FFFFFF"></div></div>
-      <label class="f">${tr("Po dotknięciu otwórz (np. /lovelace/0)","Open on tap (e.g. /lovelace/0)")}</label><input type="text" id="aUrl" value="${esc(A.url)}"></details>
+      <label class="f">${tr("Po dotknięciu otwórz (np. /lovelace/0)","Open on tap (e.g. /lovelace/0)")}</label><input type="text" id="aUrl" value="${esc(A.url)}">
+    </div></details>
     <label class="chk"><input type="checkbox" id="aOn" ${A.enabled?"checked":""}> ${tr("Włączona (reaguje na zmiany stanu)","Enabled (reacts to state changes)")}</label>
     <pre id="aPrev" hidden></pre>
-    <div class="row" style="justify-content:flex-end"><button class="b alt" id="aCancel">${tr("Anuluj","Cancel")}</button><button class="b alt" id="aPreview">${tr("Podgląd ładunku","Preview payload")}</button><button class="b" id="aSave">${tr("Zapisz","Save")}</button></div>`;
+    <div class="acts"><button class="b alt" id="aCancel">${tr("Anuluj","Cancel")}</button><button class="b alt" id="aPreview">${tr("Podgląd ładunku","Preview payload")}</button><button class="b" id="aSave">${tr("Zapisz","Save")}</button></div>`;
   const val = () => ({id:A.id, name:$("aName").value, enabled:$("aOn").checked, devices:[...document.querySelectorAll("#aDevs input:checked")].map(i => i.value), phones:[...document.querySelectorAll("#aPhones input:checked")].map(i => i.value),
     entity_id:$("aEnt").value.trim(), start_states:$("aStart").value, end_states:$("aEnd").value, title:$("aTitle").value, message:$("aMsg").value, critical_text:$("aCrit").value,
     progress_mode:$("aPm").value, progress_attr:$("aPa").value, progress_min:+$("aPmin").value, progress_max:+$("aPmax").value, chrono_attr:$("aCh").value.trim(), chrono_state:$("aChS").checked,
     icon:$("aIcon").value.trim(), color:$("aColor").value, tag:$("aTag").value.trim(), min_interval:+$("aInt").value || 30, relevance:$("aRel").value, background_color:$("aBg").value.trim(), text_color:$("aTx").value.trim(), url:$("aUrl").value.trim()});
-  const prev = () => { $("aIconPrev").innerHTML = HL.icon($("aIcon").value); $("aIconPrev").style.cssText = `background:color-mix(in srgb,${$("aColor").value} 20%,transparent);color:${$("aColor").value}`; };
+  const prev = () => { $("aIconPrev").innerHTML = HL.icon($("aIcon").value); $("aIconPrev").style.color = $("aColor").value; };
   $("aIcon").oninput = prev; $("aColor").oninput = prev; iconPicker($("aPick"), $("aIcon"), prev); prev();
   box.querySelectorAll("[data-p]").forEach(b => b.onclick = () => {
     const e = $("aEnt").value.trim(); if(!e) return toast(tr("Najpierw wybierz encję","Pick the entity first"), true);
@@ -521,36 +527,44 @@ function actForm(act){
 }
 
 // ---------- usage: which entities each device / user actually used (also written to the HA Logbook + sensors)
-$("tUsage").textContent = tr("Kto czego używał","Who used what"); $("logbookLink").textContent = tr("Otwórz Logbook HA","Open HA Logbook"); $("usageClear").textContent = tr("Wyzeruj","Reset");
+$("logbookLink").textContent = tr("Otwórz Logbook HA","Open HA Logbook"); $("usageClear").textContent = tr("Wyzeruj","Reset");
 $("usageInfo").innerHTML = tr(
   "Każda akcja jest zapisywana w <b>Logbooku</b> Home Assistanta („Kto (urządzenie) nacisnął …”) oraz w sensorach <code>sensor.haliveteo_&lt;urządzenie&gt;_last_action</code> i <code>sensor.haliveteo_last_action</code> (historia i automatyzacje). Poniżej licznik użyć encji dla każdego urządzenia.",
   "Every action is written to the Home Assistant <b>Logbook</b> (“Who (device) pressed …”) and to the sensors <code>sensor.haliveteo_&lt;device&gt;_last_action</code> and <code>sensor.haliveteo_last_action</code> (history and automations). Below: how often each entity was used per device.");
 async function renderUsage(){
   const box = $("usageList"); let rows;
   try{ rows = await api("usage"); }catch(e){ return toast(e.message, true); }
-  box.innerHTML = ""; if(!rows.length) box.innerHTML = `<div class="hint">${tr("Brak urządzeń.","No devices.")}</div>`;
+  box.innerHTML = ""; if(!rows.length) box.innerHTML = `<div class="hint" style="padding:16px 0">${tr("Brak urządzeń.","No devices.")}</div>`;
   rows.forEach(r => { const c = document.createElement("div"); c.style.marginBottom = "16px";
     const total = r.items.reduce((a, x) => a + x.n, 0);
-    c.innerHTML = `<div class="sec" style="margin-bottom:6px"><span></span><span class="sp"></span><span class="badge">${total} ${tr("akcji","actions")}</span></div><div class="ul"></div>`;
-    c.querySelector(".sec span").textContent = (r.user ? "👤 " + r.user + " – " : "") + r.device;
+    c.innerHTML = `<div class="tb" style="margin:8px 0 0"><span class="sec nm"></span><span class="sp"></span><span class="badge">${total} ${tr("akcji","actions")}</span></div><div class="ul"></div>`;
+    c.querySelector(".nm").textContent = (r.user ? r.user + " – " : "") + r.device;
     const ul = c.querySelector(".ul"); ul.innerHTML = r.items.length ? "" : `<div class="hint">${tr("Jeszcze nic nie użyto.","Nothing used yet.")}</div>`;
-    r.items.forEach(x => { const row = document.createElement("div"); row.className = "tl";
-      row.innerHTML = `<span class="shape" style="color:var(--primary-color)">${HL.icon(x.entity_id ? "mdi:" + (HL.DEFAULT_ICON[x.entity_id.split(".")[0]] || "eye") : "mdi:gesture-tap")}</span><div class="n"><b></b><div class="hint"></div></div><span class="badge">${x.n}×</span>`;
-      row.querySelector("b").textContent = x.label || x.key; row.querySelector(".hint").textContent = (x.entity_id || x.type) + " · " + tr("ostatnio","last") + " " + new Date(x.last * 1000).toLocaleString();
+    r.items.forEach(x => { const row = document.createElement("div"); row.className = "li";
+      row.innerHTML = `<span class="shape">${HL.icon(x.entity_id ? "mdi:" + (HL.DEFAULT_ICON[x.entity_id.split(".")[0]] || "eye") : "mdi:gesture-tap")}</span><div class="n"><b></b><div class="hint"></div></div><span class="badge">${x.n}×</span>`;
+      row.querySelector("b").textContent = x.label || x.key; row.querySelector(".hint").textContent = (x.entity_id || x.type) + " · " + tr("ostatnio","last") + " " + new Date(x.last * 1000).toLocaleString(undefined, {dateStyle:"short", timeStyle:"short"});
       ul.append(row); });
     box.append(c); });
 }
 $("usageClear").onclick = async () => { if(!confirm(tr("Wyzerować liczniki użycia?","Reset usage counters?"))) return; try{ await api("usage", {method:"DELETE"}); renderUsage(); }catch(e){ toast(e.message, true); } };
 
-// ---------- feed
+// ---------- feed: rows are built once; new entries are added on top without redrawing the list
+function feedRow(e){
+  const el = document.createElement("div"); el.className = "li";
+  el.innerHTML = `<div class="n"><b></b><div class="hint"></div></div>`;
+  el.querySelector("b").textContent = e.label || e.type;
+  el.querySelector(".hint").textContent = [e.device, new Date(e.ts*1000).toLocaleTimeString(), e.source, (e.entity_id || "") + (e.value != null ? " = " + JSON.stringify(e.value) : "")].filter(Boolean).join(" · ") + (e.ok ? "" : " ✗ " + e.error);
+  if(!e.ok) el.querySelector(".hint").classList.add("bad");
+  return el;
+}
 function renderFeed(){
-  const box = $("feedList"); const rows = B.feed.slice().reverse();
-  box.innerHTML = rows.length ? "" : `<div class="hint">${tr("Czekam na akcje z urządzeń…","Waiting for actions from your devices…")}</div>`;
-  rows.forEach(e => { const el = document.createElement("div"); el.className = "fe";
-    el.innerHTML = `<span style="font-size:18px">${esc(e.icon || "•")}</span><div><b></b> <small></small><div class="hint"></div></div>`;
-    el.querySelector("b").textContent = e.label || e.type; el.querySelector("small").textContent = `${e.device} · ${new Date(e.ts*1000).toLocaleTimeString()} · ${e.source}`;
-    el.querySelector(".hint").textContent = (e.entity_id || "") + (e.value != null ? " = " + JSON.stringify(e.value) : "") + (e.ok ? "" : " ✗ " + e.error);
-    if(!e.ok) el.querySelector(".hint").classList.add("bad"); box.append(el); });
+  const box = $("feedList"); box.innerHTML = ""; $("feedEmpty").textContent = tr("Czekam na akcje z urządzeń…","Waiting for actions from your devices…");
+  $("feedEmpty").hidden = B.feed.length > 0;
+  B.feed.slice().reverse().forEach(e => box.append(feedRow(e)));
+}
+function addFeed(e){
+  const box = $("feedList"); $("feedEmpty").hidden = true; box.prepend(feedRow(e));
+  while(box.children.length > 200) box.lastChild.remove();
 }
 $("feedClear").onclick = async () => { try{ await api("feed", {method:"DELETE"}); B.feed = []; renderFeed(); }catch(e){ toast(e.message,true); } };
 
@@ -558,21 +572,21 @@ $("feedClear").onclick = async () => { try{ await api("feed", {method:"DELETE"})
 function renderHelp(){
   const host = `http://${esc(location.hostname)}:${B.public_port}`, p = esc(B.prefix);
   $("helpBox").innerHTML = tr(`
-  <div class="sec">Jak to działa</div>
+  <div class="sec" style="margin-top:16px">Jak to działa</div>
   <p>Każde urządzenie (telefon, tablet, panel ścienny, skrypt) dostaje własny <b>token</b> i własny <b>układ kafelków</b>. Kafelki działają na żywo: stan z Home Assistanta aktualizuje się natychmiast, a akcje wracają jako zdarzenia.</p>
-  <div class="sec">1. Przypięcie do ekranu</div>
+  <div class="sec" style="margin-top:16px">1. Przypięcie do ekranu</div>
   <p><b>iPhone / iPad:</b> otwórz link urządzenia w <b>Safari</b> → <b>Udostępnij → Do ekranu początkowego → Dodaj</b>. Ikona dostaje nazwę urządzenia i otwiera się na pełnym ekranie. <i>Token jest w adresie celowo</i> – aplikacje z ekranu głównego iOS mają własną, osobną pamięć i inaczej nie znałyby tokenu.</p>
   <p><b>Android:</b> Chrome → menu ⋮ → <b>Zainstaluj aplikację</b>. <b>Ekran blokady iPhone'a:</b> Skróty → nowy skrót → <b>Otwórz URL</b> (link urządzenia) → widżet Skrótów na ekranie blokady albo przycisk Action. Menu ⋯ na urządzeniu ma „Dodaj do ekranu głównego” z tymi krokami i kopiowaniem adresu.</p>
-  <div class="sec">2. Kto czego używał</div>
+  <div class="sec" style="margin-top:16px">2. Kto czego używał</div>
   <p>Ustaw urządzeniu <b>Użytkownika</b>. Każda akcja trafia do <b>Logbooka</b> HA oraz do sensorów <code>sensor.haliveteo_…_last_action</code>; zakładka <b>Użycie</b> pokazuje liczniki encji.</p>
-  <div class="sec">3. Urządzenia bez ekranu / skróty / ESP</div>
+  <div class="sec" style="margin-top:16px">3. Urządzenia bez ekranu / skróty / ESP</div>
   <pre>curl -X POST ${host}/api/device/action \\
   -H "Authorization: Bearer TOKEN" -d '{"tile":"ID_KAFELKA"}'
 
 curl -X POST ${host}/api/device/event \\
   -H "Authorization: Bearer TOKEN" -d '{"event":"dzwonek","data":{"pietro":1}}'</pre>
   <p>Urządzenie może wywołać <b>tylko</b> akcje zdefiniowane w jego układzie – nie ma dostępu do reszty HA. Limit: 25 akcji / 10 s.</p>
-  <div class="sec">4. Reakcja w Home Assistant</div>
+  <div class="sec" style="margin-top:16px">4. Reakcja w Home Assistant</div>
   <p>Każda akcja wysyła zdarzenie <code>${p}_action</code>, a zdarzenia z urządzeń <code>${p}_event</code>:</p>
   <pre>trigger:
   - platform: event
@@ -581,21 +595,21 @@ curl -X POST ${host}/api/device/event \\
 action:
   - service: notify.notify
     data: {message: "Ktoś nacisnął dzwonek"}</pre>`, `
-  <div class="sec">How it works</div>
+  <div class="sec" style="margin-top:16px">How it works</div>
   <p>Each device (phone, tablet, wall panel, script) gets its own <b>token</b> and its own <b>tile layout</b>. Tiles are live: Home Assistant states update instantly, and actions come back as events.</p>
-  <div class="sec">1. Pin to the screen</div>
+  <div class="sec" style="margin-top:16px">1. Pin to the screen</div>
   <p><b>iPhone / iPad:</b> open the device link in <b>Safari</b> → <b>Share → Add to Home Screen → Add</b>. The icon gets the device name and opens full screen. <i>The token is in the address on purpose</i> – iOS home-screen apps have their own isolated storage and would not know it otherwise.</p>
   <p><b>Android:</b> Chrome → menu ⋮ → <b>Install app</b>. <b>iPhone Lock Screen:</b> Shortcuts → new shortcut → <b>Open URL</b> (the device link) → Shortcuts widget on the Lock Screen or the Action button. The ⋯ menu on the device has “Add to Home Screen” with these steps and a copy-address button.</p>
-  <div class="sec">2. Who used what</div>
+  <div class="sec" style="margin-top:16px">2. Who used what</div>
   <p>Set a <b>User</b> on the device. Every action goes to the HA <b>Logbook</b> and to the sensors <code>sensor.haliveteo_…_last_action</code>; the <b>Usage</b> tab shows per-entity counters.</p>
-  <div class="sec">3. Screenless devices / Shortcuts / ESP</div>
+  <div class="sec" style="margin-top:16px">3. Screenless devices / Shortcuts / ESP</div>
   <pre>curl -X POST ${host}/api/device/action \\
   -H "Authorization: Bearer TOKEN" -d '{"tile":"TILE_ID"}'
 
 curl -X POST ${host}/api/device/event \\
   -H "Authorization: Bearer TOKEN" -d '{"event":"doorbell","data":{"floor":1}}'</pre>
   <p>A device can <b>only</b> trigger actions defined in its own layout – it has no access to the rest of HA. Limit: 25 actions / 10 s.</p>
-  <div class="sec">4. React in Home Assistant</div>
+  <div class="sec" style="margin-top:16px">4. React in Home Assistant</div>
   <p>Every action fires the event <code>${p}_action</code>; events sent by devices fire <code>${p}_event</code>:</p>
   <pre>trigger:
   - platform: event

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0
+- Calmer, minimalist interface: one-line rows instead of cards, one filled button per view, one accent colour, three type sizes, 12 px radii, no shadows. Long explanations moved into a small "Help" section; step actions (move, duplicate, delete) in a row menu.
+- Smooth updates: the 2.5 s refresh now patches only the rows that changed (no flicker, open details stay open, the routine list keeps its height while a routine runs), Run/Stop react instantly, the editor keeps its scroll position and focus when steps are added or moved.
+
 ## 1.0.3
 - Minimalist pass: decorative emoji removed from the interface and notification texts (plain labels, calmer look). Functional symbols (check, star, arrows) stay.
 

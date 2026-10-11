@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+- Calmer, minimalist interface: flat lists with dividers instead of nested cards, one filled (primary) button per view, one accent colour, three type sizes, 12 px radii, no shadows or decorative colours. Long explanations moved into a small "Help" section per view; secondary actions (move, duplicate, test, delete) live in a row menu.
+- Device page: larger tiles, minimal header (name, connection dot, menu), text-only menu, connection notice no longer shifts the layout.
+- Smooth updates: states are patched in place (no tile redraw on reconnect, new feed rows are added without redrawing the list), taps react instantly (tiles show pressed state and toggles flip at once, rolled back if the action fails), toasts are overlays.
+- Tile editor: icon list collapsed under "Pick from the icon list"; auto-generated tiles use the automatic MDI icons. Existing emoji icons in saved layouts still render.
+
 ## 1.4.3
 - Minimalist pass: decorative emoji removed from the interface and notification texts (plain labels, calmer look). Functional symbols (check, star, arrows) stay.
 

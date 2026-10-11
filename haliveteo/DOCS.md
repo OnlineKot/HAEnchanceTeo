@@ -23,7 +23,7 @@ Strona internetowa nie może sama utworzyć Live Activity (to wymaga natywnej ap
 **Wymagania:** iOS 17.2+ (iPhone; iPad nie obsługuje), Home Assistant Core **2026.7+**, aplikacja Companion z włączonymi
 Live Activities (*Ustawienia → Live Activities*). Telefon musi mieć stabilne połączenie z HA (wymiana tokenów).
 
-Zakładka **Live Activities** → **+ Nowa aktywność**:
+Zakładka **Aktywności** → **+ Nowa aktywność**:
 - wybierasz **telefon(y)** i **encję**, która steruje aktywnością,
 - **start** gdy stan ∈ lista (puste = każdy poza końcowymi), **koniec** gdy stan ∈ lista (wysyła `clear_notification`),
 - **tytuł** (stały), **treść** (tekst albo szablon HA, np. `{{ states('sensor.pralka') }}`), tekst na wyspie (`critical_text`),
@@ -82,10 +82,10 @@ na karcie **Urządzenia**. Zewnętrzny adres jest też w generowanych linkach (�
 - Informacja o sieci jest dostępna tylko dla administratora (panel / klucz API), nie dla tokenów.
 
 ## Szybki start
-1. Panel HALiveTeo → **+ Nowe urządzenie** → skopiuj **link** (token możesz skopiować ponownie w każdej chwili przyciskiem „Kopiuj token / link”).
+1. Panel HALiveTeo → **+ Nowe urządzenie** → skopiuj **link** (token możesz skopiować ponownie w każdej chwili menu ⋯ przy urządzeniu → „Kopiuj token / link”).
 2. Otwórz link na telefonie/tablecie → Safari: *Udostępnij → Do ekranu początkowego* (działa jak aplikacja, pełny ekran).
    Menu ⋯: „Nie wygaszaj ekranu” i „Pełny ekran” (idealne na panel ścienny).
-3. **Edytuj** urządzenie: dodaj kafelki ręcznie, **Auto z encji** (zaznacz światła, sceny, skrypty…) albo edytuj **JSON**.
+3. **Edytuj** urządzenie: dodaj kafelki ręcznie, **Z encji** (zaznacz światła, sceny, skrypty…) albo edytuj **JSON**.
    Podgląd po prawej pokazuje stany na żywo. Zmiany po **Zapisz** pojawiają się na urządzeniu natychmiast.
 
 ## Bezpieczeństwo

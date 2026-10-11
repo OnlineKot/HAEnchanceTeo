@@ -25,13 +25,12 @@ HL.live = function(opts){
 
 HL.ON = new Set(["on","open","playing","unlocked","home","heat","cool","active","armed_home","armed_away","buffering","locked"]);
 HL.isOn = (tile, st) => !!st && (tile.entity_id.startsWith("lock.") ? st.s === "locked" : HL.ON.has(st.s));
-HL.DOMAIN_COLOR = {light:"#ffc107",switch:"#ffc107",input_boolean:"#ffc107",fan:"#00bcd4",cover:"#926bc7",lock:"#4caf50",media_player:"#03a9f4",climate:"#ff6f22",humidifier:"#2196f3",vacuum:"#009688",siren:"#f44336",alarm_control_panel:"#4caf50"};
 HL.DEFAULT_ICON = {light:"lightbulb",switch:"toggle-switch",input_boolean:"toggle-switch",fan:"fan",cover:"blinds",lock:"lock",media_player:"speaker",climate:"thermostat",scene:"palette",script:"script-text-play",sensor:"eye",binary_sensor:"eye",input_number:"tune-variant",number:"tune-variant",button:"gesture-tap",slider:"tune-variant",state:"eye",toggle:"toggle-switch",event:"bullhorn-outline",live:"lightning-bolt-circle"};
 // Icon: "mdi:name" -> bundled Material Design Icon (same set as Home Assistant); anything else (emoji) is shown as text.
 HL.icon = name => {
   const n = String(name || "").replace(/^mdi:/, "");
   const d = HL.MDI && HL.MDI[n];
-  return d ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>` : HL.esc(name || "");
+  return d ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>` : (String(name || "").startsWith("mdi:") ? "" : HL.esc(name || ""));
 };
 HL.tileIcon = tile => {
   if(tile.icon) return tile.icon;
@@ -61,15 +60,18 @@ HL.makeTile = function(tile, handlers){
   const el = document.createElement("div");
   el.className = "tile t-" + tile.type + (tile.width === 2 ? " w2" : "");
   el.dataset.id = tile.id;
-  const dom = (tile.entity_id || "").split(".")[0];
-  el.style.setProperty("--tc", tile.color || HL.DOMAIN_COLOR[dom] || "var(--primary-color)");
+  if(tile.color) el.style.setProperty("--tc", tile.color);   // only an explicit tile colour overrides the single accent
   el.innerHTML = `<div class="trow"><div class="tshape">${HL.icon(HL.tileIcon(tile))}</div><div class="tinfo"><div class="tn"></div><div class="tst"></div></div></div>`;
   el.querySelector(".tn").textContent = tile.label || tile.entity_id || (tile.action && tile.action.entity_id) || "";
   const tst = el.querySelector(".tst"), ask = () => !tile.confirm || confirm((tile.label || "") + "?");
-  let range, fill, thumb, hs, longTimer, longFired = false;
+  let range, fill, thumb, hs, longTimer, longFired = false, lastSt = null, optTimer = 0, pendTimer = 0;
   const show = v => { const p = (v - tile.min) / (tile.max - tile.min) * 100; fill.style.width = p + "%"; thumb.style.left = p + "%"; };
   if(tile.type === "button" || tile.type === "toggle"){
-    el.onclick = () => { if(longFired){ longFired = false; return; } if(ask()) handlers.press(tile, el); };
+    el.onclick = () => { if(longFired){ longFired = false; return; } if(!ask()) return;
+      // instant feedback: pressed look now, toggles flip optimistically (the real state or the ack settles it)
+      el.classList.add("pend"); clearTimeout(pendTimer); pendTimer = setTimeout(() => el.classList.remove("pend"), 8000);
+      if(tile.type === "toggle"){ const on = !el.classList.contains("on"); el.classList.toggle("on", on); }
+      handlers.press(tile, el); };
     tst.textContent = HL.tileSub(tile);
   }
   if(tile.type === "slider"){
@@ -78,14 +80,20 @@ HL.makeTile = function(tile, handlers){
     el.append(f); hs = f.querySelector(".hs"); fill = f.querySelector(".hs-fill"); thumb = f.querySelector(".hs-thumb"); range = f.querySelector("input");
     range.min = tile.min; range.max = tile.max; range.step = tile.step;
     range.oninput = () => { hs.classList.add("drag"); range.dragging = true; show(+range.value); tst.textContent = range.value + (tile.mode === "number" ? "" : "%"); };
-    range.onchange = () => { hs.classList.remove("drag"); range.dragging = false; if(ask()) handlers.slide(tile, +range.value, el); };
+    range.onchange = () => { hs.classList.remove("drag"); range.dragging = false; if(ask()){ el.classList.add("pend"); clearTimeout(pendTimer); pendTimer = setTimeout(() => el.classList.remove("pend"), 8000); handlers.slide(tile, +range.value, el); } else el.update(lastSt); };
   }
   if(handlers.info && tile.type !== "button"){   // long press = more-info dialog
     el.addEventListener("pointerdown", () => { longFired = false; longTimer = setTimeout(() => { longFired = true; handlers.info(tile); }, 550); });
     ["pointerup","pointerleave","pointercancel"].forEach(ev => el.addEventListener(ev, () => clearTimeout(longTimer)));
     el.addEventListener("contextmenu", e => { e.preventDefault(); handlers.info(tile); });
   }
+  el.settle = ok => {   // request answered: failure rolls the optimistic state back at once, success waits a moment for the real state
+    clearTimeout(pendTimer); el.classList.remove("pend"); clearTimeout(optTimer);
+    if(tile.type === "button") return;
+    optTimer = setTimeout(() => el.update(lastSt), ok ? 1500 : 0);
+  };
   el.update = st => {
+    lastSt = st; clearTimeout(optTimer);
     el.classList.toggle("unavail", !!st && st.s === "unavailable");
     if(tile.type === "toggle"){ el.classList.toggle("on", HL.isOn(tile, st)); tst.textContent = st ? st.s : "—"; }
     else if(tile.type === "slider"){ const v = HL.sliderValue(tile, st);
@@ -96,9 +104,12 @@ HL.makeTile = function(tile, handlers){
   return el;
 };
 
+// Renders the tile grid. If the layout did not change since the last call, only the live states are patched (no flicker, no jumps).
 HL.renderGrid = function(box, layout, states, handlers){
+  const sig = JSON.stringify(layout);
+  if(box._sig === sig && box._els){ Object.entries(box._els).forEach(([eid, list]) => list.forEach(([t, el]) => el.update(states[eid]))); return box._els; }
   box.innerHTML = ""; box.style.setProperty("--cols", layout.cols || 2);
-  const els = {};
+  const els = {}; box._sig = sig; box._els = els;
   (layout.tiles || []).forEach(t => {
     const el = HL.makeTile(t, handlers); box.append(el);
     const eid = t.type === "button" ? "" : t.entity_id;
@@ -110,14 +121,39 @@ HL.renderGrid = function(box, layout, states, handlers){
 HL.moreInfo = function(tile, st){
   const d = document.createElement("dialog"); d.className = "hd";
   const attrs = Object.entries((st && st.a) || {}).filter(([k]) => !["friendly_name","icon","entity_picture","supported_features","supported_color_modes"].includes(k));
-  d.innerHTML = `<div class="hd-card"><h2></h2><div class="hint"></div><div style="font-size:28px;line-height:40px;margin:8px 0"></div>
-    <div class="at"></div><div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="b alt">${HL.tr("Zamknij","Close")}</button></div></div>`;
+  d.innerHTML = `<div class="hd-card"><h2></h2><div class="hint"></div><div class="mi-v"></div>
+    <div class="at"></div><div class="acts"><button class="b">${HL.tr("Zamknij","Close")}</button></div></div>`;
   d.querySelector("h2").textContent = (st && st.a && st.a.friendly_name) || tile.label || tile.entity_id;
   d.querySelector(".hint").textContent = tile.entity_id;
-  d.querySelector("div[style]").textContent = st ? st.s : "—";
-  d.querySelector(".at").innerHTML = attrs.map(([k, v]) => `<div style="display:flex;gap:12px;padding:6px 0;border-top:1px solid var(--divider-color)"><span class="hint" style="flex:0 0 40%;word-break:break-word">${HL.esc(k)}</span><span style="flex:1;word-break:break-word">${HL.esc(typeof v === "object" ? JSON.stringify(v) : v)}</span></div>`).join("");
+  d.querySelector(".mi-v").textContent = st ? st.s : "—";
+  d.querySelector(".at").innerHTML = attrs.map(([k, v]) => `<div class="mi-r"><span class="hint">${HL.esc(k)}</span><span>${HL.esc(typeof v === "object" ? JSON.stringify(v) : v)}</span></div>`).join("");
   d.querySelector("button").onclick = () => d.close(); d.onclose = () => d.remove();
   document.body.append(d); d.showModal();
 };
-HL.flash = (el, ok) => { if(!el) return; el.classList.remove("pulse","bad"); void el.offsetWidth; el.classList.add(ok ? "pulse" : "bad"); };
+// Result of a request: brief static outline (no animation), optimistic state settled.
+HL.flash = (el, ok) => { if(!el) return; clearTimeout(el._ft); el.classList.remove("ok","bad"); el.classList.add(ok ? "ok" : "bad");
+  el._ft = setTimeout(() => el.classList.remove("ok","bad"), ok ? 500 : 1600); if(el.settle) el.settle(ok); };
+// Overflow menu: HL.kebab([[action, label, className, disabled], ...]) -> <details class="kb"> whose buttons carry data-a.
+HL.kebab = items => {
+  const d = document.createElement("details"); d.className = "kb";
+  d.innerHTML = `<summary aria-label="${HL.tr("Więcej","More")}">${HL.icon("mdi:dots-vertical")}</summary><div></div>`;
+  items.forEach(([a, label, cls, off]) => { const b = document.createElement("button"); b.type = "button"; b.dataset.a = a; b.textContent = label; if(cls) b.className = cls; if(off) b.disabled = true; d.lastChild.append(b); });
+  return d;
+};
+document.addEventListener("click", e => document.querySelectorAll("details.kb[open]").forEach(d => { if(!d.contains(e.target) || e.target.closest("[data-a]")) d.open = false; }));
+// Keyed list sync: only rows whose data changed are rebuilt, open <details> inside them stay open, nothing else is touched.
+HL.sync = (box, items, key, make, sig) => {
+  const old = new Map([...box.children].map(c => [c.dataset.k, c])); let prev = null;
+  items.forEach(it => {
+    const k = String(key(it)), s = sig ? sig(it) : JSON.stringify(it); let el = old.get(k); old.delete(k);
+    if(!el || el._sig !== s){
+      const fresh = make(it); fresh.dataset.k = k; fresh._sig = s;
+      if(el){ const was = [...el.querySelectorAll("details")].map(x => x.open); fresh.querySelectorAll("details").forEach((x, i) => { if(was[i]) x.open = true; }); el.replaceWith(fresh); }
+      el = fresh;
+    }
+    const want = prev ? prev.nextSibling : box.firstChild;
+    if(el !== want) box.insertBefore(el, want);
+    prev = el; });
+  old.forEach(el => el.remove());
+};
 HL.time = ts => new Date(ts * 1000).toLocaleTimeString();

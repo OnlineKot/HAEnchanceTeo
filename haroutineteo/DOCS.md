@@ -30,7 +30,7 @@ Podczas działania telefon pokazuje nazwę rutyny, **„Krok 3/7 · Wygaszam sal
 Wymaga iOS 17.2+, Home Assistant Core 2026.7+ i włączonych Live Activities w aplikacji Companion (telefony wybierasz w Ustawieniach lub per rutyna).
 
 ## Skróty (token API, port 8768)
-Zakładka **Skróty (tokeny)** → token (opcjonalnie ograniczony do wybranych rutyn). W aplikacji Skróty: *Pobierz zawartość URL*,
+Zakładka **Skróty** → token (opcjonalnie ograniczony do wybranych rutyn). W aplikacji Skróty: *Pobierz zawartość URL*,
 `POST http://<HA>:8768/api/run`, nagłówki `Authorization: Bearer TOKEN` i `Content-Type: application/json`, treść `{"routine": "Dobranoc"}`.
 Dodatkowo `POST /api/stop` i `GET /api/routines`. Limit 20 żądań/min. Port 8768 to zwykłe HTTP – używaj w sieci domowej lub przez VPN.
 
