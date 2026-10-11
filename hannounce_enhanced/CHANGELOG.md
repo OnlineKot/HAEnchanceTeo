@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.16.0
+- Calmer, more minimal panel: one card, flat sections, one accent colour, three text sizes, one 12 px radius, one filled button per view. Quick tab = speakers, one text field, one Announce button, favorite sounds below. Long explanations moved into a small "Help" per tab; rarely used fields into "Advanced" / "Shortcut setup"; the speaker picker is hidden on Speakers, Tokens, Live and App.
+- Smoother: lists and the "announcing now" bar are updated in place (no flicker; focus, scroll, open sections, typed values and playing previews are kept; TTS engine/voice choices survive refreshes). The bar and toasts are overlays, the update notice is in the footer, so nothing jumps.
+- Instant feedback: buttons are disabled and dimmed while a request runs, stars react immediately and revert on error.
+
 ## 1.15.1
 - Minimalist pass: decorative emoji removed from the interface and notification texts (plain labels, calmer look). Functional symbols (check, star, arrows) stay.
 

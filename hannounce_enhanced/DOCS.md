@@ -24,7 +24,7 @@ stan, czy obsługują `announce`, czy są niedostępne.
 - **Duplikaty w Bibliotece** – „Usuń duplikaty” kasuje identyczne dźwięki, zostawiając ulubiony lub najstarszy.
 
 ## Skrypt lub scena przed / po ogłoszeniu
-Nad zakładkami są dwie listy: **Uruchom przed** i **Uruchom po** – wybierasz skrypt lub scenę z Home Assistanta
+W sekcji **Opcje** pod listą głośników są dwie listy: **Uruchom przed** i **Uruchom po** – wybierasz skrypt lub scenę z Home Assistanta
 (np. przyciemnij światło przed, przywróć po). W API: `before_action`, `after_action` (np. `scene.salon`, `script.xyz`).
 
 ## Wysyłanie z aplikacji (iPhone / Android)

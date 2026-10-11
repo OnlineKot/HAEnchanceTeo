@@ -11,196 +11,235 @@
 <meta name="apple-mobile-web-app-title" content="HAnnounce">
 <meta name="theme-color" content="#03a9f4">
 <style>
-:root{--bg:#eef1f5;--card:#fff;--fg:#1b1f27;--mut:#667085;--acc:#0b9ee8;--acc2:#0786c7;--accbg:#e4f4fd;--bd:#e3e7ee;--ok:#2e9e55;--warn:#d98a00;--err:#d1383d;--sh:0 1px 2px rgba(16,24,40,.06),0 4px 14px rgba(16,24,40,.05)}
-@media (prefers-color-scheme:dark){:root{--bg:#0e1116;--card:#171b22;--fg:#e8ebf0;--mut:#9aa3b2;--accbg:#10303f;--bd:#262c37;--sh:0 1px 2px rgba(0,0,0,.4)}}
-*{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding-bottom:env(safe-area-inset-bottom)}
-main{max-width:820px;margin:0 auto;padding:14px 14px 30px}
-header{display:flex;align-items:center;gap:10px;margin:2px 0 14px}
-header .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#29b6f6,#0277bd);display:grid;place-items:center;font-size:20px;box-shadow:var(--sh)}
-header h1{font-size:19px;margin:0;line-height:1.1}header small{color:var(--mut)}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px;margin-bottom:14px;box-shadow:var(--sh)}
-.card>h2,.sec{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:0 0 10px;display:flex;align-items:center;gap:8px;font-weight:700}
-.sec .sp{flex:1}
-.link{background:none;border:0;color:var(--acc);cursor:pointer;font:inherit;font-size:13px;padding:2px 4px;text-transform:none;letter-spacing:0;font-weight:600}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:22px;border:1.5px solid var(--bd);background:var(--card);color:var(--fg);cursor:pointer;font:inherit;transition:.12s;-webkit-tap-highlight-color:transparent}
-.chip:hover{border-color:var(--acc)}
-.chip.on{background:var(--accbg);border-color:var(--acc);font-weight:600}
-.chip .star{color:#f5b301;font-size:13px}
-.dot{width:9px;height:9px;border-radius:50%;background:#9aa3b2;flex:none}
-.dot.playing,.dot.buffering{background:var(--ok)}.dot.idle,.dot.on,.dot.paused{background:var(--acc)}.dot.unavailable,.dot.unknown{background:var(--err)}
-.empty{color:var(--mut);font-size:14px;padding:6px 2px}
-.opts{margin-top:12px;border-top:1px solid var(--bd);padding-top:10px}
-.opts summary{cursor:pointer;color:var(--mut);font-size:13px;font-weight:600}
-.tabs{display:flex;gap:4px;overflow-x:auto;margin:0 -14px 12px;padding:0 14px 2px;scrollbar-width:none;border-bottom:1px solid var(--bd)}
-.tabs::-webkit-scrollbar{display:none}
-.tabs button{flex:none;background:none;border:0;border-bottom:3px solid transparent;color:var(--mut);padding:9px 12px;cursor:pointer;font:inherit;font-weight:600;white-space:nowrap}
-.tabs button.on{color:var(--acc);border-bottom-color:var(--acc)}
-.pane{display:none}.pane.on{display:block}
-label.f{display:block;margin:10px 0 4px;color:var(--mut);font-size:13px}
-label.chk{display:flex;gap:8px;align-items:center;margin:9px 0;font-size:14px}
-input[type=text],input[type=number],input[type=time],input[type=search],select,textarea{width:100%;padding:9px 11px;border:1.5px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--fg);font:inherit}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
-textarea{min-height:84px;resize:vertical}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:10px}
-.row>.grow{flex:1;min-width:120px}
-button.b{background:var(--acc);color:#fff;border:0;padding:10px 16px;border-radius:10px;cursor:pointer;font:inherit;font-weight:600}
-button.b:hover{background:var(--acc2)}
-button.b.alt{background:none;color:var(--acc);border:1.5px solid var(--acc)}
-button.b.red{background:var(--err)}button.b.sm{padding:6px 11px;font-size:13px}
-button:disabled{opacity:.5;cursor:default}
-audio{width:100%;margin-top:10px}
-.item{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--bd);flex-wrap:wrap}
-.item:first-child{border-top:0}
-.item .n{flex:1;min-width:150px}.item small{color:var(--mut)}
-.star-btn{background:none;border:0;font-size:21px;cursor:pointer;color:var(--mut);padding:0 4px;line-height:1}
-.star-btn.on{color:#f5b301}
-.badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
-.badge{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--bg);border:1px solid var(--bd);color:var(--mut)}
-.badge.ok{color:var(--ok);border-color:var(--ok)}.badge.warn{color:var(--warn);border-color:var(--warn)}.badge.err{color:var(--err);border-color:var(--err)}
-.spk{border-top:1px solid var(--bd);padding:10px 0}.spk:first-child{border-top:0}
-.spk.dup{opacity:.75}
-.spk .head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.spk .head .n{flex:1;min-width:150px}
-.prof{background:var(--bg);border-radius:12px;padding:6px 12px 12px;margin-top:10px}
-.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
-.tools input[type=search]{flex:1;min-width:150px}
-#nowBar .nrow{display:flex;gap:12px;align-items:center;padding:6px 0}#nowBar .nrow+.nrow{border-top:1px solid var(--divider-color)}
-#nowBar .pulse{width:8px;height:8px;border-radius:50%;background:var(--primary-color);flex:none}
-#nowBar .pulse.q{background:var(--warning-color);animation:none}
-#nowBar .bar{height:4px;border-radius:2px;background:rgba(var(--rgb-primary-color),.2);overflow:hidden;margin-top:6px}#nowBar .bar i{display:block;height:100%;background:var(--primary-color);transition:width .3s linear}
-#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;max-width:90%;z-index:9;box-shadow:var(--sh)}
-#toast.on{opacity:1}
-footer{text-align:center;color:var(--mut);font-size:13px;margin:18px 0 6px}
-footer a{color:var(--acc);text-decoration:none;font-weight:700}
-.hint{color:var(--mut);font-size:13px;margin-top:8px}.rec{color:var(--err);font-weight:600}
-.meter{height:8px;border-radius:4px;background:var(--bd);overflow:hidden;margin-bottom:12px}.meter i{display:block;height:100%;width:0;background:var(--acc);transition:width .08s}.meter.live i{background:var(--err)}
-[hidden]{display:none!important}
-.recopts{align-items:center;gap:16px}.recopts select{width:auto;min-height:36px;padding:4px 12px}
-pre{background:var(--bg);padding:10px;border-radius:10px;overflow:auto;font-size:12px}
-code{background:var(--bg);padding:1px 5px;border-radius:5px;word-break:break-all}
-.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
-.tile{position:relative;min-height:74px;padding:12px;border-radius:14px;border:1.5px solid var(--bd);background:var(--bg);color:var(--fg);cursor:pointer;font:inherit;text-align:left;display:flex;flex-direction:column;justify-content:space-between;gap:4px}
-.tile:active{transform:scale(.97)}.tile:hover{border-color:var(--acc)}
-.tile b{font-size:15px;line-height:1.2}.tile small{color:var(--mut)}.tile .star{position:absolute;right:9px;top:6px;color:#f5b301;font-size:13px}
-.kiosk .tabs,.kiosk footer,.kiosk #scriptRes{display:none}
-#p-help h2{font-size:15px;margin:18px 0 4px}
-
-/* ---- Home Assistant look (theme variables from home-assistant/frontend color.globals.ts) ---- */
+/* Home Assistant look: theme variables from home-assistant/frontend, one accent colour (primary), 3 text sizes (12 / 14 / 16), 8-16-24 spacing, one 12px radius, no shadows, only 120 ms fades. */
 @font-face{font-family:Roboto;font-weight:400;font-display:swap;src:local("Roboto"),url("/static/fonts/roboto/Roboto-Regular.woff2") format("woff2")}
 @font-face{font-family:Roboto;font-weight:500;font-display:swap;src:local("Roboto Medium"),url("/static/fonts/roboto/Roboto-Medium.woff2") format("woff2")}
-:root{--primary-color:#009ac7;--rgb-primary-color:0,154,199;--primary-text-color:#212121;--secondary-text-color:#727272;--primary-background-color:#fafafa;--card-background-color:#fff;--secondary-background-color:#e5e5e5;--divider-color:rgba(0,0,0,.12);--outline-color:rgba(0,0,0,.12);--shadow-color:rgba(0,0,0,.16);--error-color:#db4437;--warning-color:#ffa600;--success-color:#43a047;--input-fill-color:rgb(245,245,245);--input-idle-line-color:rgba(0,0,0,.42);--input-hover-line-color:rgba(0,0,0,.87);--input-label-ink-color:rgba(0,0,0,.6);--ha-font:Roboto,Noto,"Noto Sans","Segoe UI",system-ui,-apple-system,sans-serif;
-  --bg:var(--primary-background-color);--card:var(--card-background-color);--fg:var(--primary-text-color);--mut:var(--secondary-text-color);--acc:var(--primary-color);--acc2:#0288d1;--accbg:rgba(var(--rgb-primary-color),.15);--bd:var(--divider-color);--ok:var(--success-color);--warn:var(--warning-color);--err:var(--error-color);--sh:none}
-@media (prefers-color-scheme:dark){:root{--primary-background-color:#111;--card-background-color:#1c1c1c;--secondary-background-color:#282828;--primary-text-color:#e1e1e1;--secondary-text-color:#9b9b9b;--divider-color:rgba(225,225,225,.12);--outline-color:rgba(225,225,225,.12);--shadow-color:rgba(0,0,0,.48);--input-fill-color:rgba(255,255,255,.05);--input-idle-line-color:rgba(255,255,255,.42);--input-hover-line-color:rgba(255,255,255,.87);--input-label-ink-color:rgba(255,255,255,.6)}}
-body{font:400 14px/20px var(--ha-font);-webkit-font-smoothing:antialiased}
-header{background:var(--card-background-color);border-bottom:1px solid var(--divider-color);margin:-14px -14px 16px;padding:0 16px;height:56px}
-header .logo{background:none;box-shadow:none;width:auto;height:auto;font-size:22px}header h1{font-size:20px;font-weight:400}
-.card{border-radius:12px;box-shadow:none;border:1px solid var(--divider-color)}
-.card>h2,.sec{font-size:14px;text-transform:none;letter-spacing:.0071em;font-weight:500}
-.tabs{border-bottom:1px solid var(--divider-color)}
-.tabs button{text-transform:uppercase;letter-spacing:.0892857143em;font:500 14px/20px var(--ha-font);border-bottom-width:2px;padding:12px 16px}
-.tabs button.on{color:var(--primary-color);border-bottom-color:var(--primary-color)}
-button.b{height:40px;padding:0 24px;border-radius:20px;font:500 14px/20px var(--ha-font);letter-spacing:.0178em}
-button.b.sm{height:32px;padding:0 14px;font-size:13px;border-radius:16px}
-button.b.alt{background:transparent;box-shadow:inset 0 0 0 1px var(--outline-color);border:0}
-input[type=text],input[type=number],input[type=search],input[type=time],select,textarea{border:0;border-bottom:1px solid var(--input-idle-line-color);border-radius:4px 4px 0 0;background:var(--input-fill-color);padding:12px 16px;font:400 16px/24px var(--ha-font);min-height:48px}
-input:focus,select:focus,textarea:focus{border-bottom:2px solid var(--primary-color);padding-bottom:11px}
-label.f{font-weight:500;color:var(--input-label-ink-color)}
-input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;width:52px;height:32px;border-radius:16px;border:2px solid var(--outline-color);background:var(--secondary-background-color);position:relative;cursor:pointer;transition:.18s;margin:0}
-input[type=checkbox]::after{content:"";position:absolute;top:50%;left:6px;width:16px;height:16px;border-radius:50%;background:var(--secondary-text-color);transform:translateY(-50%);transition:.18s}
-input[type=checkbox]:checked{background:var(--primary-color);border-color:var(--primary-color)}
-input[type=checkbox]:checked::after{left:24px;width:24px;height:24px;background:#fff;transform:translateY(-50%) translateX(-4px)}
-label.chk{gap:12px}
-.chip{border-radius:16px;border:1px solid var(--outline-color);font:500 14px/20px var(--ha-font);padding:6px 14px}
-.chip.on{background:rgba(var(--rgb-primary-color),.15);border-color:var(--primary-color);color:var(--primary-color)}
-.tile{border-radius:12px;border:1px solid var(--divider-color);background:var(--card-background-color)}
-.tile:hover{border-color:var(--primary-color)}
-.tile b{font-weight:500}
-.badge{border-radius:8px}
-#toast{background:#323232;color:#fff;border-radius:8px;box-shadow:0 3px 8px var(--shadow-color)}
-label.b{display:inline-flex;align-items:center;justify-content:center;background:var(--primary-color);color:#fff;height:40px;padding:0 24px;border-radius:20px;cursor:pointer;font:500 14px/20px var(--ha-font);letter-spacing:.0178em}
-label.b.alt{background:transparent;color:var(--primary-color);box-shadow:inset 0 0 0 1px var(--outline-color)}
-button.b:disabled{opacity:.38;cursor:not-allowed}
+:root{--primary-color:#009ac7;--rgb-primary-color:0,154,199;--primary-text-color:#212121;--secondary-text-color:#727272;--primary-background-color:#fafafa;--card-background-color:#fff;--secondary-background-color:#e5e5e5;--divider-color:rgba(0,0,0,.12);--outline-color:rgba(0,0,0,.12);--shadow-color:rgba(0,0,0,.16);--error-color:#db4437;--warning-color:#ffa600;--success-color:#43a047;--input-fill-color:rgb(245,245,245);--input-idle-line-color:rgba(0,0,0,.42);--input-label-ink-color:rgba(0,0,0,.6);--ha-font:Roboto,Noto,"Noto Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --r:12px;--bg:var(--primary-background-color);--card:var(--card-background-color);--fg:var(--primary-text-color);--mut:var(--secondary-text-color);--acc:var(--primary-color);--accbg:rgba(var(--rgb-primary-color),.12);--bd:var(--divider-color);--ok:var(--success-color);--warn:#b26a00;--err:var(--error-color)}
+@media (prefers-color-scheme:dark){:root{--primary-background-color:#111;--card-background-color:#1c1c1c;--secondary-background-color:#282828;--primary-text-color:#e1e1e1;--secondary-text-color:#9b9b9b;--divider-color:rgba(225,225,225,.12);--outline-color:rgba(225,225,225,.12);--shadow-color:rgba(0,0,0,.48);--input-fill-color:rgba(255,255,255,.05);--input-idle-line-color:rgba(255,255,255,.42);--input-label-ink-color:rgba(255,255,255,.6);--warn:#ffa600}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scrollbar-gutter:stable}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 14px/20px var(--ha-font);-webkit-font-smoothing:antialiased;padding-bottom:env(safe-area-inset-bottom)}
+[hidden]{display:none!important}
+main{max-width:640px;margin:0 auto;padding:8px 8px 24px}
+header{display:flex;align-items:center;height:56px;margin:-8px -8px 8px;padding:0 16px;background:var(--card);border-bottom:1px solid var(--bd)}
+header h1{font:500 16px/24px var(--ha-font);margin:0}
 html.embedded header{display:none}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:8px}
+.card.pad{padding:12px 16px}
+.body{padding:16px}
+small{font-size:12px;color:var(--mut)}
+.hint{color:var(--mut);font-size:12px;line-height:18px;margin:8px 0 0}.hint+.hint{margin-top:8px}
+.rec{color:var(--err);font-weight:500}
+.empty{color:var(--mut);padding:8px 0}
+code,pre{font:12px/18px ui-monospace,SFMono-Regular,Menlo,monospace}
+code{background:var(--input-fill-color);padding:1px 4px;border-radius:6px;word-break:break-all}
+pre{background:var(--input-fill-color);padding:8px 16px;border-radius:var(--r);overflow:auto;margin:8px 0 0}
+
+/* tabs */
+.tabs{display:flex;overflow-x:auto;padding:0 8px;border-bottom:1px solid var(--bd);scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);padding:12px 8px;margin:0 4px;cursor:pointer;font:500 14px/20px var(--ha-font);white-space:nowrap}
+.tabs button.on{color:var(--acc);border-bottom-color:var(--acc)}
+.pane{display:none}.pane.on{display:block}
+
+/* sections: whitespace and hairlines instead of boxes */
+.sec{display:flex;align-items:center;margin:0 0 8px;color:var(--mut);font:500 12px/16px var(--ha-font)}
+.sec .sp{flex:1}
+.sec .link{margin:-8px 0}.sec .link:last-child{margin-right:-8px}
+.part+.part{border-top:1px solid var(--bd);margin-top:16px;padding-top:16px}
+#tgt{padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--bd)}
+.link{background:none;border:0;border-radius:var(--r);color:var(--acc);cursor:pointer;font:500 14px/20px var(--ha-font);padding:6px 8px}
+.link:hover{background:var(--accbg)}.link.err{color:var(--err)}
+details>summary{cursor:pointer;color:var(--mut)}
+details.opts{margin-top:16px}details.opts[open]>summary{margin-bottom:8px}
+details.help{margin-top:16px}details.help>summary,details.opts>summary,details.more>summary{font:500 12px/16px var(--ha-font)}
+details.help>div,details.more>div{margin-top:8px}
+details.help .hint,details.more .hint{margin:0}
+details.help>div>.hint+.hint,details.more>div>.hint+.hint,details.more .hint:not(:first-child){margin-top:8px}
+details.help h3+.hint{margin-top:4px}
+details.help h3{font:500 14px/20px var(--ha-font);color:var(--fg);margin:16px 0 0}
+details.help h3:first-child{margin-top:0}
+details.more{margin-top:16px}
+
+/* controls */
+label.f{display:block;margin:16px 0 4px;color:var(--input-label-ink-color);font:500 12px/16px var(--ha-font)}
+label.chk{display:flex;gap:16px;align-items:center;margin:16px 0 0}
+.row{display:flex;gap:8px 16px;flex-wrap:wrap;align-items:flex-end;margin-top:16px}
+.row>.grow{flex:1 1 140px;min-width:0}.row>.grow.w2{flex:2 1 200px}.row>.grow.w1{flex:1 1 100px}
+.row label.f,.pane>:first-child,.part>:first-child{margin-top:0}
+input[type=text],input[type=number],input[type=search],input[type=time],select,textarea{width:100%;min-height:48px;padding:12px 16px;border:1px solid var(--outline-color);border-radius:var(--r);background:var(--input-fill-color);color:var(--fg);font:400 16px/24px var(--ha-font)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
+input[type=color]{width:100%;height:48px;padding:4px;border:1px solid var(--outline-color);border-radius:var(--r);background:var(--input-fill-color)}
+input[type=file]{width:100%;font:14px/20px var(--ha-font);color:var(--mut)}
+input[type=file]::file-selector-button{margin-right:16px;height:40px;padding:0 24px;border:0;border-radius:var(--r);background:none;box-shadow:inset 0 0 0 1px var(--outline-color);color:var(--acc);font:500 14px/20px var(--ha-font);cursor:pointer}
+input[type=range]{width:100%;accent-color:var(--acc)}
+textarea{min-height:72px;resize:vertical}
+input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;width:44px;height:24px;margin:0;border-radius:var(--r);border:1px solid var(--input-idle-line-color);background:none;position:relative;cursor:pointer}
+input[type=checkbox]::after{content:"";position:absolute;top:5px;left:5px;width:12px;height:12px;border-radius:50%;background:var(--input-idle-line-color)}
+input[type=checkbox]:checked{background:var(--acc);border-color:var(--acc)}
+input[type=checkbox]:checked::after{top:3px;left:23px;width:16px;height:16px;background:#fff}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
+.recopts{align-items:center}.recopts select{width:auto;min-height:40px;padding:8px 16px}
+audio{width:100%;margin-top:16px}
+
+/* buttons: one filled (.b) per view; everything else is outlined (.alt) or text (.txt / .sm / .link) */
+.b{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:40px;padding:0 24px;border:0;border-radius:var(--r);background:var(--acc);color:#fff;cursor:pointer;font:500 14px/20px var(--ha-font);text-decoration:none}
+.b:hover{filter:brightness(.92)}.b:active{filter:brightness(.82)}
+.b.alt{background:none;color:var(--acc);box-shadow:inset 0 0 0 1px var(--outline-color)}
+.b.txt,.b.sm{background:none;color:var(--acc);padding:0 16px}
+.b.sm{height:32px;padding:0 8px}
+.b.alt:hover,.b.txt:hover,.b.sm:hover,.b.alt:active,.b.txt:active,.b.sm:active{background:var(--accbg);filter:none}
+.b.sm.on{background:var(--accbg)}
+.b.red,.b.mut{background:none;color:var(--err)}.b.mut{color:var(--mut)}.b.red:hover,.b.mut:hover,.b.red:active,.b.mut:active{background:rgba(219,68,55,.1);filter:none}.b.mut:hover,.b.mut:active{color:var(--err)}
+.b:disabled,.link:disabled,.chip:disabled,.tile:disabled,.star-btn:disabled{opacity:.5;cursor:default}.busy{cursor:progress!important}
+label.b{margin:0}
+.acts{display:flex;flex-wrap:wrap;flex:0 0 100%}.acts>:first-child{margin-left:-8px}.acts.ind{margin-left:32px;flex-basis:calc(100% - 32px)}.acts.ind>:first-child{margin-left:0}
+.tools{display:flex;gap:8px 16px;flex-wrap:wrap;align-items:center}
+.tools .b.sm:first-child,#libFav{margin-left:-8px}
+.tools input[type=search]{flex:1 1 100%}
+.tools label.chk{margin:0;gap:8px}
+.btnrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:16px}
+.btnrow .b.txt{padding:0 8px}.btnrow>.b:not(.txt):not(.sm){flex:1 1 100%}.btnrow>.b:not(.txt):not(.sm)+.b.txt{margin-left:-8px}
+.tools{gap:0 16px;margin-bottom:8px}#libList{margin-top:16px}
+
+/* targets */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border-radius:var(--r);border:1px solid var(--outline-color);background:none;color:var(--fg);cursor:pointer;font:500 14px/20px var(--ha-font)}
+.chip:hover{border-color:var(--acc)}
+.chip.on,.chip:active{background:var(--accbg);border-color:var(--acc);color:var(--acc)}
+.chip .star{color:var(--acc);font-size:12px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mut);opacity:.5;flex:none;display:inline-block}
+.dot.playing,.dot.buffering{background:var(--acc);opacity:1}.dot.unavailable{background:var(--err);opacity:1}
+#qRecent{margin-top:8px}#qRecent:empty{display:none}#qRecent .chip{min-height:32px;padding:0 12px;border-color:transparent;background:var(--input-fill-color);color:var(--mut);font-weight:400}
+#qRecent .chip:hover{color:var(--acc)}
+#qGo{width:100%;margin-top:16px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tile{min-height:56px;padding:8px 16px;border-radius:var(--r);border:1px solid var(--outline-color);background:none;color:var(--fg);cursor:pointer;font:inherit;text-align:left;display:flex;flex-direction:column;justify-content:center}
+.tile:hover,.tile:active{border-color:var(--acc)}.tile:active{background:var(--accbg)}.tile b{font-weight:500}.tiles .empty{grid-column:1/-1;padding:0}
+
+/* lists */
+.item{display:flex;gap:0 8px;align-items:flex-start;flex-wrap:wrap;padding:16px 0;border-top:1px solid var(--bd)}
+.item:first-child{border-top:0;padding-top:0}.item:last-child{padding-bottom:0}
+.item .n{flex:1 1 0;min-width:0}
+.star-btn{background:none;border:0;border-radius:var(--r);width:32px;height:32px;margin:-4px 0;font-size:16px;line-height:32px;cursor:pointer;color:var(--mut);padding:0}
+.star-btn.on{color:var(--acc)}.star-btn:hover{background:var(--accbg)}
+.badges{color:var(--mut);font-size:12px;line-height:18px}
+.badge.ok{color:var(--ok)}.badge.warn{color:var(--warn)}.badge.err{color:var(--err)}
+.spk{padding:16px 0;border-top:1px solid var(--bd)}.spk:first-child{border-top:0;padding-top:0}.spk:last-child{padding-bottom:0}
+.spk.dup{opacity:.75}
+.spk .head{display:flex;gap:0 8px;align-items:flex-start;flex-wrap:wrap}.spk .head .n{flex:1 1 0;min-width:0}
+.prof{margin-top:8px;padding-top:8px}
+.prof .row:first-child,.prof label.f:first-child{margin-top:8px}
+
+/* announcing now */
+#nowBar{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));max-width:624px;margin:0 auto;z-index:8}
+body.has-now main{padding-bottom:112px}
+#nowBar .nrow{display:flex;gap:16px;align-items:center;padding:8px 0}#nowBar .nrow+.nrow{border-top:1px solid var(--bd)}
+#nowBar .pulse{width:8px;height:8px;border-radius:50%;background:var(--acc);flex:none}
+#nowBar .pulse.q{background:var(--mut)}
+#nowBar .bar{height:2px;background:var(--bd);margin-top:8px;border-radius:1px;overflow:hidden}#nowBar .bar i{display:block;height:100%;background:var(--acc)}
+#nowBar .hint{margin:0}
+
+/* recording */
+.meter{height:4px;border-radius:2px;margin-top:8px;overflow:hidden}.meter+.row{margin-top:8px}.meter.live{background:var(--bd)}.meter i{display:block;height:100%;width:0;background:var(--err)}
+
+#toast{position:fixed;left:50%;top:calc(8px + env(safe-area-inset-top));transform:translateX(-50%);background:#323232;color:#fff;padding:12px 16px;border-radius:var(--r);opacity:0;pointer-events:none;max-width:90%;z-index:9;transition:opacity .12s}
+#toast.on{opacity:1}
+footer{text-align:center;color:var(--mut);font-size:12px;line-height:18px;margin:24px 0 8px}
+footer a{color:var(--acc);text-decoration:none;font-weight:500}
+.kiosk .tabs,.kiosk footer,.kiosk #scriptRes{display:none}
+#updBanner{margin:0 0 16px;color:var(--fg)}#updBanner .b.sm{margin-top:8px}
+.tkres,#tokForm{margin:16px 0;padding:16px 0;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)}
+.n>small{display:block}
+#netInfo .hint{margin:0;min-height:18px}#netInfo .hint+.hint{margin-top:0}
+#recHint:empty{display:none}
+#spkList{margin-top:16px}
+.tools+details.help{margin-top:0}
+button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.b,.chip,.tile,.link,.star-btn,input,select,textarea{transition:background-color .12s,border-color .12s,color .12s,opacity .12s}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+body:not(.ready) main>:not(header){visibility:hidden}   /* first paint waits for the data, so nothing jumps while it arrives */
+#lvPhones,#lvOnly,#tkLive{min-height:40px}
 </style>
 <script>try{if(window.self!==window.top)document.documentElement.classList.add("embedded")}catch(e){document.documentElement.classList.add("embedded")}</script>
 </head>
 <body>
 <main>
-<header><div><h1>HAnnounce Enhanced</h1><small data-i="tagline"></small></div></header>
+<header><h1>HAnnounce Enhanced</h1></header>
 
-<div class="card" id="nowBar" hidden style="border-color:var(--primary-color);padding:12px 16px"></div>
+<div class="card pad" id="nowBar" hidden></div>
 
-<div class="card" id="updBanner" hidden style="border-color:var(--warn)"></div>
+<div class="card" id="main">
+<div class="tabs" id="tabs"></div>
+<div class="body">
 
-<div class="card">
-  <h2><span data-i="targets"></span><span class="sp"></span>
-    <button class="link" id="selFav">★ <span data-i="favs"></span></button>
-    <button class="link" id="selAll" data-i="all"></button>
-    <button class="link" id="selNone" data-i="none"></button>
-    <button class="link stopb" id="stopAll" style="color:var(--err)" data-i="stop2"></button></h2>
-  <div class="chips" id="players"></div>
-  <details class="opts">
-    <summary data-i="options"></summary>
-    <div class="row">
-      <div class="grow"><label class="f" data-i="actBefore"></label><select id="actBefore"></select></div>
-      <div class="grow"><label class="f" data-i="actAfter"></label><select id="actAfter"></select></div>
-    </div>
-    <label class="chk"><input type="checkbox" id="volOn"> <span><span data-i="setvol"></span>: <b id="volVal">50</b>%</span></label>
-    <input type="range" id="vol" min="0" max="100" value="50" style="width:100%">
-  </details>
-</div>
-
-<div class="card">
-  <div class="tabs" id="tabs"></div>
+  <div id="tgt">
+    <div class="sec"><span data-i="targets"></span><span class="sp"></span>
+      <button class="link" id="selFav">★ <span data-i="favs"></span></button>
+      <button class="link" id="selAll" data-i="all"></button>
+      <button class="link" id="selNone" data-i="none"></button>
+      <button class="link err" id="stopAll" data-i="stop2"></button></div>
+    <div class="chips" id="players"></div>
+    <details class="opts">
+      <summary data-i="options"></summary>
+      <div class="row">
+        <div class="grow"><label class="f" data-i="actBefore"></label><select id="actBefore"></select></div>
+        <div class="grow"><label class="f" data-i="actAfter"></label><select id="actAfter"></select></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="volOn"> <span><span data-i="setvol"></span>: <b id="volVal">50</b>%</span></label>
+      <input type="range" id="vol" min="0" max="100" value="50" style="margin-top:8px">
+    </details>
+  </div>
 
   <div class="pane" id="p-quick">
-    <div class="sec" data-i="qSounds"></div>
-    <div class="tiles" id="qTiles"></div>
-    <div class="sec" style="margin-top:18px" data-i="qMsg"></div>
-    <textarea id="qMsg" style="min-height:64px"></textarea>
-    <div class="chips" id="qRecent" style="margin-top:8px"></div>
-    <div class="row"><button class="b" id="qGo" data-i="announce"></button><button class="b red" id="qStop" data-i="stop2"></button></div>
+    <div class="part">
+      <textarea id="qMsg" data-ph="qMsg"></textarea>
+      <button class="b" id="qGo" data-i="announce"></button>
+      <div class="chips" id="qRecent"></div>
+    </div>
+    <div class="part">
+      <div class="sec" data-i="qSounds"></div>
+      <div class="tiles" id="qTiles"></div>
+    </div>
   </div>
 
   <div class="pane" id="p-say">
-    <label class="f" data-i="ttsent"></label><select id="ttsEnt"></select>
     <label class="f" data-i="message"></label><textarea id="ttsMsg"></textarea>
+    <label class="f" data-i="ttsent"></label><select id="ttsEnt"></select>
     <div class="row">
       <div class="grow"><label class="f" data-i="lang"></label><select id="ttsLang"></select></div>
       <div class="grow"><label class="f" data-i="voice"></label><select id="ttsVoice"></select></div>
     </div>
     <audio id="sayAudio" controls hidden></audio>
-    <div class="row"><button class="b" id="sayGo" data-i="announce"></button>
-      <button class="b alt" id="sayPrev" data-i="preview"></button>
-      <button class="b alt" id="saySave" data-i="save"></button>
-</div>
+    <div class="btnrow"><button class="b" id="sayGo" data-i="announce"></button>
+      <button class="b txt" id="sayPrev" data-i="preview"></button>
+      <button class="b txt" id="saySave" data-i="save"></button></div>
   </div>
 
   <div class="pane" id="p-rec">
-    <div class="meter" id="recMeter"><i id="recLvl"></i></div>
-    <div class="row">
+    <div class="btnrow">
       <button class="b" id="recBtn" data-i="rec"></button>
-      <span class="rec" id="recTime"></span>
-      <label class="b alt" style="margin:0"><span data-i="devrec"></span>
+      <label class="b txt"><span data-i="devrec"></span>
         <input type="file" id="recFile" accept="audio/*,.m4a,.caf,.aac,.wav,.mp3,.ogg,.opus" style="display:none"></label>
     </div>
+    <div class="meter" id="recMeter"><i id="recLvl"></i></div>
     <div class="row recopts">
       <label class="chk"><input type="checkbox" id="recCount" checked><span data-i="recCount"></span></label>
       <label class="chk"><input type="checkbox" id="recNs" checked><span data-i="recNs"></span></label>
       <select id="recMax"><option value="30">30 s</option><option value="60" selected>60 s</option><option value="120">2 min</option><option value="300">5 min</option></select>
     </div>
     <div class="hint" id="recHint"></div>
-    <div class="prof" id="recHelp" hidden><b data-i="recHelpT"></b><div class="hint" data-i="recHelp1"></div><div class="hint" data-i="recHelp2"></div><div class="hint" data-i="recHelp3"></div></div>
+    <details class="help" id="recHelp" hidden><summary data-i="recHelpT"></summary><div><div class="hint" data-i="recHelp1"></div><div class="hint" data-i="recHelp2"></div><div class="hint" data-i="recHelp3"></div></div></details>
     <audio id="recAudio" controls hidden></audio>
     <div class="out" id="recOut" hidden></div>
   </div>
 
   <div class="pane" id="p-up">
-    <label class="f" data-i="file"></label><input type="file" id="upFile" accept="audio/*,video/mp4">
+    <input type="file" id="upFile" accept="audio/*,video/mp4" aria-label="Audio file">
     <audio id="upAudio" controls hidden></audio>
-    <div class="out" id="upOut"></div>
+    <div class="out" id="upOut" hidden></div>
   </div>
 
   <div class="pane" id="p-gen">
@@ -210,104 +249,109 @@ html.embedded header{display:none}
       <div class="grow"><label class="f" data-i="dur"></label><input type="number" id="gDur" min="0.1" max="20" step="0.1" placeholder="auto"></div>
       <div class="grow"><label class="f" data-i="rep"></label><input type="number" id="gRep" min="1" max="10" value="1"></div>
     </div>
-    <div class="row"><button class="b alt" id="gPrev" data-i="preview"></button></div>
     <audio id="gAudio" controls hidden></audio>
+    <div class="btnrow"><button class="b txt" id="gPrev" data-i="preview"></button></div>
     <div class="out" id="gOut"></div>
   </div>
 
   <div class="pane" id="p-lib">
     <div class="tools">
       <input type="search" id="libQ" data-ph="search">
-      <button class="b alt sm" id="libFav">★</button>
-      <button class="b alt sm" id="libDup" data-i="dedupe"></button>
+      <button class="b sm" id="libFav">★ <span data-i="favs"></span></button>
+      <button class="b sm" id="libDup" data-i="dedupe"></button>
     </div>
     <div id="libList"></div>
   </div>
 
   <div class="pane" id="p-spk">
     <div class="tools">
-      <button class="b alt sm" id="spkScan" data-i="rescan"></button>
-      <button class="b alt sm" id="spkDup" data-i="dedupeSpk"></button>
-      <label class="chk" style="margin:0"><input type="checkbox" id="spkHidden"> <span data-i="showHidden"></span></label>
+      <button class="b sm" id="spkScan" data-i="rescan"></button>
+      <button class="b sm" id="spkDup" data-i="dedupeSpk"></button>
+      <label class="chk"><input type="checkbox" id="spkHidden"> <span data-i="showHidden"></span></label>
     </div>
-    <div class="hint" data-i="spkHint" style="margin:0 0 8px"></div>
+    <details class="help"><summary data-i="help"></summary><div><div class="hint" data-i="spkHint"></div></div></details>
     <div id="spkList"></div>
   </div>
 
   <div class="pane" id="p-live">
     <div class="sec"><span data-i="liveTitle"></span></div>
-    <div class="hint" data-i="liveInfo" style="margin:0 0 10px"></div>
+    <details class="help"><summary data-i="help"></summary><div><div class="hint" data-i="liveInfo"></div><div class="hint" data-i="lvOnlyHint"></div><div class="hint" data-i="lvMsgHint"></div></div></details>
     <label class="chk"><input type="checkbox" id="lvOn"> <span data-i="lvOn"></span></label>
     <label class="f" data-i="lvPhones"></label><div class="chips" id="lvPhones"></div>
-    <label class="f" data-i="lvOnly"></label><div class="chips" id="lvOnly"></div><div class="hint" data-i="lvOnlyHint"></div>
+    <label class="f" data-i="lvOnly"></label><div class="chips" id="lvOnly"></div>
     <div class="row"><div class="grow"><label class="f" data-i="lvTitle"></label><input type="text" id="lvTitle"></div>
       <div class="grow"><label class="f" data-i="lvCrit"></label><input type="text" id="lvCrit"></div></div>
-    <label class="f" data-i="lvMsg"></label><input type="text" id="lvMsg"><div class="hint" data-i="lvMsgHint"></div>
+    <label class="f" data-i="lvMsg"></label><input type="text" id="lvMsg">
     <label class="chk"><input type="checkbox" id="lvHide"> <span data-i="lvHide"></span></label>
     <label class="chk"><input type="checkbox" id="lvCount"> <span data-i="lvCount"></span></label>
-    <div class="row"><div class="grow"><label class="f" data-i="lvIcon"></label><select id="lvIconSel"></select></div>
-      <div class="grow"><label class="f">mdi:</label><input type="text" id="lvIcon"></div>
-      <div><label class="f" data-i="lvColor"></label><input type="color" id="lvColor"></div></div>
-    <details style="margin-top:10px"><summary class="hint" style="cursor:pointer" data-i="lvAdv"></summary>
+    <details class="more"><summary data-i="lvAdv"></summary>
+      <div class="row"><div class="grow"><label class="f" data-i="lvIcon"></label><select id="lvIconSel"></select></div>
+        <div class="grow"><label class="f">mdi:</label><input type="text" id="lvIcon"></div>
+        <div class="grow"><label class="f" data-i="lvColor"></label><input type="color" id="lvColor"></div></div>
       <div class="row"><div class="grow"><label class="f">background_color</label><input type="text" id="lvBg" placeholder="#101820"></div>
         <div class="grow"><label class="f">text_color</label><input type="text" id="lvTx" placeholder="#FFFFFF"></div>
         <div class="grow"><label class="f">relevance_score 0–1</label><input type="number" id="lvRel" step="0.1" min="0" max="1"></div>
         <div class="grow"><label class="f" data-i="lvEnd"></label><input type="number" id="lvEnd" step="1" min="0" max="60"></div></div>
       <label class="f" data-i="lvUrl"></label><input type="text" id="lvUrl" placeholder="/lovelace/0"></details>
-    <div class="row"><button class="b" id="lvSave" data-i="dSave"></button><button class="b alt" id="lvTest" data-i="lvTest"></button></div>
+    <div class="btnrow"><button class="b" id="lvSave" data-i="dSave"></button><button class="b txt" id="lvTest" data-i="lvTest"></button></div>
   </div>
 
   <div class="pane" id="p-tok">
-    <div class="sec"><span data-i="tokTitle"></span><span class="sp"></span><button class="link" id="tokNew" data-i="tokNew"></button></div>
-    <div class="hint" data-i="tokHint" style="margin:0 0 10px"></div>
-    <div class="prof" id="netInfo" style="margin-bottom:12px"></div>
-    <div class="prof" id="tokForm" hidden>
-      <label class="f" data-i="tokName"></label><input type="text" id="tkName" data-ph="tokNamePh">
-      <label class="chk"><input type="checkbox" id="tkSup" checked> <span data-i="tokSup"></span></label>
-      <label class="f" data-i="tokSpk"></label><div class="chips" id="tkSpk"></div>
-      <label class="f" data-i="tokLive"></label><div class="chips" id="tkLive"></div><div class="hint" data-i="tokLiveHint"></div>
-      <label class="chk"><input type="checkbox" id="tkAll"> <span data-i="tokAll"></span></label>
-      <label class="chk"><input type="checkbox" id="tkTts" checked> <span data-i="tokTts"></span></label>
-      <label class="chk"><input type="checkbox" id="tkSnd" checked> <span data-i="tokSnd"></span></label>
-      <label class="chk"><input type="checkbox" id="tkAct"> <span data-i="tokAct"></span></label>
-      <label class="f" data-i="tokMax"></label><input type="number" id="tkMax" min="0" max="100" placeholder="—">
-      <div class="hint" data-i="tokTtsHint"></div>
-      <div class="row"><button class="b" id="tkCreate" data-i="tokCreate"></button><button class="b alt" id="tkCancel" data-i="cancel"></button></div>
+    <div class="part">
+      <div class="sec"><span data-i="tokTitle"></span><span class="sp"></span><button class="link" id="tokNew" data-i="tokNew"></button></div>
+      <details class="help"><summary data-i="help"></summary><div><div class="hint" data-i="tokHint"></div><div class="hint" data-i="netWarn"></div></div></details>
+      <div id="tokForm" hidden>
+        <label class="f" data-i="tokName"></label><input type="text" id="tkName" data-ph="tokNamePh">
+        <label class="f" data-i="tokSpk"></label><div class="chips" id="tkSpk"></div>
+        <label class="f" data-i="tokLive"></label><div class="chips" id="tkLive"></div>
+        <label class="chk"><input type="checkbox" id="tkSup" checked> <span data-i="tokSup"></span></label>
+        <label class="chk"><input type="checkbox" id="tkAll"> <span data-i="tokAll"></span></label>
+        <label class="chk"><input type="checkbox" id="tkTts" checked> <span data-i="tokTts"></span></label>
+        <label class="chk"><input type="checkbox" id="tkSnd" checked> <span data-i="tokSnd"></span></label>
+        <label class="chk"><input type="checkbox" id="tkAct"> <span data-i="tokAct"></span></label>
+        <label class="f" data-i="tokMax"></label><input type="number" id="tkMax" min="0" max="100" placeholder="—">
+        <details class="help"><summary data-i="help"></summary><div><div class="hint" data-i="tokLiveHint"></div><div class="hint" data-i="tokTtsHint"></div></div></details>
+        <div class="btnrow"><button class="b" id="tkCreate" data-i="tokCreate"></button><button class="b txt" id="tkCancel" data-i="cancel"></button></div>
+      </div>
+      <div id="tokResult"></div>
+      <div id="tokList"></div>
     </div>
-    <div id="tokResult"></div>
-    <div id="tokList"></div>
-    <div class="sec" style="margin-top:20px"><span data-i="logTitle"></span><span class="sp"></span>
-      <button class="link" id="logRefresh" data-i="refresh"></button><button class="link" id="logClear" style="color:var(--err)" data-i="logClear"></button></div>
-    <select id="logFilter" style="margin-bottom:8px"></select>
-    <div id="addonLogBox" hidden><button class="link" id="addonLogBtn" data-i="addonLog"></button><pre id="addonLog" class="hint" style="white-space:pre-wrap;max-height:320px;overflow:auto;font:12px/18px ui-monospace,monospace" hidden></pre></div>
-    <div id="logList"></div>
+    <div class="part" id="netInfo"></div>
+    <div class="part">
+      <div class="sec"><span data-i="logTitle"></span><span class="sp"></span>
+        <button class="link" id="logRefresh" data-i="refresh"></button><button class="link err" id="logClear" data-i="logClear"></button></div>
+      <select id="logFilter"></select>
+      <div id="addonLogBox" hidden><button class="link" id="addonLogBtn" data-i="addonLog"></button><pre id="addonLog" class="hint" style="white-space:pre-wrap;max-height:320px;overflow:auto" hidden></pre></div>
+      <div id="logList"></div>
+    </div>
   </div>
 
   <div class="pane" id="p-help"><div id="helpBox"></div></div>
 </div>
+</div>
 
-<div class="card" id="scriptRes" hidden></div>
+<div class="card pad" id="scriptRes" hidden></div>
 
-<footer><span id="verInfo"></span><br><span data-i="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
+<footer><div id="updBanner" hidden></div><span id="verInfo"></span><br><span data-i="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
 </main>
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <script>
 const L = {
- en:{tagline:"Announcements for your speakers",netTitle:"Network",netLocal:"Local address",netExt:"External address",netChecked:"checked",netRefresh:"Refresh",netCopy:"Copy",netErr:"Could not check the external IP",netOff:"External IP check is off (option check_external_ip).",netChanged:"IP changed",netWarn:"From outside your home you need port forwarding on the router (or a VPN such as Tailscale/WireGuard). This address is plain HTTP – a token sent over the internet can be read; prefer a VPN or an HTTPS reverse proxy.",tokURLext:"URL (from outside the home)",tabLive:"Live",nowPlaying:"Announcing now",nowQueued:"Queued",nowOn:"on",liveTitle:"Live Activity – Dynamic Island & Lock Screen",
+ en:{help:"Help",netTitle:"Network",netLocal:"Local address",netExt:"External address",netChecked:"checked",netRefresh:"Refresh",netCopy:"Copy",netErr:"Could not check the external IP",netOff:"External IP check is off (option check_external_ip).",netChanged:"IP changed",netWarn:"From outside your home you need port forwarding on the router (or a VPN such as Tailscale/WireGuard). This address is plain HTTP – a token sent over the internet can be read; prefer a VPN or an HTTPS reverse proxy.",tokURLext:"URL (from outside the home)",tabLive:"Live",nowPlaying:"Announcing now",nowQueued:"Queued",nowOn:"on",liveTitle:"Live Activity – Dynamic Island & Lock Screen",
   liveInfo:"Shows the announcement in progress (what, where, countdown) on the iPhone Dynamic Island and Lock Screen (Android: Live Update) via the Home Assistant Companion app. Needs iOS 17.2+, Home Assistant Core 2026.7+ and Live Activities enabled in the app (Settings → Live Activities). The status is also published as sensor.hannounce_status. An admin can also give a person their own live status per token (Tokens tab) or per announcement (API field live).",
-  lvOn:"Show announcements as a Live Activity on the phones below",lvPhones:"Phones (Companion app)",lvOnly:"Only for announcements from (empty = all)",lvOnlyHint:"Sources: the panel/admin or a token name.",
-  lvTitle:"Title",lvCrit:"Island compact text",lvMsg:"Message",lvMsgHint:"Placeholders: {text} {speakers} {source} {user}",lvHide:"Hide the spoken text (privacy – show only that something is announced)",lvCount:"Countdown timer until the announcement ends",
+  lvOn:"Show announcements as a Live Activity",lvPhones:"Phones (Companion app)",lvOnly:"Only for announcements from (empty = all)",lvOnlyHint:"Sources: the panel/admin or a token name.",
+  lvTitle:"Title",lvCrit:"Island compact text",lvMsg:"Message",lvMsgHint:"Placeholders: {text} {speakers} {source} {user}",lvHide:"Hide the spoken text (privacy)",lvCount:"Countdown timer until the announcement ends",
   lvIcon:"Icon",lvColor:"Color",lvAdv:"Advanced",lvEnd:"Keep after end (s)",lvUrl:"Open on tap",lvTest:"Test (6 s)",lvNoPhone:"No phone found (notify.mobile_app_*). Install the Home Assistant app on the phone.",lvSaved:"Saved ✓",lvTested:"Test sent to the phone",
-  tokLive:"Live status on these phones (gives them a Live Activity of this token's announcements)",tokLiveHint:"Optional. E.g. the person who owns the shortcut sees their announcement on their Dynamic Island.",tokens:"Tokens",tokTitle:"Tokens for shortcuts",tokNew:"+ New token",cancel:"Cancel",refresh:"Refresh",
+  tokLive:"Live status on phones",tokLiveHint:"Live status is optional: it gives those phones a Live Activity of this token's announcements, e.g. the owner of the shortcut sees theirs on their Dynamic Island.",tokens:"Tokens",tokTitle:"Tokens for shortcuts",tokNew:"+ New token",cancel:"Cancel",refresh:"Refresh",
   tokHint:"A token lets one shortcut (or app) announce without your admin key. It can be limited to chosen speakers and revoked any time.",
-  tokName:"Name (e.g. the shortcut or person)",tokNamePh:"iPhone shortcut",tokSup:"Supervised: save everything this token says in the log",
-  tokSpk:"Speakers (default targets)",tokAll:"Allow it to announce on other speakers too",tokTts:"May use text-to-speech",tokSnd:"May play library sounds",tokAct:"May run scripts / scenes",
+  tokName:"Name (e.g. the shortcut or person)",tokNamePh:"iPhone shortcut",tokSup:"Supervised (log everything it says)",
+  tokSpk:"Speakers (default targets)",tokAll:"May use any speaker",tokTts:"May use text-to-speech",tokSnd:"May play library sounds",tokAct:"May run scripts / scenes",
   tokMax:"Max volume % (empty = no limit)",tokTtsHint:"The TTS engine, language and voice currently chosen in the Say tab become this token's defaults, so the shortcut only needs to send the message.",
-  tokCreate:"Create token",tokShown:"Copy the token now - it is shown only once!",tokSteps:"Shortcuts app → + → “Get Contents of URL”: paste the URL, Show More → Method POST → add the two headers → Request Body: JSON with a “message” text field (use “Ask for Input” or “Dictate Text” as its value). Name it and add it to the lock screen / Siri.",
+  tokCreate:"Create token",tokSetup:"Shortcut setup",tokShown:"Copy the token now - it is shown only once!",tokSteps:"Shortcuts app → + → “Get Contents of URL”: paste the URL, Show More → Method POST → add the two headers → Request Body: JSON with a “message” text field (use “Ask for Input” or “Dictate Text” as its value). Name it and add it to the lock screen / Siri.",
   tokURL:"URL",tokAuth:"Header Authorization",tokCT:"Header Content-Type",tokBody:"JSON body (text)",tokBody2:"JSON body (library sound)",tokRevoke:"Revoke",tokConfirm:"Revoke this token? Shortcuts using it will stop working.",
   tokNone:"No tokens yet.",tokCopy:"Copy token",tokRecURL:"Voice URL (record from the lock screen)",tokRecSteps:"Voice shortcut: “Record Audio” → “Get Contents of URL” with this Voice URL, method POST, Request Body = File → Recorded Audio, same Authorization header (the token's speakers are used; optional ?targets=media_player.x). It is announced once and not saved.",tokCopyAny:"Token and ready-to-paste values",tokOld:"Created before copying was possible - revoke and create a new one",tokUsed:"last used",tokNever:"never used",tokUses:"uses",tokSupB:"supervised",tokLimited:"limited speakers",tokNeed:"Enter a name and select at least one speaker.",
-  logTitle:"Announcement log",addonLog:"Show add-on system log (admin)",logClear:"Clear log",logAll:"All sources",logConfirm:"Clear the whole log?",logNoText:"(text not recorded)",logEmpty:"Nothing logged yet.",logViewTok:"Log",stop2:"■ Stop",stopped:"Stopped ■",preparing:"Preparing voice…",playing:"Playing ♪",queued:"Queued - plays in {s} s",updNew:"New version available",updHave:"you have",updHow:"Open the add-on page and tap Update.",updOpen:"Open add-on page",updAuto:"auto-update on",updManual:"auto-update off (enable it on the add-on page)",copy:"Copy",copied:"Copied ✓",allThree:"All three ways to open it:",w1:"① Script in HA",w2:"② iOS shortcut (Open URL)",w3:"③ Standalone app (Add to Home Screen)",quick:"Quick",qSounds:"Favorite sounds - tap to announce",qMsg:"Say something",qNoFav:"No favorite sounds yet. Mark sounds with ★ in the Library.",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options: script / scene, volume",
+  logTitle:"Announcement log",addonLog:"Show add-on system log (admin)",logClear:"Clear log",logAll:"All sources",logConfirm:"Clear the whole log?",logNoText:"(text not recorded)",logEmpty:"Nothing logged yet.",logViewTok:"Log",stop2:"■ Stop",stopped:"Stopped ■",preparing:"Preparing voice…",playing:"Playing ♪",queued:"Queued - plays in {s} s",updNew:"New version available",updHave:"you have",updHow:"Open the add-on page and tap Update.",updOpen:"Open add-on page",updAuto:"auto-update on",updManual:"auto-update off (enable it on the add-on page)",copy:"Copy",copied:"Copied ✓",allThree:"All three ways to open it:",w1:"① Script in HA",w2:"② iOS shortcut (Open URL)",w3:"③ Standalone app (Add to Home Screen)",quick:"Quick",qSounds:"Favorite sounds",qMsg:"Say something",qNoFav:"No favorite sounds yet. Mark sounds with ★ in the Library.",targets:"Speakers",favs:"Favorites",all:"All",none:"None",options:"Options",
   setvol:"Override volume (restored after)",say:"Say (TTS)",record:"Record",upload:"Upload",generate:"Generate",library:"Library",speakers:"Speakers",app:"App",
   actBefore:"Run before (script / scene)",actAfter:"Run after (script / scene)",actNone:"— none —",
   ttsent:"TTS engine",message:"Message",lang:"Language",voice:"Voice",deflt:"(default)",ttsnone:"No TTS engine found in Home Assistant",
@@ -327,20 +371,20 @@ const L = {
   dAuto:"Let the player handle it (announce)",dManual:"Restore what was playing (media + position)",dNone:"Do nothing",dBefore:"Wait before playing (s)",dAfter:"Wait after it ends, then restore (s)",
   dPower:"Turn on if off, turn off afterwards",dUnmute:"Unmute during announcement",dQuiet:"Quiet hours",dQFrom:"from",dQTo:"to",dQVol:"Quiet volume % (empty = skip speaker)",
   dSave:"Save",dReset:"Reset",dCopy:"Copy to all speakers",dSaved:"Settings saved ✓"},
- pl:{tagline:"Ogłoszenia na Twoich głośnikach",netTitle:"Sieć",netLocal:"Adres lokalny",netExt:"Adres zewnętrzny",netChecked:"sprawdzono",netRefresh:"Odśwież",netCopy:"Kopiuj",netErr:"Nie udało się sprawdzić zewnętrznego IP",netOff:"Sprawdzanie zewnętrznego IP jest wyłączone (opcja check_external_ip).",netChanged:"IP się zmieniło",netWarn:"Spoza domu potrzebujesz przekierowania portu na routerze (albo VPN, np. Tailscale/WireGuard). Ten adres to zwykłe HTTP – token wysłany przez internet można podsłuchać; lepiej użyć VPN lub reverse proxy z HTTPS.",tokURLext:"Adres (spoza domu)",tabLive:"Live",nowPlaying:"Teraz ogłaszam",nowQueued:"W kolejce",nowOn:"na",liveTitle:"Live Activity – Dynamic Island i ekran blokady",
+ pl:{help:"Pomoc",netTitle:"Sieć",netLocal:"Adres lokalny",netExt:"Adres zewnętrzny",netChecked:"sprawdzono",netRefresh:"Odśwież",netCopy:"Kopiuj",netErr:"Nie udało się sprawdzić zewnętrznego IP",netOff:"Sprawdzanie zewnętrznego IP jest wyłączone (opcja check_external_ip).",netChanged:"IP się zmieniło",netWarn:"Spoza domu potrzebujesz przekierowania portu na routerze (albo VPN, np. Tailscale/WireGuard). Ten adres to zwykłe HTTP – token wysłany przez internet można podsłuchać; lepiej użyć VPN lub reverse proxy z HTTPS.",tokURLext:"Adres (spoza domu)",tabLive:"Live",nowPlaying:"Teraz ogłaszam",nowQueued:"W kolejce",nowOn:"na",liveTitle:"Live Activity – Dynamic Island i ekran blokady",
   liveInfo:"Pokazuje trwające ogłoszenie (co, gdzie, odliczanie) na Dynamic Island i ekranie blokady iPhone'a (Android: Live Update) przez aplikację Home Assistant Companion. Wymaga iOS 17.2+, Home Assistant Core 2026.7+ i włączonych Live Activities w aplikacji (Ustawienia → Live Activities). Status jest też publikowany jako sensor.hannounce_status. Admin może dać komuś własny status na żywo: per token (zakładka Tokeny) lub per ogłoszenie (pole live w API).",
-  lvOn:"Pokazuj ogłoszenia jako Live Activity na poniższych telefonach",lvPhones:"Telefony (aplikacja Companion)",lvOnly:"Tylko dla ogłoszeń z (puste = wszystkie)",lvOnlyHint:"Źródła: panel/admin albo nazwa tokenu.",
-  lvTitle:"Tytuł",lvCrit:"Tekst na wyspie (compact)",lvMsg:"Treść",lvMsgHint:"Symbole: {text} {speakers} {source} {user}",lvHide:"Ukryj mówiony tekst (prywatność – widać tylko, że coś jest ogłaszane)",lvCount:"Licznik odliczający do końca ogłoszenia",
+  lvOn:"Pokazuj ogłoszenia jako Live Activity",lvPhones:"Telefony (aplikacja Companion)",lvOnly:"Tylko dla ogłoszeń z (puste = wszystkie)",lvOnlyHint:"Źródła: panel/admin albo nazwa tokenu.",
+  lvTitle:"Tytuł",lvCrit:"Tekst na wyspie (compact)",lvMsg:"Treść",lvMsgHint:"Symbole: {text} {speakers} {source} {user}",lvHide:"Ukryj mówiony tekst (prywatność)",lvCount:"Licznik odliczający do końca ogłoszenia",
   lvIcon:"Ikona",lvColor:"Kolor",lvAdv:"Zaawansowane",lvEnd:"Zostaw po końcu (s)",lvUrl:"Po dotknięciu otwórz",lvTest:"Test (6 s)",lvNoPhone:"Nie znaleziono telefonu (notify.mobile_app_*). Zainstaluj aplikację Home Assistant na telefonie.",lvSaved:"Zapisano ✓",lvTested:"Test wysłany na telefon",
-  tokLive:"Status na żywo na tych telefonach (daje im Live Activity z ogłoszeń tego tokenu)",tokLiveHint:"Opcjonalnie. Np. osoba, do której należy skrót, widzi swoje ogłoszenie na swojej Dynamic Island.",tokens:"Tokeny",tokTitle:"Tokeny dla skrótów",tokNew:"+ Nowy token",cancel:"Anuluj",refresh:"Odśwież",
+  tokLive:"Status na żywo na telefonach",tokLiveHint:"Status na żywo jest opcjonalny: daje tym telefonom Live Activity z ogłoszeń tego tokenu, np. właściciel skrótu widzi swoje ogłoszenie na swojej Dynamic Island.",tokens:"Tokeny",tokTitle:"Tokeny dla skrótów",tokNew:"+ Nowy token",cancel:"Anuluj",refresh:"Odśwież",
   tokHint:"Token pozwala jednemu skrótowi (lub aplikacji) ogłaszać bez Twojego klucza administratora. Można go ograniczyć do wybranych głośników i w każdej chwili odwołać.",
-  tokName:"Nazwa (np. skrót lub osoba)",tokNamePh:"Skrót na iPhone",tokSup:"Nadzorowany: zapisuj w dzienniku wszystko, co ten token mówi",
-  tokSpk:"Głośniki (domyślne cele)",tokAll:"Pozwól ogłaszać także na innych głośnikach",tokTts:"Może używać mowy (TTS)",tokSnd:"Może odtwarzać dźwięki z biblioteki",tokAct:"Może uruchamiać skrypty / sceny",
+  tokName:"Nazwa (np. skrót lub osoba)",tokNamePh:"Skrót na iPhone",tokSup:"Nadzorowany (zapisuj w dzienniku wszystko, co mówi)",
+  tokSpk:"Głośniki (domyślne cele)",tokAll:"Może używać każdego głośnika",tokTts:"Może używać mowy (TTS)",tokSnd:"Może odtwarzać dźwięki z biblioteki",tokAct:"Może uruchamiać skrypty / sceny",
   tokMax:"Maks. głośność % (puste = bez limitu)",tokTtsHint:"Silnik TTS, język i głos wybrane teraz w zakładce Mów staną się domyślnymi dla tego tokenu, więc skrót wysyła tylko wiadomość.",
-  tokCreate:"Utwórz token",tokShown:"Skopiuj token teraz - pokazuje się tylko raz!",tokSteps:"Aplikacja Skróty → + → „Pobierz zawartość URL”: wklej adres, Pokaż więcej → Metoda POST → dodaj oba nagłówki → Treść żądania: JSON z polem tekstowym „message” (jako wartość użyj „Zapytaj o dane” lub „Dyktuj tekst”). Nazwij skrót i dodaj go do ekranu blokady / Siri.",
+  tokCreate:"Utwórz token",tokSetup:"Konfiguracja skrótu",tokShown:"Skopiuj token teraz - pokazuje się tylko raz!",tokSteps:"Aplikacja Skróty → + → „Pobierz zawartość URL”: wklej adres, Pokaż więcej → Metoda POST → dodaj oba nagłówki → Treść żądania: JSON z polem tekstowym „message” (jako wartość użyj „Zapytaj o dane” lub „Dyktuj tekst”). Nazwij skrót i dodaj go do ekranu blokady / Siri.",
   tokURL:"Adres URL",tokAuth:"Nagłówek Authorization",tokCT:"Nagłówek Content-Type",tokBody:"Treść JSON (tekst)",tokBody2:"Treść JSON (dźwięk z biblioteki)",tokRevoke:"Odwołaj",tokConfirm:"Odwołać ten token? Skróty, które go używają, przestaną działać.",
   tokNone:"Brak tokenów.",tokCopy:"Kopiuj token",tokRecURL:"Adres głosowy (nagrywanie z ekranu blokady)",tokRecSteps:"Skrót głosowy: „Nagraj dźwięk” → „Pobierz zawartość URL” z tym adresem, metoda POST, Treść żądania = Plik → Nagrany dźwięk, ten sam nagłówek Authorization (używa głośników tokenu; opcjonalnie ?targets=media_player.x). Ogłoszenie leci raz i nie jest zapisywane.",tokCopyAny:"Token i gotowe wartości do wklejenia",tokOld:"Utworzony zanim kopiowanie było możliwe - usuń i utwórz nowy",tokUsed:"ostatnio użyty",tokNever:"nieużywany",tokUses:"użyć",tokSupB:"nadzorowany",tokLimited:"ograniczone głośniki",tokNeed:"Wpisz nazwę i zaznacz co najmniej jeden głośnik.",
-  logTitle:"Dziennik ogłoszeń",addonLog:"Pokaż log systemowy dodatku (admin)",logClear:"Wyczyść dziennik",logAll:"Wszystkie źródła",logConfirm:"Wyczyścić cały dziennik?",logNoText:"(tekst niezapisany)",logEmpty:"Nic jeszcze nie zapisano.",logViewTok:"Dziennik",stop2:"■ Stop",stopped:"Zatrzymano ■",preparing:"Przygotowuję głos…",playing:"Gra ♪",queued:"W kolejce - zagra za {s} s",updNew:"Dostępna nowa wersja",updHave:"masz",updHow:"Otwórz stronę dodatku i kliknij Aktualizuj.",updOpen:"Otwórz stronę dodatku",updAuto:"automatyczna aktualizacja włączona",updManual:"automatyczna aktualizacja wyłączona (włącz na stronie dodatku)",copy:"Kopiuj",copied:"Skopiowano ✓",allThree:"Wszystkie trzy sposoby otwierania:",w1:"① Skrypt w HA",w2:"② Skrót iOS (Otwórz URL)",w3:"③ Osobna aplikacja (Do ekranu początkowego)",quick:"Szybkie",qSounds:"Ulubione dźwięki - dotknij, by ogłosić",qMsg:"Powiedz coś",qNoFav:"Brak ulubionych dźwięków. Oznacz dźwięki ★ w Bibliotece.",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje: skrypt / scena, głośność",
+  logTitle:"Dziennik ogłoszeń",addonLog:"Pokaż log systemowy dodatku (admin)",logClear:"Wyczyść dziennik",logAll:"Wszystkie źródła",logConfirm:"Wyczyścić cały dziennik?",logNoText:"(tekst niezapisany)",logEmpty:"Nic jeszcze nie zapisano.",logViewTok:"Dziennik",stop2:"■ Stop",stopped:"Zatrzymano ■",preparing:"Przygotowuję głos…",playing:"Gra ♪",queued:"W kolejce - zagra za {s} s",updNew:"Dostępna nowa wersja",updHave:"masz",updHow:"Otwórz stronę dodatku i kliknij Aktualizuj.",updOpen:"Otwórz stronę dodatku",updAuto:"automatyczna aktualizacja włączona",updManual:"automatyczna aktualizacja wyłączona (włącz na stronie dodatku)",copy:"Kopiuj",copied:"Skopiowano ✓",allThree:"Wszystkie trzy sposoby otwierania:",w1:"① Skrypt w HA",w2:"② Skrót iOS (Otwórz URL)",w3:"③ Osobna aplikacja (Do ekranu początkowego)",quick:"Szybkie",qSounds:"Ulubione dźwięki",qMsg:"Powiedz coś",qNoFav:"Brak ulubionych dźwięków. Oznacz dźwięki ★ w Bibliotece.",targets:"Głośniki",favs:"Ulubione",all:"Wszystkie",none:"Żaden",options:"Opcje",
   setvol:"Ustaw głośność (potem przywracana)",say:"Mów (TTS)",record:"Nagraj",upload:"Wgraj",generate:"Generuj",library:"Biblioteka",speakers:"Głośniki",app:"Aplikacja",
   actBefore:"Uruchom przed (skrypt / scena)",actAfter:"Uruchom po (skrypt / scena)",actNone:"— brak —",
   ttsent:"Silnik TTS",message:"Wiadomość",lang:"Język",voice:"Głos",deflt:"(domyślny)",ttsnone:"Nie znaleziono silnika TTS w Home Assistant",
@@ -383,7 +427,42 @@ const post = (p, body) => api(p, {method:"POST", body:JSON.stringify(body)});
 let toastT;
 function toast(m, bad){const e=$("toast");e.textContent=m;e.style.background=bad?"var(--err)":"";e.style.color=bad?"#fff":"";e.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),3600);}
 document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i));
-document.querySelectorAll("[data-ph]").forEach(e => e.placeholder = t(e.dataset.ph));
+document.querySelectorAll("[data-ph]").forEach(e => { e.placeholder = t(e.dataset.ph); e.setAttribute("aria-label", t(e.dataset.ph)); });
+
+// ---- smooth updates: in-flight state on buttons, and in-place DOM patching (no flicker, keeps focus, scroll and open <details>)
+async function busy(el, fn){            // disables the control while its request is running (also stops double taps)
+  if(el){ if(el.disabled) return; el.disabled = true; el.classList.add("busy"); }
+  try{ return await fn(); } finally{ if(el){ el.disabled = false; el.classList.remove("busy"); } }
+}
+function setOptions(sel, html){         // rebuild <option>s only when they changed and keep the current choice
+  if(sel.dataset.sig === html) return;
+  const v = sel.value; sel.dataset.sig = html; sel.innerHTML = html;
+  if([...sel.options].some(o => o.value === v)) sel.value = v;
+}
+const setText = (e, s) => { if(e.textContent !== s) e.textContent = s; };
+const setHTML = (e, h) => { if(e._h !== h){ e._h = h; e.innerHTML = h; } };
+// Keyed list: existing elements are updated in place (upd), new ones created (make), gone ones removed, order kept.
+function patchList(box, items, o){
+  box.querySelectorAll(":scope>.empty").forEach(e => e.remove());
+  if(o.hold){   // keep the rows where they are (e.g. right after a star tap) - they are re-sorted the next time the list is opened
+    const pos = [...box.children].map(e => e.dataset.k), at = it => pos.indexOf(String(o.key(it)));
+    items = [...items].sort((a, b) => (at(a) < 0 ? -1 : at(a)) - (at(b) < 0 ? -1 : at(b)));
+  }
+  const old = new Map([...box.children].map(e => [e.dataset.k, e]));
+  let prev = null;
+  items.forEach(it => {
+    const k = String(o.key(it)); let el = old.get(k);
+    if(el) old.delete(k); else { el = o.make(it); el.dataset.k = k; }
+    el._it = it; if(o.upd) o.upd(el, it);
+    const want = prev ? prev.nextElementSibling : box.firstElementChild;
+    if(el !== want) box.insertBefore(el, want);
+    prev = el;
+  });
+  old.forEach(e => e.remove());
+  if(o.empty){ const d = document.createElement("div"); d.className = "empty"; d.textContent = o.empty; box.append(d); }
+}
+const bdg = l => l.filter(Boolean).map(([h,c]) => `<span class="badge${c?" "+c:""}">${h}</span>`).join(" · ");   // meta line: plain muted text, separated by dots
+const mk = (tag, cls, html) => { const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; };
 
 // ---- tabs
 const TABS = [["quick","quick"],["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"],["spk","speakers"],["tok","tokens"],["live","tabLive"],["help","app"]];
@@ -391,10 +470,12 @@ TABS.forEach(([id, k]) => {
   const b = document.createElement("button"); b.textContent = t(k); b.dataset.id = id;
   b.onclick = () => showTab(id); $("tabs").append(b);
 });
+const NEEDS_TARGETS = new Set(["quick","say","rec","up","gen","lib"]);   // the speaker picker is only shown where something is announced
 function showTab(id){
-  document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.id===id));
+  document.querySelectorAll(".tabs button").forEach(b=>{ b.classList.toggle("on",b.dataset.id===id); if(b.dataset.id===id) try{ b.scrollIntoView({inline:"center",block:"nearest"}); }catch{} });
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="p-"+id));
-  if(id==="lib") renderLib(); if(id==="spk") renderSpk(); if(id==="tok") renderTokens(); if(id==="live") renderLiveCfg(); if(id==="help") renderHelp();
+  $("tgt").hidden = !NEEDS_TARGETS.has(id); holdLib = holdSpk = false;
+  if(id==="lib") renderLib(); if(id==="spk") renderSpk(); if(id==="tok") renderTokens(); if(id==="live" && !LV) renderLiveCfg(); if(id==="help") renderHelp();
 }
 
 // ---- state
@@ -406,21 +487,24 @@ async function refresh(){
   const ids = new Set(S.players.map(p=>p.entity_id));
   selected = new Set([...selected].filter(x=>ids.has(x) && !S.players.find(p=>p.entity_id===x).hidden));
   renderChips();
-  $("ttsEnt").innerHTML = S.tts.length ? S.tts.map(x=>`<option value="${esc(x.entity_id)}">${esc(x.name)}</option>`).join("")
-    : `<option value="">${t("ttsnone")}</option>`;
-  $("gType").innerHTML = Object.entries(S.generators).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join("");
+  setOptions($("ttsEnt"), S.tts.length ? S.tts.map(x=>`<option value="${esc(x.entity_id)}">${esc(x.name)}</option>`).join("") : `<option value="">${t("ttsnone")}</option>`);
+  setOptions($("gType"), Object.entries(S.generators).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join(""));
   fillActions(); loadLangs(); renderQuick(); renderLib(); renderSpk();
 }
 function renderChips(){
-  const box = $("players"); box.innerHTML = "";
-  const vis = visible();
-  if(!vis.length) box.innerHTML = `<div class="empty">${t("empty")}</div>`;
-  vis.forEach(p => {
-    const c = document.createElement("button"); c.className = "chip" + (selected.has(p.entity_id) ? " on" : "");
-    c.innerHTML = `<span class="dot ${esc(p.state)}"></span><span></span>${p.favorite?'<span class="star">★</span>':""}`;
-    c.children[1].textContent = p.name; c.title = p.entity_id + " · " + p.state;
-    c.onclick = () => { selected.has(p.entity_id) ? selected.delete(p.entity_id) : selected.add(p.entity_id); store.set("targets",[...selected]); renderChips(); };
-    box.append(c);
+  patchList($("players"), visible(), {
+    key: p => p.entity_id, empty: visible().length ? "" : t("empty"),
+    make: p => {
+      const c = mk("button", "chip", '<span class="dot"></span><span></span><span class="star" hidden>★</span>');
+      c.onclick = () => { const id = c._it.entity_id; selected.has(id) ? selected.delete(id) : selected.add(id); store.set("targets",[...selected]); renderChips(); };
+      return c;
+    },
+    upd: (c, p) => {
+      const on = selected.has(p.entity_id);
+      c.classList.toggle("on", on); c.setAttribute("aria-pressed", on);
+      c.children[0].className = "dot " + p.state; setText(c.children[1], p.name); c.children[2].hidden = !p.favorite;
+      c.title = p.entity_id + " · " + p.state;
+    }
   });
 }
 $("selAll").onclick = () => { selected = new Set(visible().map(p=>p.entity_id)); store.set("targets",[...selected]); renderChips(); };
@@ -434,63 +518,65 @@ function fillActions(){
   const html = `<option value="">${t("actNone")}</option>` + ["script","scene"].map(g =>
     grp[g].length ? `<optgroup label="${g}">` + grp[g].map(a=>`<option value="${esc(a.entity_id)}">${esc(a.name)}</option>`).join("") + "</optgroup>" : "").join("");
   [["actBefore","before"],["actAfter","after"]].forEach(([id,k]) => {
-    $(id).innerHTML = html; $(id).value = store.get("act_"+k,""); if($(id).value!==store.get("act_"+k,"")) $(id).value = "";
+    const first = !$(id).dataset.sig; setOptions($(id), html);
+    if(first){ const v = store.get("act_"+k,""); $(id).value = v; if($(id).value !== v) $(id).value = ""; }
     $(id).onchange = () => store.set("act_"+k, $(id).value);
   });
 }
 const actions_ = () => ({before_action:$("actBefore").value||undefined, after_action:$("actAfter").value||undefined});
 function extra(){ const x={targets:targets(),...actions_()}; if($("volOn").checked) x.volume=$("vol").value/100; return x; }
 function needTargets(){ if(!targets().length){toast(t("sel"),true);return false} return true; }
-async function announce(body){
+async function announce(body, btn){
   if(!needTargets()) return false;
-  if(body.message) toast("" + t("preparing"));   // TTS is rendered first, so there is a short wait before the sound
-  try{
-    const r = await post("announce",{...extra(),...body});
-    toast((r.queued > 0.5 ? t("queued").replace("{s}", Math.round(r.queued)) : t("playing")) + (r.skipped?.length ? " (" + r.skipped.length + " skipped)" : ""));
-    return true;
-  }catch(e){ toast(e.message,true); return false; }
+  return busy(btn, async () => {
+    if(body.message) toast(t("preparing"));   // TTS is rendered first, so there is a short wait before the sound
+    try{
+      const r = await post("announce",{...extra(),...body});
+      toast((r.queued > 0.5 ? t("queued").replace("{s}", Math.round(r.queued)) : t("playing")) + (r.skipped?.length ? " (" + r.skipped.length + " skipped)" : ""));
+      return true;
+    }catch(e){ toast(e.message,true); return false; }
+  });
 }
 async function stopAll(){
   try{ await post("stop",{targets:targets()}); toast(t("stopped")); }catch(e){ toast(e.message,true); }
 }
-$("stopAll").onclick = stopAll; $("qStop").onclick = stopAll;
+$("stopAll").onclick = () => busy($("stopAll"), stopAll);
 
 // ---- say (uses the TTS engines configured in Home Assistant)
 function loadLangs(){
   const eng = S.tts.find(x=>x.entity_id===$("ttsEnt").value);
-  const prev = $("ttsLang").value;
-  $("ttsLang").innerHTML = `<option value="">${t("deflt")}</option>` + (eng?.languages||[]).map(l=>`<option>${esc(l)}</option>`).join("");
-  if(prev) $("ttsLang").value = prev;
+  setOptions($("ttsLang"), `<option value="">${t("deflt")}</option>` + (eng?.languages||[]).map(l=>`<option>${esc(l)}</option>`).join(""));
   loadVoices();
 }
+let voiceReq = 0;
 async function loadVoices(){
-  $("ttsVoice").innerHTML = `<option value="">${t("deflt")}</option>`;
-  if(!$("ttsEnt").value) return;
-  try{
-    const v = await api(`tts/voices?engine=${encodeURIComponent($("ttsEnt").value)}&language=${encodeURIComponent($("ttsLang").value)}`);
-    v.forEach(x => { const o=document.createElement("option"); o.value=x.id; o.textContent=x.name; $("ttsVoice").append(o); });
-  }catch{}
+  const my = ++voiceReq; let v = [];
+  if($("ttsEnt").value){
+    try{ v = await api(`tts/voices?engine=${encodeURIComponent($("ttsEnt").value)}&language=${encodeURIComponent($("ttsLang").value)}`); }catch{}
+  }
+  if(my !== voiceReq) return;   // a newer request is on its way
+  setOptions($("ttsVoice"), `<option value="">${t("deflt")}</option>` + v.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join(""));
 }
 $("ttsEnt").onchange = loadLangs; $("ttsLang").onchange = loadVoices;
 function ttsBody(){
   const m = $("ttsMsg").value.trim(); if(!m){toast(t("nomsg"),true);return null}
   return {message:m,tts_entity:$("ttsEnt").value,language:$("ttsLang").value||undefined,voice:$("ttsVoice").value||undefined};
 }
-$("sayGo").onclick = () => { const b=ttsBody(); if(b) announce(b); };
-$("sayPrev").onclick = async () => {
+$("sayGo").onclick = () => { const b=ttsBody(); if(b) announce(b, $("sayGo")); };
+$("sayPrev").onclick = () => {
   const b=ttsBody(); if(!b) return;
-  try{ const it = await post("tts/item",{...b,save:false});
-    $("sayAudio").src="media/"+it.file; $("sayAudio").hidden=false; $("sayAudio").play(); }catch(e){toast(e.message,true)}
+  busy($("sayPrev"), async () => { try{ const it = await post("tts/item",{...b,save:false});
+    $("sayAudio").src="media/"+it.file; $("sayAudio").hidden=false; $("sayAudio").play(); }catch(e){toast(e.message,true)} });
 };
-$("saySave").onclick = async () => {
+$("saySave").onclick = () => {
   const b=ttsBody(); if(!b) return;
   const name = prompt(t("name"), b.message.slice(0,40)); if(!name) return;
-  try{ await post("tts/item",{...b,save:true,name}); toast(t("saved")); refresh(); }catch(e){toast(e.message,true)}
+  busy($("saySave"), async () => { try{ await post("tts/item",{...b,save:true,name}); toast(t("saved")); await refresh(); }catch(e){toast(e.message,true)} });
 };
 
 function copyRow(label, value){
-  const w = document.createElement("div"); w.style.marginTop = "10px";
-  w.innerHTML = `<label class="f"></label><div class="row" style="margin-top:0"><input type="text" readonly class="grow"><button class="b alt sm">${t("copy")}</button></div>`;
+  const w = document.createElement("div");
+  w.innerHTML = `<label class="f"></label><div class="row" style="margin-top:0;flex-wrap:nowrap;align-items:center"><input type="text" readonly class="grow"><button class="b sm">${t("copy")}</button></div>`;
   w.querySelector("label").textContent = label; const inp = w.querySelector("input"); inp.value = value;
   w.querySelector("button").onclick = async () => {
     try{ await navigator.clipboard.writeText(value); }catch{ inp.select(); document.execCommand("copy"); }
@@ -504,18 +590,18 @@ function showScriptResult(r, extras){
   p.textContent = (r.created ? t("scriptOk") + r.entity_id : t("scriptManual"));
   box.append(p);
   if(!r.created){ const pre=document.createElement("textarea"); pre.readOnly=true; pre.value=r.yaml; box.append(pre); }
-  if(extras){ const h=document.createElement("div"); h.className="sec"; h.style.marginTop="14px"; h.textContent=t("allThree"); box.append(h);
+  if(extras){ const h=document.createElement("div"); h.className="sec"; h.style.marginTop="16px"; h.textContent=t("allThree"); box.append(h);
     extras.forEach(([l,v]) => box.append(copyRow(l,v))); }
-  box.scrollIntoView({behavior:"smooth"});
+  box.scrollIntoView({block:"nearest"});
 }
 
 // ---- shared "sound source" actions: name box + once / save / save&announce
 function actions(box, getItem){
   box.innerHTML = `<label class="f">${t("name")}</label><input type="text" class="nm">
-    <div class="row"><button class="b once">${t("once")}</button>
-    <button class="b alt sv">${t("save")}</button><button class="b alt sa">${t("saveAnn")}</button></div>`;
+    <div class="btnrow"><button class="b once">${t("once")}</button>
+    <button class="b txt sv">${t("save")}</button><button class="b txt sa">${t("saveAnn")}</button></div>`;
   const nm = box.querySelector(".nm");
-  const go = async (save, ann) => {
+  const go = (save, ann, btn) => busy(btn, async () => {
     if(ann && !needTargets()) return;
     try{
       const item = await getItem(save, nm.value.trim());
@@ -523,10 +609,10 @@ function actions(box, getItem){
       if(save) toast(t("saved")), refresh();
       if(ann) await announce({item:item.id});
     }catch(e){ toast(e.message,true); }
-  };
-  box.querySelector(".once").onclick = () => go(false,true);
-  box.querySelector(".sv").onclick = () => go(true,false);
-  box.querySelector(".sa").onclick = () => go(true,true);
+  });
+  box.querySelector(".once").onclick = e => go(false,true,e.currentTarget);
+  box.querySelector(".sv").onclick = e => go(true,false,e.currentTarget);
+  box.querySelector(".sa").onclick = e => go(true,true,e.currentTarget);
 }
 async function sendBlob(blob, fname, kind, save, name){
   const f = new FormData();
@@ -543,7 +629,7 @@ function setRec(blob, secs){
   $("recHint").textContent = (secs ? secs.toFixed(0) + " s · " : "") + (blob.size/1024 < 1024 ? (blob.size/1024).toFixed(0) + " KB" : (blob.size/1048576).toFixed(1) + " MB") + " · " + t("recAgain");
 }
 const canMic = !!(navigator.mediaDevices?.getUserMedia && window.MediaRecorder && window.isSecureContext);
-if(!canMic){ $("recBtn").hidden = true; $("recMeter").hidden = true; document.querySelector(".recopts").hidden = true; $("recFile").parentElement.classList.remove("alt"); $("recHelp").hidden = false; }
+if(!canMic){ $("recBtn").hidden = true; $("recMeter").hidden = true; document.querySelector(".recopts").hidden = true; $("recFile").parentElement.classList.remove("txt"); $("recHelp").hidden = false; }
 function stopMeter(){ cancelAnimationFrame(raf); if(actx){ actx.close().catch(()=>{}); actx = null; } $("recLvl").style.width = "0"; $("recMeter").classList.remove("live"); }
 function startMeter(stream){
   try{
@@ -560,21 +646,21 @@ $("recBtn").onclick = async () => {
   if(recBusy) return; recBusy = true;
   try{
     const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:$("recNs").checked, noiseSuppression:$("recNs").checked, autoGainControl:true}});
-    if($("recCount").checked){ for(let i = 3; i > 0; i--){ $("recTime").textContent = i + "…"; await wait(1000); } }
+    if($("recCount").checked){ for(let i = 3; i > 0; i--){ $("recBtn").textContent = i + "…"; await wait(1000); } }
     const mime = ["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus"].find(m => MediaRecorder.isTypeSupported(m));
     mr = mime ? new MediaRecorder(stream, {mimeType:mime}) : new MediaRecorder(stream); chunks = [];
     const max = +$("recMax").value, t0 = Date.now();
     mr.ondataavailable = e => { if(e.data.size) chunks.push(e.data); };
     mr.onstop = () => {
       stream.getTracks().forEach(x => x.stop()); clearInterval(tick); stopMeter();
-      $("recBtn").textContent = t("rec"); $("recTime").textContent = ""; recBusy = false;
+      $("recBtn").textContent = t("rec"); recBusy = false;
       if(chunks.length) setRec(new Blob(chunks, {type:mr.mimeType || mime || "audio/webm"}), (Date.now() - t0) / 1000);
     };
     mr.start(250); startMeter(stream);
     $("recBtn").textContent = t("stop");
-    tick = setInterval(() => { const s = (Date.now() - t0) / 1000; $("recTime").textContent = "● " + s.toFixed(0) + " / " + max + " s"; if(s >= max) mr.stop(); }, 250);
+    tick = setInterval(() => { const s = (Date.now() - t0) / 1000; $("recBtn").textContent = t("stop") + " · " + s.toFixed(0) + " / " + max + " s"; if(s >= max) mr.stop(); }, 250);
     recBusy = false;
-  }catch(e){ recBusy = false; stopMeter(); toast(e.name === "NotAllowedError" ? t("recDenied") : e.message, true); $("recTime").textContent = ""; }
+  }catch(e){ recBusy = false; stopMeter(); toast(e.name === "NotAllowedError" ? t("recDenied") : e.message, true); $("recBtn").textContent = t("rec"); }
 };
 $("recFile").onchange = e => { if(e.target.files[0]) setRec(e.target.files[0]); };
 
@@ -582,7 +668,7 @@ $("recFile").onchange = e => { if(e.target.files[0]) setRec(e.target.files[0]); 
 let fileUp = null;
 actions($("upOut"), (save,name)=>fileUp ? sendBlob(fileUp,fileUp.name,"upload",save,name||fileUp.name.replace(/\.[^.]+$/,"")) : (toast(t("nofile"),true),null));
 $("upFile").onchange = e => {
-  fileUp = e.target.files[0]||null;
+  fileUp = e.target.files[0]||null; $("upOut").hidden = !fileUp;
   if(fileUp){ $("upAudio").src = URL.createObjectURL(fileUp); $("upAudio").hidden = false; }
 };
 
@@ -590,70 +676,79 @@ $("upFile").onchange = e => {
 const genBody = (save,name) => ({type:$("gType").value,freq:+$("gFreq").value||null,duration:+$("gDur").value||null,repeat:+$("gRep").value||1,save,name});
 const genItem = (save,name) => post("generate",genBody(save,name));
 actions($("gOut"), genItem);
-$("gPrev").onclick = async () => {
+$("gPrev").onclick = () => busy($("gPrev"), async () => {
   try{ const it = await genItem(false,""); $("gAudio").src = "media/"+it.file; $("gAudio").hidden=false; $("gAudio").play(); }
   catch(e){ toast(e.message,true); }
-};
+});
 
-// ---- library (favorites first, search, duplicate removal)
-let favOnly = false;
-$("libQ").oninput = renderLib;
-$("libFav").onclick = () => { favOnly = !favOnly; $("libFav").classList.toggle("alt", !favOnly); renderLib(); };
-$("libDup").onclick = async () => {
+// ---- library (favorites first, search, duplicate removal). Rows are patched in place, so a playing sound is never interrupted.
+let favOnly = false, holdLib = false, holdSpk = false;
+$("libQ").oninput = () => { holdLib = false; renderLib(); };
+$("libFav").onclick = () => { holdLib = false; favOnly = !favOnly; $("libFav").classList.toggle("on", favOnly); renderLib(); };
+$("libDup").onclick = () => busy($("libDup"), async () => {
   try{ const r = await post("library/dedupe",{});
-    toast(r.removed.length ? t("removed") + r.removed.length : t("noDup")); refresh(); }catch(e){toast(e.message,true)}
-};
+    toast(r.removed.length ? t("removed") + r.removed.length : t("noDup")); await refresh(); }catch(e){toast(e.message,true)}
+});
+const setStar = (b, on) => { b.classList.toggle("on", on); setText(b, on ? "★" : "☆"); };
 function renderLib(){
-  const box = $("libList"), q = $("libQ").value.trim().toLowerCase();
-  let items = S.library.filter(i => (!favOnly || i.favorite) && (!q || i.name.toLowerCase().includes(q)));
-  items.sort((a,b) => (b.favorite - a.favorite) || (b.created - a.created));
-  box.innerHTML = items.length ? "" : `<div class="empty">${t("empty")}</div>`;
-  items.forEach(it => {
-    const d = document.createElement("div"); d.className = "item";
-    d.innerHTML = `<button class="star-btn ${it.favorite?"on":""}">${it.favorite?"★":"☆"}</button>
-      <div class="n"><b></b><br><small>${esc(it.kind)} · ${it.duration.toFixed(1)} s</small></div>
-      <audio controls preload="none" src="media/${it.file}" style="width:190px;margin:0"></audio>
-      <button class="b sm a">${t("announce")}</button><button class="b alt sm r">${t("rename")}</button><button class="b red sm x">${t("del")}</button>`;
-    d.querySelector("b").textContent = it.name;
-    d.querySelector(".star-btn").onclick = async () => { try{ await post("library/"+it.id,{favorite:!it.favorite}); refresh(); }catch(e){toast(e.message,true)} };
-    d.querySelector(".a").onclick = () => announce({item:it.id});
-    d.querySelector(".r").onclick = async () => {
-      const n = prompt(t("newname"), it.name); if(!n) return;
-      try{ await post("library/"+it.id,{name:n}); refresh(); }catch(e){toast(e.message,true)}
-    };
-    d.querySelector(".x").onclick = async () => {
-      if(!confirm(t("confirmDel"))) return;
-      try{ await api("library/"+it.id,{method:"DELETE"}); refresh(); }catch(e){toast(e.message,true)}
-    };
-    box.append(d);
+  const q = $("libQ").value.trim().toLowerCase();
+  const items = S.library.filter(i => (!favOnly || i.favorite) && (!q || i.name.toLowerCase().includes(q)))
+    .sort((a,b) => (b.favorite - a.favorite) || (b.created - a.created));
+  patchList($("libList"), items, {
+    hold: holdLib, key: it => it.id, empty: items.length ? "" : t("empty"),
+    make: it => {
+      const d = mk("div", "item", `<button class="star-btn"></button>
+        <div class="n"><b></b><div class="badges"></div></div>
+        <div class="acts ind"><button class="b sm p">${t("preview")}</button><button class="b sm a">${t("announce")}</button><button class="b sm r">${t("rename")}</button><button class="b sm mut x">${t("del")}</button></div>
+        <audio controls preload="none" style="margin:8px 0 0" hidden></audio>`);
+      d.querySelector("audio").src = "media/" + it.file;
+      const au = d.querySelector("audio"), star = d.querySelector(".star-btn"); star.setAttribute("aria-label", t("favs"));
+      star.onclick = () => busy(star, async () => {
+        const it = d._it, want = !it.favorite; setStar(star, want); holdLib = true;          // optimistic; the row stays where it is
+        try{ await post("library/"+it.id,{favorite:want}); await refresh(); }catch(e){ setStar(star, it.favorite); toast(e.message,true); }
+      });
+      d.querySelector(".p").onclick = () => { if(au.hidden){ au.hidden = false; au.play().catch(()=>{}); } else { au.pause(); au.hidden = true; } };
+      const a = d.querySelector(".a"); a.onclick = () => announce({item:d._it.id}, a);
+      const r = d.querySelector(".r"); r.onclick = () => {
+        const n = prompt(t("newname"), d._it.name); if(!n) return;
+        busy(r, async () => { try{ await post("library/"+d._it.id,{name:n}); setText(d.querySelector("b"), n); await refresh(); }catch(e){toast(e.message,true)} });
+      };
+      const x = d.querySelector(".x"); x.onclick = () => {
+        if(!confirm(t("confirmDel"))) return;
+        busy(x, async () => { d.style.opacity = ".5"; try{ await api("library/"+d._it.id,{method:"DELETE"}); await refresh(); }catch(e){ d.style.opacity = ""; toast(e.message,true)} });
+      };
+      return d;
+    },
+    upd: (d, it) => {
+      const star = d.querySelector(".star-btn"); if(!star.disabled) setStar(star, it.favorite);
+      setText(d.querySelector("b"), it.name);
+      setHTML(d.querySelector(".badges"), bdg([[esc(it.kind)], [it.duration.toFixed(1) + " s"]]));
+    }
   });
 }
 
-// ---- quick (full-screen friendly home): favorite sounds as big tiles + one-line message
+// ---- quick (full-screen friendly home): one-line message + favorite sounds as tiles
 const recent = () => store.get("recent", []);
 function renderQuick(){
   const favs = S.library.filter(i=>i.favorite).sort((a,b)=>b.created-a.created);
-  const box = $("qTiles"); box.innerHTML = "";
-  if(!favs.length) box.innerHTML = `<div class="empty">${t("qNoFav")}</div>`;
-  favs.forEach(it => {
-    const b = document.createElement("button"); b.className = "tile";
-    b.innerHTML = `<span class="star">★</span><b></b><small>${it.duration.toFixed(1)} s</small>`;
-    b.querySelector("b").textContent = it.name;
-    b.onclick = () => announce({item:it.id});
-    box.append(b);
+  patchList($("qTiles"), favs, {
+    key: it => it.id, empty: favs.length ? "" : t("qNoFav"),
+    make: () => { const b = mk("button", "tile", "<b></b><small></small>"); b.onclick = () => announce({item:b._it.id}, b); return b; },
+    upd: (b, it) => { setText(b.children[0], it.name); setText(b.children[1], it.duration.toFixed(1) + " s"); }
   });
-  const rc = $("qRecent"); rc.innerHTML = "";
-  recent().forEach(m => { const c = document.createElement("button"); c.className = "chip"; c.textContent = m;
-    c.onclick = () => { $("qMsg").value = m; }; rc.append(c); });
+  patchList($("qRecent"), recent(), {
+    key: m => m,
+    make: m => { const c = mk("button", "chip"); c.textContent = m; c.onclick = () => { $("qMsg").value = m; }; return c; }
+  });
 }
 $("qGo").onclick = async () => {
   const m = $("qMsg").value.trim(); if(!m) return toast(t("nomsg"),true);
   if(!$("ttsEnt").value) return toast(t("ttsnone"),true);
-  const ok = await announce({message:m,tts_entity:$("ttsEnt").value,language:$("ttsLang").value||undefined,voice:$("ttsVoice").value||undefined});
+  const ok = await announce({message:m,tts_entity:$("ttsEnt").value,language:$("ttsLang").value||undefined,voice:$("ttsVoice").value||undefined}, $("qGo"));
   if(ok){ store.set("recent",[m,...recent().filter(x=>x!==m)].slice(0,6)); renderQuick(); }
 };
 
-// ---- "is it announcing?" - live sessions bar (polls /api/status) ----
+// ---- "is it announcing?" - live sessions bar (polls /api/status). Fixed overlay at the bottom, so the page never shifts when it appears.
 let stat = {active:[], now:0}, clockOff = 0;
 async function pollStatus(){
   if(document.hidden) return;
@@ -661,18 +756,23 @@ async function pollStatus(){
 }
 function drawNow(){
   const box = $("nowBar"), act = stat.active || [];
-  if(!act.length){ box.hidden = true; return; }
-  box.hidden = false; box.innerHTML = "";
+  box.hidden = !act.length; document.body.classList.toggle("has-now", !!act.length);
   const now = Date.now()/1000 + clockOff;
-  act.forEach(x => {
-    const row = document.createElement("div"); row.className = "nrow";
-    const left = x.ends ? Math.max(0, x.ends - now) : x.duration, pct = x.ends ? Math.min(100, 100 - left / x.duration * 100) : 0;
-    row.innerHTML = `<span class="pulse ${x.state==="queued"?"q":""}"></span><div style="flex:1;min-width:0"><div style="font-weight:500" class="tx"></div>
-      <div class="hint sub"></div><div class="bar"><i style="width:${pct}%"></i></div></div><button class="b red sm">${t("stop2")}</button>`;
-    row.querySelector(".tx").textContent = (x.state === "queued" ? "" + t("nowQueued") + ": " : "") + (x.hidden ? x.kind.toUpperCase() : x.said);
-    row.querySelector(".sub").textContent = `${t("nowOn")} ${x.names.join(", ")} · ${x.source}` + (x.state === "playing" ? ` · ${Math.ceil(left)} s` : "");
-    row.querySelector("button").onclick = async () => { try{ await post("stop", {targets:x.targets}); pollStatus(); }catch(e){ toast(e.message, true); } };
-    box.append(row);
+  patchList(box, act, {
+    key: x => x.id,
+    make: () => {
+      const row = mk("div", "nrow", `<span class="pulse"></span><div style="flex:1;min-width:0"><div class="tx" style="font-weight:500"></div><div class="hint sub"></div><div class="bar"><i></i></div></div><button class="b red sm"></button>`);
+      const b = row.querySelector("button"); b.textContent = t("stop2");
+      b.onclick = () => busy(b, async () => { try{ await post("stop", {targets:row._it.targets}); pollStatus(); }catch(e){ toast(e.message, true); } });
+      return row;
+    },
+    upd: (row, x) => {
+      const left = x.ends ? Math.max(0, x.ends - now) : x.duration, pct = x.ends ? Math.min(100, 100 - left / x.duration * 100) : 0;
+      row.querySelector(".pulse").className = "pulse" + (x.state === "queued" ? " q" : "");
+      setText(row.querySelector(".tx"), (x.state === "queued" ? t("nowQueued") + ": " : "") + (x.hidden ? x.kind.toUpperCase() : x.said));
+      setText(row.querySelector(".sub"), `${t("nowOn")} ${x.names.join(", ")} · ${x.source}` + (x.state === "playing" ? ` · ${Math.ceil(left)} s` : ""));
+      row.querySelector(".bar i").style.width = pct + "%";
+    }
   });
 }
 setInterval(pollStatus, 1500); setInterval(drawNow, 400);
@@ -694,26 +794,27 @@ async function renderLiveCfg(){
   $("lvOn").checked = c.enabled; $("lvTitle").value = c.title; $("lvCrit").value = c.critical_text; $("lvMsg").value = c.message;
   $("lvHide").checked = c.hide_text; $("lvCount").checked = c.countdown; $("lvIcon").value = c.icon; $("lvColor").value = c.color;
   $("lvBg").value = c.background_color; $("lvTx").value = c.text_color; $("lvRel").value = c.relevance ?? ""; $("lvEnd").value = c.end_delay; $("lvUrl").value = c.url;
-  if(LV.notify.length) chipSet($("lvPhones"), LV.notify, c.phones); else $("lvPhones").innerHTML = `<span class="hint">${t("lvNoPhone")}</span>`;
+  if(LV.notify.length) chipSet($("lvPhones"), LV.notify, c.phones); else $("lvPhones").innerHTML = `<span class="hint" style="margin:0">${t("lvNoPhone")}</span>`;
   chipSet($("lvOnly"), LV.sources, c.only_sources);
 }
 const lvBody = () => ({enabled:$("lvOn").checked, phones:chipVals($("lvPhones")), only_sources:chipVals($("lvOnly")), title:$("lvTitle").value, critical_text:$("lvCrit").value, message:$("lvMsg").value,
   hide_text:$("lvHide").checked, countdown:$("lvCount").checked, icon:$("lvIcon").value.trim(), color:$("lvColor").value, background_color:$("lvBg").value.trim(), text_color:$("lvTx").value.trim(),
   relevance:$("lvRel").value, end_delay:$("lvEnd").value, url:$("lvUrl").value.trim()});
-$("lvSave").onclick = async () => { try{ await post("live", lvBody()); toast(t("lvSaved")); }catch(e){ toast(e.message, true); } };
-$("lvTest").onclick = async () => { try{ const b = lvBody(); await post("live", b); await post("live/test", {phones:b.phones}); toast(t("lvTested")); }catch(e){ toast(e.message, true); } };
+$("lvSave").onclick = () => busy($("lvSave"), async () => { try{ await post("live", lvBody()); toast(t("lvSaved")); }catch(e){ toast(e.message, true); } });
+$("lvTest").onclick = () => busy($("lvTest"), async () => { try{ const b = lvBody(); await post("live", b); await post("live/test", {phones:b.phones}); toast(t("lvTested")); }catch(e){ toast(e.message, true); } });
 
 // ---- network: local + external IP ----
 let NET = null;
 async function renderNet(force){
   const box = $("netInfo");
-  try{ NET = force ? await post("network/refresh", {}) : await api("network"); }catch(e){ box.textContent = e.message; return; }
-  const n = NET; box.innerHTML = `<div class="sec" style="margin-bottom:6px"><span>${t("netTitle")}</span><span class="sp"></span><button class="link" id="netRef">${t("netRefresh")}</button></div>
-    <div class="hint" id="netL"></div><div class="hint" id="netE" style="margin-top:2px"></div><div class="hint" id="netW" style="margin-top:8px"></div>`;
-  $("netL").textContent = `${t("netLocal")}: ${n.local_base || "—"}`;
-  $("netE").textContent = n.enabled ? (n.external_base ? `${t("netExt")}: ${n.external_base}` + (n.external_host ? "" : ` · ${n.source}`) + (n.checked ? ` · ${t("netChecked")} ${new Date(n.checked*1000).toLocaleTimeString()}` : "") + (n.changed ? ` · ${t("netChanged")}: ${n.previous} → ${n.external_ip}` : "") : (n.error ? t("netErr") + ": " + n.error : "…")) : t("netOff");
-  $("netW").textContent = t("netWarn");
-  $("netRef").onclick = () => renderNet(true);
+  if(!box.firstElementChild){   // the structure is built once; only the text changes afterwards
+    box.innerHTML = `<div class="sec"><span>${t("netTitle")}</span><span class="sp"></span><button class="link" id="netRef">${t("netRefresh")}</button></div><div class="hint" id="netL"></div><div class="hint" id="netE"></div>`;
+    $("netRef").onclick = () => busy($("netRef"), () => renderNet(true));
+  }
+  try{ NET = force ? await post("network/refresh", {}) : await api("network"); }catch(e){ setText($("netE"), e.message); return; }
+  const n = NET;
+  setText($("netL"), `${t("netLocal")}: ${n.local_base || "—"}`);
+  setText($("netE"), n.enabled ? (n.external_base ? `${t("netExt")}: ${n.external_base}` + (n.external_host ? "" : ` · ${n.source}`) + (n.checked ? ` · ${t("netChecked")} ${new Date(n.checked*1000).toLocaleTimeString()}` : "") + (n.changed ? ` · ${t("netChanged")}: ${n.previous} → ${n.external_ip}` : "") : (n.error ? t("netErr") + ": " + n.error : "…")) : t("netOff"));
 }
 
 // ---- tokens (for shortcuts) + announcement log
@@ -721,65 +822,69 @@ let TK = [];
 const ago = ts => ts ? new Date(ts*1000).toLocaleString() : t("tokNever");
 function showTokenCard(token, fresh = true){
     const box = $("tokResult"); box.innerHTML = "";
-    const card = document.createElement("div"); card.className = "prof"; card.style.border = "1.5px solid var(--warn)";
-    const h = document.createElement("div"); h.innerHTML = `<b>${fresh ? "" + t("tokShown") : t("tokCopyAny")}</b>`; card.append(h);
+    const card = document.createElement("div"); card.className = "tkres";
+    const h = document.createElement("b"); h.textContent = fresh ? t("tokShown") : t("tokCopyAny"); card.append(h);
     card.append(copyRow("Token", token));
-    const hint = document.createElement("div"); hint.className = "hint"; hint.style.marginTop = "10px"; hint.textContent = t("tokSteps"); card.append(hint);
     card.append(copyRow(t("tokURL"), S.base_url + "/api/announce"));
     if(NET && NET.external_base) card.append(copyRow(t("tokURLext"), NET.external_base + "/api/announce"));
-    card.append(copyRow(t("tokRecURL"), S.base_url + "/api/record"));
-    const rh = document.createElement("div"); rh.className = "hint"; rh.textContent = t("tokRecSteps"); card.append(rh);
-    card.append(copyRow(t("tokAuth"), "Bearer " + token));
-    card.append(copyRow(t("tokCT"), "application/json"));
-    card.append(copyRow(t("tokBody"), JSON.stringify({message:lang==="pl"?"Obiad gotowy":"Dinner is ready"})));
-    card.append(copyRow(t("tokBody2"), JSON.stringify({sound:(S.library[0]||{name:"Gong"}).name})));
-    box.append(card); card.scrollIntoView({behavior:"smooth"});
+    const more = document.createElement("details"); more.className = "more";
+    const sum = document.createElement("summary"); sum.textContent = t("tokSetup"); more.append(sum);
+    const inner = document.createElement("div"); more.append(inner);
+    const hint = document.createElement("div"); hint.className = "hint"; hint.textContent = t("tokSteps"); inner.append(hint);
+    inner.append(copyRow(t("tokAuth"), "Bearer " + token));
+    inner.append(copyRow(t("tokCT"), "application/json"));
+    inner.append(copyRow(t("tokBody"), JSON.stringify({message:lang==="pl"?"Obiad gotowy":"Dinner is ready"})));
+    inner.append(copyRow(t("tokBody2"), JSON.stringify({sound:(S.library[0]||{name:"Gong"}).name})));
+    inner.append(copyRow(t("tokRecURL"), S.base_url + "/api/record"));
+    const rh = document.createElement("div"); rh.className = "hint"; rh.textContent = t("tokRecSteps"); inner.append(rh);
+    card.append(more);
+    box.append(card); card.scrollIntoView({block:"nearest"});
 }
 async function renderTokens(){
   renderNet();
   try{ TK = await api("tokens"); }catch(e){ return toast(e.message,true); }
-  const box = $("tokList"); box.innerHTML = TK.length ? "" : `<div class="empty">${t("tokNone")}</div>`;
-  TK.forEach(k => {
-    const d = document.createElement("div"); d.className = "item";
-    const spk = (k.targets||[]).map(e => (S.players.find(p=>p.entity_id===e)||{name:e}).name).join(", ");
-    d.innerHTML = `<div class="n"><b></b> <small class="hint">${esc(k.prefix)}…</small>
-      <div class="badges">${k.supervised?`<span class="badge warn">${t("tokSupB")}</span>`:""}
-      ${k.allow_all_speakers?"":`<span class="badge">${t("tokLimited")}</span>`}
-      <span class="badge">${t("tokUses")}: ${k.uses||0}</span><span class="badge">${t("tokUsed")}: ${esc(k.last_used?ago(k.last_used):t("tokNever"))}</span></div>
-      <small class="hint spk"></small></div>
-      <button class="b alt sm cp"${k.can_copy?"":" disabled"} title="${k.can_copy?"":t("tokOld")}">${t("tokCopy")}</button><button class="b alt sm lg">${t("logViewTok")}</button><button class="b red sm rv">${t("tokRevoke")}</button>`;
-    d.querySelector("b").textContent = k.name; d.querySelector(".spk").textContent = spk;
-    d.querySelector(".cp").onclick = async () => { try{ showTokenCard((await api("tokens/"+k.id+"/secret")).token, false); }catch(e){ toast(e.message,true); } };
-    d.querySelector(".lg").onclick = () => { $("logFilter").value = k.id; renderLog(); $("logList").scrollIntoView({behavior:"smooth"}); };
-    d.querySelector(".rv").onclick = async () => { if(!confirm(t("tokConfirm"))) return;
-      try{ await api("tokens/"+k.id,{method:"DELETE"}); renderTokens(); }catch(e){toast(e.message,true)} };
-    box.append(d);
+  patchList($("tokList"), TK, {
+    key: k => k.id, empty: TK.length ? "" : t("tokNone"),
+    make: () => {
+      const d = mk("div", "item", `<div class="n"><div><b></b> <small class="pre"></small></div><div class="badges"></div><small class="spkn"></small></div>
+        <div class="acts"><button class="b sm cp">${t("tokCopy")}</button><button class="b sm lg">${t("logViewTok")}</button><button class="b sm mut rv">${t("tokRevoke")}</button></div>`);
+      const cp = d.querySelector(".cp"), rv = d.querySelector(".rv");
+      cp.onclick = () => busy(cp, async () => { try{ showTokenCard((await api("tokens/"+d._it.id+"/secret")).token, false); }catch(e){ toast(e.message,true); } });
+      d.querySelector(".lg").onclick = () => { $("logFilter").value = d._it.id; renderLog(); $("logList").scrollIntoView({block:"nearest"}); };
+      rv.onclick = () => { if(!confirm(t("tokConfirm"))) return;
+        busy(rv, async () => { try{ await api("tokens/"+d._it.id,{method:"DELETE"}); await renderTokens(); }catch(e){toast(e.message,true)} }); };
+      return d;
+    },
+    upd: (d, k) => {
+      setText(d.querySelector("b"), k.name); setText(d.querySelector(".pre"), k.prefix + "…");
+      setHTML(d.querySelector(".badges"), bdg([k.supervised && [t("tokSupB")], !k.allow_all_speakers && [t("tokLimited")], [t("tokUses") + ": " + (k.uses||0)], [t("tokUsed") + ": " + esc(k.last_used?ago(k.last_used):t("tokNever"))]]));
+      setText(d.querySelector(".spkn"), (k.targets||[]).map(e => (S.players.find(p=>p.entity_id===e)||{name:e}).name).join(", "));
+      const cp = d.querySelector(".cp"); cp.disabled = !k.can_copy || cp.classList.contains("busy"); cp.title = k.can_copy ? "" : t("tokOld");
+    }
   });
-  const cur = $("logFilter").value;
-  $("logFilter").innerHTML = `<option value="">${t("logAll")}</option>` + TK.map(k=>`<option value="${esc(k.id)}">${esc(k.name)}</option>`).join("");
-  $("logFilter").value = cur;
+  setOptions($("logFilter"), `<option value="">${t("logAll")}</option>` + TK.map(k=>`<option value="${esc(k.id)}">${esc(k.name)}</option>`).join(""));
   renderLog();
 }
 async function renderLog(){
   const box = $("logList");
   try{
     const rows = await api("log?limit=100" + ($("logFilter").value ? "&token="+encodeURIComponent($("logFilter").value) : ""));
-    box.innerHTML = rows.length ? "" : `<div class="empty">${t("logEmpty")}</div>`;
-    rows.forEach(e => {
-      const d = document.createElement("div"); d.className = "item";
-      const names = (e.targets||[]).map(x => (S.players.find(p=>p.entity_id===x)||{name:x}).name).join(", ");
-      d.innerHTML = `<div class="n"><div class="badges"><span class="badge">${esc(new Date(e.ts*1000).toLocaleString())}</span>
-        <span class="badge">${esc(e.source)}</span>${e.supervised?`<span class="badge warn"></span>`:""}
-        <span class="badge ${e.ok?"ok":"err"}">${e.ok?"✓":"✗ "+esc(e.error)}</span></div>
-        <div style="margin-top:4px"></div><small class="hint"></small></div>`;
-      d.querySelector("div[style]").textContent = (e.kind==="tts"?"":"") + (e.said === "(text not recorded)" ? t("logNoText") : e.said);
-      d.querySelector("small").textContent = "→ " + names;
-      box.append(d);
+    const seen = {}; rows.forEach(e => { const b = e.ts + "|" + e.source + "|" + e.said; seen[b] = (seen[b]||0) + 1; e._k = b + "#" + seen[b]; });
+    patchList(box, rows, {
+      key: e => e._k, empty: rows.length ? "" : t("logEmpty"),
+      make: e => {
+        const d = mk("div", "item", `<div class="n"><div class="badges">${bdg([[esc(new Date(e.ts*1000).toLocaleString())], [esc(e.source)], [e.ok?"✓":"✗ "+esc(e.error), e.ok?"ok":"err"]])}</div>
+          <div class="tx" style="margin-top:4px"></div><small></small></div>`);
+        const names = (e.targets||[]).map(x => (S.players.find(p=>p.entity_id===x)||{name:x}).name).join(", ");
+        d.querySelector(".tx").textContent = e.said === "(text not recorded)" ? t("logNoText") : e.said;
+        d.querySelector("small").textContent = "→ " + names;
+        return d;
+      }
     });
-  }catch(e){ box.innerHTML = ""; toast(e.message,true); }
+  }catch(e){ toast(e.message,true); }
 }
-$("logRefresh").onclick = renderTokens; $("logFilter").onchange = renderLog;
-$("logClear").onclick = async () => { if(!confirm(t("logConfirm"))) return; try{ await api("log",{method:"DELETE"}); renderLog(); }catch(e){toast(e.message,true)} };
+$("logRefresh").onclick = () => busy($("logRefresh"), renderTokens); $("logFilter").onchange = renderLog;
+$("logClear").onclick = () => { if(!confirm(t("logConfirm"))) return; busy($("logClear"), async () => { try{ await api("log",{method:"DELETE"}); await renderLog(); }catch(e){toast(e.message,true)} }); };
 $("tokNew").onclick = () => {
   const f = $("tokForm"); f.hidden = !f.hidden; if(f.hidden) return;
   fillTokLive(); $("tkSpk").innerHTML = "";
@@ -791,21 +896,23 @@ async function fillTokLive(){
   const box = $("tkLive"); box.innerHTML = "";
   let n = []; try{ n = (await api("live")).notify; }catch{}
   n.forEach(p => { const c = document.createElement("button"); c.type = "button"; c.className = "chip"; c.dataset.id = p; c.textContent = p; c.onclick = () => c.classList.toggle("on"); box.append(c); });
-  if(!n.length) box.innerHTML = `<span class="hint">${t("lvNoPhone")}</span>`;
+  if(!n.length) box.innerHTML = `<span class="hint" style="margin:0">${t("lvNoPhone")}</span>`;
 }
 $("tkCancel").onclick = () => { $("tokForm").hidden = true; };
-$("tkCreate").onclick = async () => {
+$("tkCreate").onclick = () => {
   const sel = [...document.querySelectorAll("#tkSpk .chip.on")].map(c=>c.dataset.id), name = $("tkName").value.trim();
   if(!name || !sel.length) return toast(t("tokNeed"),true);
-  try{
-    const r = await post("tokens",{name,supervised:$("tkSup").checked,targets:sel,allow_all_speakers:$("tkAll").checked,
-      allow_tts:$("tkTts").checked,allow_sounds:$("tkSnd").checked,allow_actions:$("tkAct").checked,
-      max_volume:$("tkMax").value===""?null:+$("tkMax").value/100,
-      tts_entity:$("ttsEnt").value||"",language:$("ttsLang").value||"",voice:$("ttsVoice").value||"",
-      live_phones:[...document.querySelectorAll("#tkLive .chip.on")].map(c=>c.dataset.id)});
-    $("tokForm").hidden = true; $("tkName").value = "";
-    showTokenCard(r.token); renderTokens();
-  }catch(e){ toast(e.message,true); }
+  busy($("tkCreate"), async () => {
+    try{
+      const r = await post("tokens",{name,supervised:$("tkSup").checked,targets:sel,allow_all_speakers:$("tkAll").checked,
+        allow_tts:$("tkTts").checked,allow_sounds:$("tkSnd").checked,allow_actions:$("tkAct").checked,
+        max_volume:$("tkMax").value===""?null:+$("tkMax").value/100,
+        tts_entity:$("ttsEnt").value||"",language:$("ttsLang").value||"",voice:$("ttsVoice").value||"",
+        live_phones:[...document.querySelectorAll("#tkLive .chip.on")].map(c=>c.dataset.id)});
+      $("tokForm").hidden = true; $("tkName").value = "";
+      showTokenCard(r.token); renderTokens();
+    }catch(e){ toast(e.message,true); }
+  });
 };
 
 // ---- speakers: detection, favorites, hide/remove, duplicates, calibration, per-speaker profile
@@ -824,129 +931,142 @@ function profileForm(eid){
    <label class="chk"><input type="checkbox" class="pw" ${p.power_cycle?"checked":""}> ${t("dPower")}</label>
    <label class="chk"><input type="checkbox" class="um" ${p.unmute?"checked":""}> ${t("dUnmute")}</label>
    <label class="f">${t("dQuiet")}</label>
-   <div class="row"><div class="grow">${t("dQFrom")} <input type="time" class="qf" value="${p.quiet_from}"></div>
-   <div class="grow">${t("dQTo")} <input type="time" class="qt" value="${p.quiet_to}"></div></div>
+   <div class="row" style="margin-top:0"><div class="grow"><label class="f">${t("dQFrom")}</label><input type="time" class="qf" value="${p.quiet_from}"></div>
+   <div class="grow"><label class="f">${t("dQTo")}</label><input type="time" class="qt" value="${p.quiet_to}"></div></div>
    <label class="f">${t("dQVol")}</label><input type="number" min="0" max="100" class="qv" value="${pct(p.quiet_volume)}">
-   <div class="row"><button class="b sv">${t("dSave")}</button><button class="b alt rs">${t("dReset")}</button>
-   ${eid==="_default" ? `<button class="b alt cp">${t("dCopy")}</button>` : ""}</div>`;
+   <div class="btnrow"><button class="b sv">${t("dSave")}</button><button class="b txt rs">${t("dReset")}</button>
+   ${eid==="_default" ? `<button class="b txt cp">${t("dCopy")}</button>` : ""}</div>`;
   f.querySelector(".rm").value = p.resume_mode;
   const read = () => { const q=c=>f.querySelector(c); const n=c=>q(c).value===""?null:+q(c).value;
     return {volume:n(".vol")==null?null:n(".vol")/100, restore_volume:q(".rv").checked, resume_mode:q(".rm").value,
       before_delay:+q(".bd").value||0, after_delay:+q(".ad").value||0, power_cycle:q(".pw").checked, unmute:q(".um").checked,
       quiet_from:q(".qf").value, quiet_to:q(".qt").value, quiet_volume:n(".qv")==null?null:n(".qv")/100}; };
-  const save = async (extra={}) => { try{ D = await post("devices",{entity_id:eid,profile:read(),...extra}); toast(t("dSaved")); renderSpk(); }catch(e){toast(e.message,true)} };
-  f.querySelector(".sv").onclick = () => save();
-  f.querySelector(".rs").onclick = async () => { try{ D = await post("devices",{entity_id:eid,reset:true}); renderSpk(); }catch(e){toast(e.message,true)} };
-  const cp = f.querySelector(".cp"); if(cp) cp.onclick = () => save({copy_to:S.players.map(x=>x.entity_id)});
+  const save = (btn, extra={}) => busy(btn, async () => { try{ D = await post("devices",{entity_id:eid,profile:read(),...extra}); toast(t("dSaved")); renderSpk(); }catch(e){toast(e.message,true)} });
+  const sv = f.querySelector(".sv"); sv.onclick = () => save(sv);
+  const rs = f.querySelector(".rs"); rs.onclick = () => busy(rs, async () => { try{ D = await post("devices",{entity_id:eid,reset:true}); renderSpk(); }catch(e){toast(e.message,true)} });
+  const cp = f.querySelector(".cp"); if(cp) cp.onclick = () => save(cp, {copy_to:S.players.map(x=>x.entity_id)});
   return f;
 }
 const openProfiles = new Set();
+function profileSlot(row, eid){      // (re)build the settings form only when the saved profile really changed - typing is never overwritten
+  const psig = JSON.stringify(D.profiles[eid] || D.default);
+  if(row._psig === psig) return;
+  row._psig = psig;
+  const form = profileForm(eid); form.hidden = !openProfiles.has(eid);
+  const oldF = row.querySelector(":scope>.prof");
+  if(oldF){ form.hidden = oldF.hidden; oldF.replaceWith(form); } else row.append(form);
+}
+function toggleProfile(row, eid){
+  const form = row.querySelector(":scope>.prof"); form.hidden = !form.hidden;
+  form.hidden ? openProfiles.delete(eid) : openProfiles.add(eid);
+}
 async function renderSpk(){
   try{ D = await api("devices"); }catch(e){ return toast(e.message,true); }
-  const box = $("spkList"); box.innerHTML = "";
-  const def = document.createElement("div"); def.className = "spk";
-  def.innerHTML = `<div class="head"><div class="n"><b>${t("dDefault")}</b></div><button class="b alt sm">${t("settings")}</button></div>`;
-  const defForm = profileForm("_default"); defForm.hidden = !openProfiles.has("_default");
-  def.querySelector("button").onclick = () => { defForm.hidden = !defForm.hidden; defForm.hidden ? openProfiles.delete("_default") : openProfiles.add("_default"); };
-  def.append(defForm); box.append(def);
   const showHidden = $("spkHidden").checked;
   const list = S.players.filter(p => showHidden || !p.hidden);
-  if(!list.length) box.insertAdjacentHTML("beforeend", `<div class="empty">${t("empty")}</div>`);
-  list.forEach(p => {
-    const row = document.createElement("div"); row.className = "spk" + (p.duplicate_of ? " dup" : "");
-    const model = [p.manufacturer, p.model].filter(Boolean).join(" ");
-    const cal = p.calibration ? `<span class="badge ok">${t("calAt")} ${new Date(p.calibration.at*1000).toLocaleDateString()}${p.calibration.start_latency!=null?` · ${p.calibration.start_latency}s`:""}</span>` : "";
-    row.innerHTML = `<div class="head">
-      <button class="star-btn ${p.favorite?"on":""}">${p.favorite?"★":"☆"}</button>
-      <div class="n"><span class="dot ${esc(p.state)}"></span> <b></b>
-        <div class="badges">
-          ${p.platform?`<span class="badge">${esc(p.platform)}</span>`:""}
-          ${model?`<span class="badge">${esc(model)}</span>`:""}
-          <span class="badge ${p.announce?"ok":"warn"}">${p.announce?t("announceOk"):t("announceNo")}</span>
-          ${p.state==="unavailable"?`<span class="badge err">${t("unavail")}</span>`:""}
-          ${p.duplicate_of?`<span class="badge warn">${t("dupOf")} ${esc(p.duplicate_of)}</span>`:""}
-          ${p.hidden?`<span class="badge">${t("hiddenB")}</span>`:""}${cal}
-        </div><small class="hint">${esc(p.entity_id)}</small></div>
-      <button class="b alt sm cal">${t("calibrate")}</button>
-      <button class="b alt sm set">${t("settings")}</button>
-      <button class="b ${p.hidden?"alt":"red"} sm hid">${p.hidden?t("restore"):t("remove")}</button></div>`;
-    row.querySelector("b").textContent = p.name;
-    row.querySelector(".star-btn").onclick = async () => { try{ await post("speaker",{entity_id:p.entity_id,favorite:!p.favorite}); await refresh(); }catch(e){toast(e.message,true)} };
-    row.querySelector(".hid").onclick = async () => { try{ await post("speaker",{entity_id:p.entity_id,hidden:!p.hidden}); await refresh(); }catch(e){toast(e.message,true)} };
-    row.querySelector(".cal").onclick = async ev => {
-      if(!confirm(t("calConfirm"))) return;
-      const btn = ev.target; btn.disabled = true; btn.textContent = t("calRunning");
-      try{ const r = await post("speaker/calibrate",{entity_id:p.entity_id});
-        toast(r.measured ? t("calDone") + ` (${r.start_latency}s)` : t("calNoMeasure")); await refresh(); }
-      catch(e){ toast(e.message,true); btn.disabled = false; btn.textContent = t("calibrate"); }
-    };
-    const form = profileForm(p.entity_id); form.hidden = !openProfiles.has(p.entity_id);
-    row.querySelector(".set").onclick = () => { form.hidden = !form.hidden; form.hidden ? openProfiles.delete(p.entity_id) : openProfiles.add(p.entity_id); };
-    row.append(form); box.append(row);
+  patchList($("spkList"), [{entity_id:"_default"}, ...list], {
+    hold: holdSpk, key: p => p.entity_id, empty: list.length ? "" : t("empty"),
+    make: p => {
+      if(p.entity_id === "_default"){
+        const row = mk("div", "spk", `<div class="head" style="align-items:center"><div class="n"><b>${t("dDefault")}</b></div><button class="b sm">${t("settings")}</button></div>`);
+        row.querySelector("button").onclick = () => toggleProfile(row, "_default");
+        return row;
+      }
+      const row = mk("div", "spk", `<div class="head">
+        <button class="star-btn"></button>
+        <div class="n"><div><span class="dot"></span> <b></b></div><div class="badges"></div></div>
+        <div class="acts ind"><button class="b sm cal">${t("calibrate")}</button><button class="b sm set">${t("settings")}</button><button class="b sm hid"></button></div></div>`);
+      const star = row.querySelector(".star-btn"), hid = row.querySelector(".hid"), cal = row.querySelector(".cal"); star.setAttribute("aria-label", t("favs"));
+      star.onclick = () => busy(star, async () => {
+        const p = row._it, want = !p.favorite; setStar(star, want); holdSpk = true;          // optimistic; the row stays where it is
+        try{ await post("speaker",{entity_id:p.entity_id,favorite:want}); await refresh(); }catch(e){ setStar(star, p.favorite); toast(e.message,true); }
+      });
+      hid.onclick = () => busy(hid, async () => { const p = row._it; try{ await post("speaker",{entity_id:p.entity_id,hidden:!p.hidden}); await refresh(); }catch(e){toast(e.message,true)} });
+      cal.onclick = () => {
+        if(!confirm(t("calConfirm"))) return;
+        busy(cal, async () => {
+          const p = row._it; setText(cal, t("calRunning"));
+          try{ const r = await post("speaker/calibrate",{entity_id:p.entity_id});
+            toast(r.measured ? t("calDone") + ` (${r.start_latency}s)` : t("calNoMeasure")); await refresh(); }
+          catch(e){ toast(e.message,true); }
+          finally{ setText(cal, t("calibrate")); }
+        });
+      };
+      row.querySelector(".set").onclick = () => toggleProfile(row, row._it.entity_id);
+      return row;
+    },
+    upd: (row, p) => {
+      row.classList.toggle("dup", !!p.duplicate_of);
+      if(p.entity_id !== "_default"){
+        const model = [p.manufacturer, p.model].filter(Boolean).join(" ");
+        const cal = p.calibration && [t("calAt") + " " + new Date(p.calibration.at*1000).toLocaleDateString() + (p.calibration.start_latency!=null ? ` · ${p.calibration.start_latency}s` : "")];
+        const star = row.querySelector(".star-btn"); if(!star.disabled) setStar(star, p.favorite);
+        row.querySelector(".dot").className = "dot " + p.state;
+        setText(row.querySelector("b"), p.name);
+        setHTML(row.querySelector(".badges"), bdg([[esc(p.entity_id)], p.platform && [esc(p.platform)], model && [esc(model)], [p.announce?t("announceOk"):t("announceNo"), p.announce?"":"warn"], p.state==="unavailable" && [t("unavail"), "err"], p.duplicate_of && [t("dupOf") + " " + esc(p.duplicate_of), "warn"], p.hidden && [t("hiddenB")], cal && [esc(cal[0])]]));
+        const hid = row.querySelector(".hid"); if(!hid.disabled){ setText(hid, p.hidden ? t("restore") : t("remove")); hid.classList.toggle("mut", !p.hidden); }
+      }
+      profileSlot(row, p.entity_id);
+    }
   });
 }
-$("spkHidden").onchange = renderSpk;
-$("spkScan").onclick = async () => { try{ await refresh(); toast(S.players.length + " ✓"); }catch(e){toast(e.message,true)} };
-$("spkDup").onclick = async () => {
+$("spkHidden").onchange = () => { holdSpk = false; renderSpk(); };
+$("spkScan").onclick = () => busy($("spkScan"), async () => { try{ await refresh(); toast(S.players.length + " ✓"); }catch(e){toast(e.message,true)} });
+$("spkDup").onclick = () => busy($("spkDup"), async () => {
   try{ const r = await post("speakers/dedupe",{});
     toast(r.hidden.length ? t("hiddenDups") + r.hidden.length : t("noDup")); await refresh(); }catch(e){toast(e.message,true)}
-};
+});
 
+let helpSig = "";
 async function renderHelp(){
   const pl = lang==="pl";
   let info = {slug:"",path:"",deeplink:"",standalone:S.base_url+"/?quick=1",notify:[],api_enabled:S.api_enabled};
   try{ info = await api("launcher"); }catch{}
+  const sig = JSON.stringify([info, S.base_url, (S.tts[0]||{}).entity_id, S.api_enabled]);
+  if(sig === helpSig) return;       // nothing changed: keep what the person has open / selected
+  helpSig = sig;
   const base = esc(S.base_url || "http://IP_HA:8765");
-  const key = info.api_enabled ? "" : `<p class="rec">${pl?"Najpierw ustaw „Klucz API” w konfiguracji dodatku.":"First set the “API key” in the add-on configuration."}</p>`;
+  const nokey = info.api_enabled ? "" : `<div class="hint rec">${pl?"Najpierw ustaw „Klucz API” w konfiguracji dodatku.":"First set the “API key” in the add-on configuration."}</div>`;
   const sample = esc(JSON.stringify({targets:["media_player.kuchnia"],message:pl?"Obiad gotowy":"Dinner is ready",tts_entity:(S.tts[0]||{}).entity_id||"tts.piper"},null,1));
   const dl = esc(info.deeplink || "homeassistant://navigate/hassio/ingress/<slug>");
   const opts = info.notify.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("") || `<option value="">—</option>`;
-  $("helpBox").innerHTML = pl ? `
-  <h2>Jeden skrypt, który otwiera cały interfejs</h2>
-  <p>Zamiast skryptów do pojedynczych dźwięków: jeden skrypt/skrót otwiera pełnoekranowy interfejs ogłaszania, a wybór głośników i dźwięków robisz już na miejscu (zakładka Szybkie: ulubione dźwięki jako duże kafelki + pole tekstu).</p>
-  <div class="prof" id="lnch">
-    <label class="f">Telefon (usługa powiadomień HA)</label><select id="lnPhone">${opts}</select>
-    <div class="row"><div class="grow"><label class="f">System</label><select id="lnOs"><option value="ios">iPhone</option><option value="android">Android</option></select></div>
-    <div class="grow"><label class="f">Co otworzyć</label><select id="lnTarget"><option value="ingress">Panel w aplikacji Home Assistant</option><option value="standalone">Osobny interfejs (port 8765)</option></select></div></div>
-    <div class="row"><button class="b" id="lnGo">Utwórz skrypt „HAnnounce: open interface”</button></div>
-    <div class="hint">Skrypt wysyła na telefon powiadomienie „dotknij, by otworzyć” (Android: otwiera od razu). Nic nie jest odtwarzane. Uruchom go widżetem „Skrypty” aplikacji HA na ekranie blokady.</div>
-  </div>
-  <h2>Bez powiadomienia: skrót iOS otwierający interfejs od razu</h2>
-  <p>Aplikacja <b>Skróty</b> → nowy skrót → akcja <b>Otwórz URL</b> → <code>${dl}</code>. Dodaj go do ekranu blokady (widżet Skrótów), przycisku Action, Stuknięcia w tył albo powiedz „Hej Siri, ogłoś”.</p>
-  <h2>Osobna aplikacja</h2>${key}
-  <p>Safari → <code>${base}/?quick=1</code> → <b>Udostępnij → Do ekranu początkowego</b>. Otwiera się na pełnym ekranie, tylko widok Szybkie. Przy pierwszym uruchomieniu wpisz Klucz API.</p>
-  <h2>Siri i Skróty z własnym tekstem (API)</h2>${key}
-  <p>Akcja <b>Pobierz zawartość URL</b>: URL <code>${base}/api/announce</code>, metoda <b>POST</b>, nagłówki <code>Authorization: Bearer TWÓJ_KLUCZ</code> i <code>Content-Type: application/json</code>, treść JSON:</p>
-  <pre>${sample}</pre>
-  <h2>Skrypt lub scena razem z ogłoszeniem</h2>
-  <p>Pola „Uruchom przed/po” w Opcjach (np. przyciemnij światło przed, przywróć po). W API: <code>before_action</code>, <code>after_action</code>.</p>`
-  : `
-  <h2>One script that opens the whole interface</h2>
-  <p>Instead of scripts for single sounds: one script/shortcut opens the full-screen announcement interface and you pick speakers and sounds there (Quick tab: favorite sounds as big tiles + a text box).</p>
-  <div class="prof" id="lnch">
-    <label class="f">Phone (HA notify service)</label><select id="lnPhone">${opts}</select>
-    <div class="row"><div class="grow"><label class="f">System</label><select id="lnOs"><option value="ios">iPhone</option><option value="android">Android</option></select></div>
-    <div class="grow"><label class="f">Open</label><select id="lnTarget"><option value="ingress">Panel inside the Home Assistant app</option><option value="standalone">Standalone interface (port 8765)</option></select></div></div>
-    <div class="row"><button class="b" id="lnGo">Create script “HAnnounce: open interface”</button></div>
-    <div class="hint">The script sends a “tap to open” notification to the phone (Android opens it directly). Nothing is played. Run it from the HA app “Scripts” widget on the lock screen.</div>
-  </div>
-  <h2>No notification: iOS shortcut that opens it instantly</h2>
-  <p><b>Shortcuts</b> app → new shortcut → <b>Open URL</b> → <code>${dl}</code>. Add it to the lock screen (Shortcuts widget), Action button, Back Tap, or say “Hey Siri, Announce”.</p>
-  <h2>Standalone app</h2>${key}
-  <p>Safari → <code>${base}/?quick=1</code> → <b>Share → Add to Home Screen</b>. Opens full screen with the Quick view only. Enter the API key on first launch.</p>
-  <h2>Siri & Shortcuts with your own text (API)</h2>${key}
-  <p><b>Get Contents of URL</b>: URL <code>${base}/api/announce</code>, method <b>POST</b>, headers <code>Authorization: Bearer YOUR_KEY</code> and <code>Content-Type: application/json</code>, JSON body:</p>
-  <pre>${sample}</pre>
-  <h2>Script or scene together with the announcement</h2>
-  <p>“Run before/after” in Options (e.g. dim lights before, restore after). In the API: <code>before_action</code>, <code>after_action</code>.</p>`;
-  $("lnGo").onclick = async () => {
-    if(!$("lnPhone").value) return toast(pl?"Nie znaleziono telefonu z aplikacją HA (mobile_app_*).":"No phone with the HA app found (mobile_app_*).",true);
-    try{ const r = await post("launcher",{notify:$("lnPhone").value,platform:$("lnOs").value,target:$("lnTarget").value});
-      showScriptResult(r, [[t("w1"), r.entity_id], [t("w2"), info.deeplink || ""], [t("w3"), info.standalone]]); }
-    catch(e){ toast(e.message,true); }
+  const X = pl ? {
+    title:"Skrypt otwierający interfejs", lead:"Jeden skrypt lub skrót otwiera ten interfejs; głośniki i dźwięki wybierasz na miejscu.",
+    phone:"Telefon (usługa powiadomień HA)", os:"System", open:"Co otworzyć", ingress:"Panel w aplikacji HA", standalone:"Osobny (port 8765)",
+    create:"Utwórz skrypt „HAnnounce: open interface”", noPhone:"Nie znaleziono telefonu z aplikacją HA (mobile_app_*).",
+    secs:[
+      ["Jak działa skrypt", "Skrypt wysyła na telefon powiadomienie „dotknij, by otworzyć” (Android: otwiera od razu). Nic nie jest odtwarzane. Uruchom go widżetem „Skrypty” aplikacji HA na ekranie blokady. W zakładce Szybkie: pole tekstu i ulubione dźwięki jako kafelki."],
+      ["Bez powiadomienia: skrót iOS otwierający interfejs od razu", `Aplikacja <b>Skróty</b> → nowy skrót → akcja <b>Otwórz URL</b> → <code>${dl}</code>. Dodaj go do ekranu blokady (widżet Skrótów), przycisku Action, Stuknięcia w tył albo powiedz „Hej Siri, ogłoś”.`],
+      ["Osobna aplikacja", `Safari → <code>${base}/?quick=1</code> → <b>Udostępnij → Do ekranu początkowego</b>. Otwiera się na pełnym ekranie, tylko widok Szybkie. Przy pierwszym uruchomieniu wpisz Klucz API.`],
+      ["Siri i Skróty z własnym tekstem (API)", `Akcja <b>Pobierz zawartość URL</b>: URL <code>${base}/api/announce</code>, metoda <b>POST</b>, nagłówki <code>Authorization: Bearer TWÓJ_KLUCZ</code> i <code>Content-Type: application/json</code>, treść JSON:<pre>${sample}</pre>`],
+      ["Skrypt lub scena razem z ogłoszeniem", `Pola „Uruchom przed/po” w Opcjach (np. przyciemnij światło przed, przywróć po). W API: <code>before_action</code>, <code>after_action</code>.`]]
+  } : {
+    title:"Script that opens the interface", lead:"One script or shortcut opens this interface; you pick speakers and sounds there.",
+    phone:"Phone (HA notify service)", os:"System", open:"Open", ingress:"Panel in the HA app", standalone:"Standalone (port 8765)",
+    create:"Create script “HAnnounce: open interface”", noPhone:"No phone with the HA app found (mobile_app_*).",
+    secs:[
+      ["How the script works", "The script sends a “tap to open” notification to the phone (Android opens it directly). Nothing is played. Run it from the HA app “Scripts” widget on the lock screen. Quick tab: a text box and your favorite sounds as tiles."],
+      ["No notification: iOS shortcut that opens it instantly", `<b>Shortcuts</b> app → new shortcut → <b>Open URL</b> → <code>${dl}</code>. Add it to the lock screen (Shortcuts widget), Action button, Back Tap, or say “Hey Siri, Announce”.`],
+      ["Standalone app", `Safari → <code>${base}/?quick=1</code> → <b>Share → Add to Home Screen</b>. Opens full screen with the Quick view only. Enter the API key on first launch.`],
+      ["Siri & Shortcuts with your own text (API)", `<b>Get Contents of URL</b>: URL <code>${base}/api/announce</code>, method <b>POST</b>, headers <code>Authorization: Bearer YOUR_KEY</code> and <code>Content-Type: application/json</code>, JSON body:<pre>${sample}</pre>`],
+      ["Script or scene together with the announcement", `“Run before/after” in Options (e.g. dim lights before, restore after). In the API: <code>before_action</code>, <code>after_action</code>.`]]
+  };
+  $("helpBox").innerHTML = `<div class="part"><div class="sec">${X.title}</div>
+    <div class="hint" style="margin:0">${X.lead}</div>
+    <label class="f">${X.phone}</label><select id="lnPhone">${opts}</select>
+    <div class="row"><div class="grow w1"><label class="f">${X.os}</label><select id="lnOs"><option value="ios">iPhone</option><option value="android">Android</option></select></div>
+    <div class="grow w2"><label class="f">${X.open}</label><select id="lnTarget"><option value="ingress">${X.ingress}</option><option value="standalone">${X.standalone}</option></select></div></div>
+    <div class="btnrow"><button class="b" id="lnGo">${X.create}</button></div>${nokey}</div>
+    <details class="help"><summary>${t("help")}</summary><div>${X.secs.map(([h,b]) => `<h3>${h}</h3><div class="hint">${b}</div>`).join("")}</div></details>`;
+  $("lnGo").onclick = () => {
+    if(!$("lnPhone").value) return toast(X.noPhone,true);
+    busy($("lnGo"), async () => {
+      try{ const r = await post("launcher",{notify:$("lnPhone").value,platform:$("lnOs").value,target:$("lnTarget").value});
+        showScriptResult(r, [[t("w1"), r.entity_id], [t("w2"), info.deeplink || ""], [t("w3"), info.standalone]]); }
+      catch(e){ toast(e.message,true); }
+    });
   };
 }
-
 
 // ---- live updates: the interface refreshes itself, and tells you when a new add-on version exists
 let lastP = "", lastL = "";
@@ -958,8 +1078,7 @@ async function live(){
     const n = await api("state");
     const p = sigP(n), l = sigL(n);
     S = n;
-    if(p !== lastP){ lastP = p; renderChips();
-      if($("p-spk").classList.contains("on") && !document.activeElement?.closest("#spkList")) renderSpk(); }
+    if(p !== lastP){ lastP = p; renderChips(); if($("p-spk").classList.contains("on")) renderSpk(); }
     if(l !== lastL){ lastL = l; renderQuick(); renderLib(); }
   }catch{}
 }
@@ -967,13 +1086,13 @@ async function checkVersion(){
   try{
     const box = $("updBanner"); $("addonLogBox").hidden = !(S.admin && !document.body.classList.contains("kiosk"));
     if(!S.admin || document.body.classList.contains("kiosk")){ box.hidden = true; $("verInfo").textContent = ""; return; }   // only the HA admin sees version / update info
-    const v = await api("version"), pl = lang==="pl";
+    const v = await api("version");
     $("verInfo").textContent = v.version ? `v${v.version} · ` + (v.auto_update ? t("updAuto") : t("updManual")) : "";
     if(v.update_available){
-      box.hidden = false;
       const inFrame = window.top !== window;
-      box.innerHTML = `<b>${t("updNew")}: v${esc(v.latest)}</b> <small>(${t("updHave")} v${esc(v.version)})</small><div class="hint">${t("updHow")}</div>` +
-        (inFrame && v.addon_path ? `<div class="row"><a class="b sm" style="text-decoration:none" href="${esc(v.addon_path)}" target="_top">${t("updOpen")}</a></div>` : "");
+      box.innerHTML = `<b>${t("updNew")}: v${esc(v.latest)}</b> <small>(${t("updHave")} v${esc(v.version)})</small><div class="hint" style="margin:0">${t("updHow")}</div>` +
+        (inFrame && v.addon_path ? `<div><a class="b sm" href="${esc(v.addon_path)}" target="_top">${t("updOpen")}</a></div>` : "");
+      box.hidden = false;
     } else box.hidden = true;
   }catch{}
 }
@@ -983,8 +1102,11 @@ document.addEventListener("visibilitychange", () => { if(!document.hidden){ live
 
 if(new URLSearchParams(location.search).has("quick")) document.body.classList.add("kiosk");
 showTab((location.hash||"").slice(1) || "quick");
-refresh().then(()=>{ lastP=sigP(S); lastL=sigL(S); checkVersion(); }).catch(e => toast(e.message,true));
-$("addonLogBtn").onclick = async () => { const pre = $("addonLog"); if(!pre.hidden){ pre.hidden = true; return; } try{ pre.textContent = (await api("addonlog")).lines.join("\n"); pre.hidden = false; pre.scrollTop = pre.scrollHeight; }catch(e){ toast(e.message,true); } };
+refresh().then(()=>{ lastP=sigP(S); lastL=sigL(S); checkVersion();
+  if(S.admin && !document.body.classList.contains("kiosk")){ renderTokens(); renderLiveCfg(); renderHelp(); }   // admin panel: prepare the other tabs in the background, so they open without content popping in
+}).catch(e => toast(e.message,true)).finally(() => document.body.classList.add("ready"));
+setTimeout(() => document.body.classList.add("ready"), 4000);
+$("addonLogBtn").onclick = () => busy($("addonLogBtn"), async () => { const pre = $("addonLog"); if(!pre.hidden){ pre.hidden = true; return; } try{ pre.textContent = (await api("addonlog")).lines.join("\n"); pre.hidden = false; pre.scrollTop = pre.scrollHeight; }catch(e){ toast(e.message,true); } });
 </script>
 </body>
 </html>
