@@ -3,7 +3,7 @@
 "use strict";
 if (window.__teoCards) return;
 window.__teoCards = 1;
-const VERSION = "1.0.2";
+const VERSION = "1.0.3";
 window.TEO_CARDS_VERSION = VERSION;
 
 /* ---------- helpers ---------- */
@@ -90,11 +90,11 @@ const CSS = `
 :host{display:block;--teo-r:24px;--c:var(--primary-color,#03a9f4);--ic:var(--state-inactive-color,var(--secondary-text-color,#9e9e9e));font-family:var(--ha-font-family-body,var(--paper-font-body1_-_font-family,Roboto,Noto,system-ui,sans-serif));-webkit-tap-highlight-color:transparent;color:var(--primary-text-color,#212121)}
 *{box-sizing:border-box}
 button{font:inherit;color:inherit}
-.card{position:relative;overflow:hidden;border-radius:var(--teo-r);background:var(--ha-card-background,var(--card-background-color,#fff));border:var(--ha-card-border-width,1px) solid var(--ha-card-border-color,var(--divider-color,rgba(0,0,0,.12)));box-shadow:var(--ha-card-box-shadow,none);transition:background .35s,border-color .35s,box-shadow .35s;isolation:isolate}
-.card::before{content:"";position:absolute;inset:0;z-index:-1;background:color-mix(in srgb,var(--c) var(--tint,0%),transparent);transition:background .25s}
+.card{position:relative;overflow:hidden;border-radius:var(--teo-r);background:var(--ha-card-background,var(--card-background-color,#fff));border:var(--ha-card-border-width,1px) solid var(--ha-card-border-color,var(--divider-color,rgba(0,0,0,.12)));box-shadow:var(--ha-card-box-shadow,none);transition:background .1s;isolation:isolate}
+.card::before{content:"";position:absolute;inset:0;z-index:-1;background:color-mix(in srgb,var(--c) var(--tint,0%),transparent);transition:background .1s}
 .card.on{--tint:10%;--ic:var(--c)}
 .hd{display:flex;align-items:center;gap:12px;padding:14px;min-height:72px}
-.ico{position:relative;flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--ic);background:color-mix(in srgb,var(--ic) 17%,transparent);--mdc-icon-size:24px;cursor:pointer;transition:color .3s,background .3s,box-shadow .4s;overflow:hidden;outline:none}
+.ico{position:relative;flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--ic);background:color-mix(in srgb,var(--ic) 17%,transparent);--mdc-icon-size:24px;cursor:pointer;transition:color .1s,background .1s;overflow:hidden;outline:none}
 .ico ha-icon{display:flex}
 .ico img,.av{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .tx{min-width:0;flex:1;cursor:pointer;outline:none;border-radius:12px}
@@ -102,27 +102,27 @@ button{font:inherit;color:inherit}
 .st{font-size:13px;line-height:18px;color:var(--secondary-text-color,#727272);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card.on .st{color:color-mix(in srgb,var(--primary-text-color,#212121) 72%,transparent)}
 .ico:focus-visible,.tx:focus-visible,.btn:focus-visible,.chip:focus-visible,.sw:focus-visible,.aa:focus-visible{outline:2px solid var(--c);outline-offset:2px}
-.sw{flex:none;position:relative;width:46px;height:28px;border-radius:14px;border:0;padding:0;cursor:pointer;background:color-mix(in srgb,var(--secondary-text-color,#727272) 30%,transparent);transition:background .25s}
-.sw::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .25s cubic-bezier(.3,1.3,.5,1)}
+.sw{flex:none;position:relative;width:46px;height:28px;border-radius:14px;border:0;padding:0;cursor:pointer;background:color-mix(in srgb,var(--secondary-text-color,#727272) 30%,transparent);transition:background .1s}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .12s}
 .sw[aria-checked=true]{background:var(--c)}.sw[aria-checked=true]::after{transform:translateX(18px)}
 .val{font-size:22px;font-weight:600;white-space:nowrap;letter-spacing:-.01em}.val small{font-size:13px;font-weight:500;color:var(--secondary-text-color,#727272);margin-left:2px}
 .ct{display:flex;flex-direction:column;gap:10px;padding:0 14px 14px}
 .row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1 1 0;min-width:0}
 .sl{position:relative;display:block;height:44px;border-radius:16px;background:color-mix(in srgb,var(--c) 18%,transparent);overflow:hidden;cursor:pointer;touch-action:pan-y;--p:0%}
-.sl .fl{position:absolute;inset:0 auto 0 0;width:var(--p);background:var(--c);transition:width .18s}
+.sl .fl{position:absolute;inset:0 auto 0 0;width:var(--p);background:var(--c);transition:none}
 .sl.drag .fl,.sl.drag .th{transition:none}
-.sl .th{position:absolute;top:50%;left:clamp(10px,calc(var(--p) - 10px),calc(100% - 14px));width:4px;height:20px;margin-top:-10px;border-radius:2px;background:#fff;box-shadow:0 0 3px rgba(0,0,0,.45);pointer-events:none;transition:left .18s}
+.sl .th{position:absolute;top:50%;left:clamp(10px,calc(var(--p) - 10px),calc(100% - 14px));width:4px;height:20px;margin-top:-10px;border-radius:2px;background:#fff;box-shadow:0 0 3px rgba(0,0,0,.45);pointer-events:none;transition:left .1s}
 .sl.hue,.sl.kel{background:linear-gradient(90deg,#f44,#fa0,#ee0,#4d4,#0dd,#46f,#d4d,#f44)}.sl.kel{background:linear-gradient(90deg,#ffa43a,#ffd9a5,#fff,#cfe3ff,#8fb8ff)}
 .sl.hue .fl,.sl.kel .fl{display:none}.sl.hue .th,.sl.kel .th{width:12px;height:12px;margin:-6px 0 0;border-radius:50%;border:3px solid #fff;background:transparent;box-shadow:0 0 4px rgba(0,0,0,.5)}
 .sl input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:pointer}
 .sl:focus-within{outline:2px solid var(--c);outline-offset:2px}
 .sl.thin{height:32px;border-radius:12px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 14px;border:0;border-radius:16px;cursor:pointer;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--primary-text-color,#212121);font-size:14px;font-weight:600;--mdc-icon-size:20px;transition:background .2s,transform .1s;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 14px;border:0;border-radius:16px;cursor:pointer;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--primary-text-color,#212121);font-size:14px;font-weight:600;--mdc-icon-size:20px;transition:background .1s,transform .08s;white-space:nowrap}
 .btn:hover{background:color-mix(in srgb,var(--c) 24%,transparent)}.btn:active{transform:scale(.96)}
 .btn.on{background:var(--c);color:var(--teo-on,#fff)}.btn[disabled]{opacity:.4;pointer-events:none}
 .btn.ic{flex:0 0 44px;padding:0}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
-.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px 0 10px;border-radius:18px;cursor:pointer;background:color-mix(in srgb,var(--c) 12%,var(--ha-card-background,var(--card-background-color,#fff)));border:1px solid var(--ha-card-border-color,var(--divider-color,rgba(0,0,0,.12)));font-size:13px;font-weight:600;--mdc-icon-size:18px;white-space:nowrap;transition:background .2s,transform .1s;color:var(--primary-text-color,#212121);outline:none}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px 0 10px;border-radius:18px;cursor:pointer;background:color-mix(in srgb,var(--c) 12%,var(--ha-card-background,var(--card-background-color,#fff)));border:1px solid var(--ha-card-border-color,var(--divider-color,rgba(0,0,0,.12)));font-size:13px;font-weight:600;--mdc-icon-size:18px;white-space:nowrap;transition:background .1s,transform .08s;color:var(--primary-text-color,#212121);outline:none}
 .chip:active{transform:scale(.96)}.chip.on{background:var(--c);border-color:transparent;color:var(--teo-on,#fff)}
 .chip ha-icon{display:flex;color:var(--cc,var(--c))}.chip.on ha-icon{color:inherit}
 .chip.sm{height:32px;padding:0 12px;font-weight:500}
@@ -176,11 +176,39 @@ class Base extends HTMLElement {
   get hass() { return this._h; }
   set hass(h) { const o = this._h; this._h = h; if (this._cfg && (this._dyn || this._chg(o, h))) this._fresh(); }
   _chg(o, h) { if (!o || o.locale !== h.locale || o.language !== h.language) return true; return this._ids().some(i => o.states[i] !== h.states[i]); }
+  /* optimistic UI: show the expected result of a tap at once, drop it as soon as Home Assistant reports the real state (or after 2.5 s) */
+  _optHass() {
+    const h = this._h, o = this._opt; if (!o) return h;
+    const now = Date.now(); let st = null;
+    for (const id in o) {
+      const e = o[id];
+      if (now > e.until || h.states[id] !== e.base) { delete o[id]; continue; }
+      if (!st) { st = Object.create(h.states); }
+      st[id] = {...e.base, state: e.state, attributes: {...e.base.attributes, ...e.attrs}};
+    }
+    if (!st) return h;
+    const n = Object.create(h); n.states = st; return n;
+  }
+  _predict(d, s, data) {
+    const ids = arr(data.entity_id), h = this._h; if (ids.length !== 1 || !h.states[ids[0]]) return;
+    const id = ids[0], base = h.states[id], cur = base.state, attrs = {};
+    let ex = null;
+    if (s === "turn_on") { ex = "on"; if (data.brightness_pct != null) attrs.brightness = Math.round(data.brightness_pct * 2.55); if (data.brightness != null) attrs.brightness = data.brightness; }
+    else if (s === "turn_off") ex = "off";
+    else if (s === "toggle") ex = cur === "on" ? "off" : cur === "off" ? "on" : null;
+    else if (s === "open_cover") ex = "opening"; else if (s === "close_cover") ex = "closing";
+    else if (s === "lock") ex = "locked"; else if (s === "unlock") ex = "unlocked";
+    else if (s === "set_cover_position" && data.position != null) { attrs.current_position = data.position; ex = cur; }
+    if (ex == null) return;
+    (this._opt = this._opt || {})[id] = {state: ex, attrs, base, until: Date.now() + 2500};
+    this._html = ""; this._fresh();
+    clearTimeout(this._ot); this._ot = setTimeout(() => { this._html = ""; this._fresh(); }, 2600);
+  }
   _fresh() {
     if (!this._h) return;
     if (this._drag) { this._dirty = true; return; }
     let html;
-    try { html = this._tpl(this._h, this._cfg); } catch (e) { console.error("[teo-cards]", e); html = `<div class="card"><div class="err">${esc(e.message)}</div></div>`; }
+    try { html = this._tpl(this._optHass(), this._cfg); } catch (e) { console.error("[teo-cards]", e); html = `<div class="card"><div class="err">${esc(e.message)}</div></div>`; }
     if (html === this._html) return;
     this._html = html;
     const sel = 'button,input,select,[tabindex="0"]', ae = this._r.activeElement;
@@ -194,7 +222,7 @@ class Base extends HTMLElement {
     else if (!this._tick && this._iv) { clearInterval(this._iv); this._iv = 0; }
   }
   connectedCallback() { if (this._cfg && this._h) this._post(); }
-  disconnectedCallback() { clearInterval(this._iv); this._iv = 0; clearTimeout(this._hold); clearTimeout(this._settle); clearTimeout(this._tt); }
+  disconnectedCallback() { clearInterval(this._iv); this._iv = 0; clearTimeout(this._hold); clearTimeout(this._settle); clearTimeout(this._tt); clearTimeout(this._ot); clearTimeout(this._ls); }
   getCardSize() { return 2; }
   /* --- interaction --- */
   _acfg(t) { return {entity: this._cfg.entity, tap_action: this._cfg.tap_action, hold_action: this._cfg.hold_action, double_tap_action: this._cfg.double_tap_action, def: {tap: {action: "more-info"}, hold: {action: "none"}}}; }
@@ -228,25 +256,30 @@ class Base extends HTMLElement {
   _svc(t) {
     const [d, s] = t.dataset.s.split("."), data = t.dataset.d ? JSON.parse(t.dataset.d) : {};
     if (!("entity_id" in data) && t.dataset.n == null) data.entity_id = t.dataset.e || this._cfg.entity;
-    haptic("light"); this._h.callService(d, s, data);
+    haptic("light"); this._predict(d, s, data); this._h.callService(d, s, data);
   }
   _onInput(e) {
     const i = e.target;
-    if (i.type === "range") { this._drag = true; clearTimeout(this._settle); const s = i.closest(".sl"); s.classList.add("drag"); s.style.setProperty("--p", pctOf(+i.value, +i.min, +i.max) + "%"); if (this._live) this._live(i); }
+    if (i.type === "range") { this._drag = true; clearTimeout(this._settle); const s = i.closest(".sl"); s.classList.add("drag"); s.style.setProperty("--p", pctOf(+i.value, +i.min, +i.max) + "%"); if (this._live) this._live(i); if (i.dataset.s) this._liveSend(i); }
   }
   _onChange(e) {
     const i = e.target;
     if (i.type === "range") { if (i.dataset.s) this._slide(i); else if (this._slideCustom) this._slideCustom(i); clearTimeout(this._settle); this._settle = setTimeout(() => { this._drag = false; if (this._dirty) { this._dirty = false; this._fresh(); } }, 900); }
     else if (i.tagName === "SELECT" && i.dataset.s) { const [d, s] = i.dataset.s.split("."); this._h.callService(d, s, {entity_id: i.dataset.e || this._cfg.entity, [i.dataset.f]: i.value}); }
   }
-  _slide(i) {
+  _liveSend(i) {   // send while dragging (at most every 150 ms) so the device follows the finger
+    const now = Date.now(); clearTimeout(this._ls);
+    const go = () => { this._lastLive = Date.now(); this._slide(i, true); };
+    if (now - (this._lastLive || 0) >= 150) go(); else this._ls = setTimeout(go, 150 - (now - this._lastLive));
+  }
+  _slide(i, live) {
     let [d, s] = i.dataset.s.split("."), v = +i.value;
     const data = {entity_id: i.dataset.e || this._cfg.entity};
     if (i.dataset.z && v === 0) { [d, s] = i.dataset.z.split("."); }
     else if (i.dataset.f === "hs_color") data.hs_color = [v, +i.dataset.sat || 100];
     else data[i.dataset.f] = v;
     if (i.dataset.x && !(i.dataset.z && v === 0)) Object.assign(data, JSON.parse(i.dataset.x));
-    haptic("light"); this._h.callService(d, s, data);
+    if (!live) haptic("light"); this._h.callService(d, s, data);
   }
 }
 Base.prototype.shell = function (cls, style, inner, glow) { return `<div class="card ${cls}" style="${style}">${inner}</div>`; };
@@ -370,7 +403,7 @@ class TeoCard extends Base {
     this._tt = setTimeout(() => {
       const d = {entity_id: this._cfg.entity}; for (const x in this._tg) d[x] = this._tg[x];
       this._tg = null; this._h.callService("climate", "set_temperature", d);
-    }, 700);
+    }, 450);
     haptic("light");
   }
   _tpl(h, c) {
@@ -669,7 +702,7 @@ const MORE = new Set(["climate", "media_player", "lock", "vacuum", "camera", "se
 class TeoRoom extends Base {
   static css = `.hd{padding:16px 16px 10px;align-items:flex-start}.ico{width:48px;height:48px}.bd{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .rb{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;padding:2px 14px 14px}
-.rbt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px 8px;border-radius:18px;cursor:pointer;background:color-mix(in srgb,var(--secondary-text-color,#727272) 10%,transparent);--mdc-icon-size:24px;min-width:0;outline:none;transition:background .25s,transform .1s;color:var(--secondary-text-color,#727272)}
+.rbt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px 8px;border-radius:18px;cursor:pointer;background:color-mix(in srgb,var(--secondary-text-color,#727272) 10%,transparent);--mdc-icon-size:24px;min-width:0;outline:none;transition:background .1s,transform .08s;color:var(--secondary-text-color,#727272)}
 .rbt:active{transform:scale(.95)}.rbt.on{background:color-mix(in srgb,var(--bc) 22%,transparent);color:var(--bc)}.rbt ha-icon{display:flex}
 .rbt span{font-size:11px;line-height:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--primary-text-color,#212121);font-weight:500}
 .lt{flex:none;align-self:flex-start}.lt.btn{min-height:40px;border-radius:20px}`;
