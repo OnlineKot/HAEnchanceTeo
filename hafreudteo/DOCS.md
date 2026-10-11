@@ -9,6 +9,12 @@ A small, calm companion for a cat (made for Freud). Open **Freud** in the sideba
 - **History** of everything, with delete.
 - Works for the whole household: the panel is open to every Home Assistant user (not only admins). Set *Who is logging on this device* so entries carry a name.
 
+## Behaviour log
+*Behaviour → Add* on the Today tab: pick a kind (vomiting, poor appetite, limping, hiding, drinking a lot, litter box problem, night yowling, sneezing, other), add a note, save. Entries appear in History and `sensor.<name>_behavior` counts the last 7 days – handy to show the vet.
+
+## Cat in the garden
+Settings → *Cat in the garden*: choose the entity of your camera (animal / cat / motion detection – a binary sensor, an event entity, a counter...). Whenever it triggers, the add-on immediately logs "a cat was seen" with the camera's name. It does **not** say it is Freud – the camera only knows it was a cat. A cooldown (default 10 min) avoids repeated entries. `sensor.<name>_garden_cat` holds the last time and how many times today.
+
 ## Reminders on the phone
 Set `notify_services` (e.g. `mobile_app_iphone`) in the add-on Configuration. Reminders arrive in the Companion app with a **Done** button (also on the lock screen); pressing it logs the task and clears the notification on the other phones. Quiet hours (default 22:00–07:00) and the repeat interval are in Settings.
 

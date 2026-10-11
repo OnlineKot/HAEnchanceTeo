@@ -32,12 +32,15 @@ HA_WS = os.environ.get("HFT_HA_WS") or (HA[:-4] if HA.endswith("/api") else HA).
 TOKEN = os.environ.get("SUPERVISOR_TOKEN", "")
 STORE, TOK_FILE, AVATAR = DATA / "freud.json", DATA / "tokens.json", DATA / "avatar.bin"
 MAX_EVENTS, DUP_MIN = 3000, 20
+BEH_KINDS = ["vomit", "appetite", "limp", "hiding", "thirst", "litter", "night", "sneeze", "other"]
+NEG = {"unavailable", "unknown", "off", "none", "clear", "idle", "0", "", "not_home", "no_motion", "false"}
 TICK = int(os.environ.get("HFT_TICK", 60))
 
 log = logging.getLogger("hafreudteo")
 
 DEFAULT_CFG = {
     "name": "", "birthday": "", "birthday_approx": False, "senior_applied": False, "bday_notified": 0, "portion_g": 40, "quiet": ["22:00", "07:00"], "repeat_min": 60, "who": "",
+    "cams": {"entities": [], "cooldown_min": 10},
     "tasks": {
         "feed": {"enabled": True, "remind": True, "times": ["07:00", "18:00"], "grace_min": 30},
         "water": {"enabled": True, "remind": False, "every_h": 24},
@@ -51,11 +54,11 @@ DEFAULT_CFG = {
 }
 TASK_IDS = list(DEFAULT_CFG["tasks"])
 LABELS = {
-    "pl": {"feed": "Karmienie", "water": "Woda", "litter": "Kuweta", "litter_full": "Kuweta - pełna wymiana", "flea": "Pchły i kleszcze",
+    "pl": {"feed": "Karmienie", "water": "Woda", "garden_cat": "Kot w ogrodzie", "behavior": "Zachowanie", "litter": "Kuweta", "litter_full": "Kuweta - pełna wymiana", "flea": "Pchły i kleszcze",
            "deworm": "Odrobaczanie", "vaccine": "Szczepienie", "vet": "Wizyta u weterynarza", "weight": "Waga",
            "done": "Zrobione", "remind": "{cat}: {task}", "fed_today": "dziś {n}/{m}", "ago": "{x} temu", "never": "brak wpisów",
            "recent": "{cat} był karmiony {m} min temu ({who}).", "ok": "Wszystko w porządku."},
-    "en": {"feed": "Feeding", "water": "Water", "litter": "Litter box", "litter_full": "Litter box - full change", "flea": "Flea and tick",
+    "en": {"feed": "Feeding", "water": "Water", "garden_cat": "Cat in the garden", "behavior": "Behaviour", "litter": "Litter box", "litter_full": "Litter box - full change", "flea": "Flea and tick",
            "deworm": "Deworming", "vaccine": "Vaccination", "vet": "Vet visit", "weight": "Weight",
            "done": "Done", "remind": "{cat}: {task}", "fed_today": "today {n}/{m}", "ago": "{x} ago", "never": "no entries",
            "recent": "{cat} was fed {m} min ago ({who}).", "ok": "All good."},
@@ -139,6 +142,7 @@ def load():
         for k in ("name", "birthday", "birthday_approx", "senior_applied", "bday_notified", "portion_g", "quiet", "repeat_min", "who"):
             if k in c:
                 merged[k] = c[k]
+        merged["cams"].update({k: v for k, v in (c.get("cams") or {}).items() if k in merged["cams"]})
         for t in TASK_IDS:
             merged["tasks"][t].update({k: v for k, v in (c.get("tasks", {}).get(t) or {}).items() if k in merged["tasks"][t]})
         cfg, events = merged, [e for e in d.get("events", []) if isinstance(e, dict) and "ts" in e and "task" in e][-MAX_EVENTS:]
@@ -240,7 +244,7 @@ def apply_age_option():
         cfg["birthday_approx"] = not md      # only the year is a guess when the real day and month are known
         changed = True
     if is_senior() and not cfg.get("senior_applied"):
-        cfg["tasks"]["vet"]["every_h"] = min(cfg["tasks"]["vet"]["every_h"], 4380)   # senior cats: check-up every 6 months
+        cfg["tasks"]["vet"]["every_h"] = min(cfg["tasks"]["vet"]["every_h"], 4368)   # senior cats: check-up every 6 months
         cfg["senior_applied"], changed = True, True
     if changed:
         save()
@@ -281,10 +285,13 @@ def weight_change():
     return round((last[1] - base) / base * 100, 1)
 
 
-def log_event(task, who, note="", value=None, ts=None, force=False):
-    if task != "weight" and task not in TASK_IDS:
+def log_event(task, who, note="", value=None, ts=None, force=False, kind=None):
+    special = ("weight", "behavior", "garden_cat")
+    if task not in special and task not in TASK_IDS:
         raise err(400, "unknown task")
-    if task != "weight" and not cfg["tasks"][task]["enabled"]:
+    if task == "behavior" and kind not in BEH_KINDS:
+        raise err(400, "unknown behaviour kind")
+    if task not in special and not cfg["tasks"][task]["enabled"]:
         raise err(400, "task is disabled")
     now = time.time()
     ts = float(ts) if ts else now
@@ -303,7 +310,9 @@ def log_event(task, who, note="", value=None, ts=None, force=False):
         prev = last_of("feed")
         if prev and now - prev["ts"] < DUP_MIN * 60:
             raise Conflict(json.dumps({"minutes": int((now - prev["ts"]) / 60), "who": prev["who"]}))
-    ev = {"id": uuid.uuid4().hex[:8], "ts": ts, "task": task, "who": str(who or "")[:30], "note": str(note or "")[:120], "value": value}
+    ev = {"id": uuid.uuid4().hex[:8], "ts": ts, "task": task, "who": str(who or "")[:40], "note": str(note or "")[:200], "value": value}
+    if kind:
+        ev["kind"] = kind
     events.append(ev)
     events.sort(key=lambda e: e["ts"])
     del events[:-MAX_EVENTS]
@@ -350,6 +359,16 @@ async def publish():
                 await ha_call("POST", f"/states/sensor.{sl}_{tid}", {"state": iso(s["last"]) or "unknown", "attributes": {
                     **base, "friendly_name": f"{name} {L(tid).lower()}", "device_class": "timestamp", "by": s["who"], "due_at": iso(s.get("due_at")),
                     "needs_attention": s["state"] == "due"}})
+        seen = [e for e in events if e["task"] == "garden_cat"]
+        if cfg["cams"]["entities"]:
+            today0 = now.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
+            await ha_call("POST", f"/states/sensor.{sl}_garden_cat", {"state": iso(seen[-1]["ts"]) if seen else "unknown", "attributes": {
+                **base, "friendly_name": f"{name} garden - a cat was seen", "device_class": "timestamp", "icon": "mdi:cat", "seen_today": sum(1 for e in seen if e["ts"] >= today0),
+                "camera": seen[-1]["who"] if seen else None}})
+        beh = [e for e in events if e["task"] == "behavior"]
+        if beh:
+            await ha_call("POST", f"/states/sensor.{sl}_behavior", {"state": sum(1 for e in beh if e["ts"] >= time.time() - 7 * 86400), "attributes": {
+                **base, "friendly_name": f"{name} unusual behaviour (7 days)", "icon": "mdi:alert-circle-outline", "last": iso(beh[-1]["ts"]), "last_kind": beh[-1].get("kind"), "last_note": beh[-1]["note"]}})
         w = weights()
         if w:
             await ha_call("POST", f"/states/sensor.{sl}_weight", {"state": w[-1][1], "attributes": {
@@ -425,6 +444,76 @@ async def action_listener():
         delay = min(delay * 2, 300)
 
 
+def detection(entity, old, new):
+    """Does this state change mean 'the camera saw a cat'? Works for binary sensors, event entities, counters and text states."""
+    n = str(new or "").strip().lower()
+    o = str(old or "").strip().lower()
+    if n in NEG or n == o and not entity.startswith("event."):
+        return False
+    dom = entity.split(".")[0]
+    if dom == "event":
+        return True
+    try:
+        return float(n) > 0 and (o in NEG or float(n) > float(o))
+    except ValueError:
+        pass
+    return n == "on" if dom == "binary_sensor" else True
+
+
+def sight(entity, name):
+    cool = int(cfg["cams"].get("cooldown_min", 10)) * 60
+    prev = next((e for e in reversed(events) if e["task"] == "garden_cat"), None)
+    if prev and time.time() - prev["ts"] < cool:
+        return
+    ev = log_event("garden_cat", name or entity, entity)
+    log.info("cat seen by %s", entity)
+    return ev
+
+
+async def cam_listener():
+    """One WebSocket with a server-side state trigger on the chosen camera entities (no state_changed firehose)."""
+    delay = 5
+    while cfg["cams"]["entities"]:
+        ents = list(cfg["cams"]["entities"])
+        try:
+            async with session.ws_connect(HA_WS, heartbeat=30, timeout=15) as ws:
+                await ws.receive_json(timeout=10)
+                await ws.send_json({"type": "auth", "access_token": TOKEN})
+                if (await ws.receive_json(timeout=10)).get("type") != "auth_ok":
+                    return
+                await ws.send_json({"id": 1, "type": "subscribe_trigger", "trigger": {"platform": "state", "entity_id": ents}})
+                delay = 5
+                while True:
+                    msg = await ws.receive()
+                    if msg.type != WSMsgType.TEXT:
+                        break
+                    d = json.loads(msg.data)
+                    tr_ = (((d.get("event") or {}).get("variables") or {}).get("trigger") or {}) if d.get("type") == "event" else {}
+                    ns, os_ = tr_.get("to_state") or {}, tr_.get("from_state") or {}
+                    ent = tr_.get("entity_id") or ns.get("entity_id") or ""
+                    if ent in ents and detection(ent, os_.get("state"), ns.get("state")):
+                        try:
+                            sight(ent, (ns.get("attributes") or {}).get("friendly_name"))
+                        except web.HTTPException:
+                            pass
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            log.debug("camera listener: %s", type(exc).__name__)
+        await asyncio.sleep(delay)
+        delay = min(delay * 2, 300)
+
+
+cam_task = None
+
+
+def restart_cams():
+    global cam_task
+    if cam_task and not cam_task.done():
+        cam_task.cancel()
+    cam_task = asyncio.create_task(cam_listener()) if cfg["cams"]["entities"] else None
+
+
 async def scheduler():
     while True:
         await asyncio.sleep(TICK)
@@ -497,7 +586,7 @@ def view_state():
     now = datetime.now(tz)
     return {"name": cat_name(), "cfg": cfg, "status": all_status(now), "now": now.timestamp(), "weight_change": weight_change(), "weight_alert": weight_alert_pct(), "birthday": birthday_info(now), "senior": is_senior(),
             "events": events[-400:][::-1], "has_avatar": AVATAR.exists(), "notify": notify_services(), "api_enabled": bool(OPT.get("api_enabled")),
-            "api_port": API_PORT, "lang": lang, "sensors": slug(), "summary": summary_text()}
+            "api_port": API_PORT, "lang": lang, "sensors": slug(), "summary": summary_text(), "kinds": BEH_KINDS}
 
 
 async def h_index(request):
@@ -516,7 +605,7 @@ async def h_log(request):
         raise err(400, "bad json")
     who = request_who(request, b)
     try:
-        ev = log_event(str(b.get("task", "")), who, b.get("note"), b.get("value"), b.get("ts"), bool(b.get("force")))
+        ev = log_event(str(b.get("task", "")), who, b.get("note"), b.get("value"), b.get("ts"), bool(b.get("force")), b.get("kind"))
     except Conflict as c:
         raise err(409, L("recent", cat=cat_name(), m=max(1, json.loads(str(c))["minutes"]), who=json.loads(str(c))["who"] or "?"), duplicate=json.loads(str(c)))
     return web.json_response({"ok": True, "event": ev})
@@ -556,6 +645,12 @@ def clean_cfg(b):
         if not (isinstance(q, list) and len(q) == 2 and all(tm(x) for x in q)):
             raise err(400, "quiet hours must be two HH:MM values")
         new["quiet"] = q
+    if "cams" in b and isinstance(b["cams"], dict):
+        ents = [str(e) for e in (b["cams"].get("entities") or [])]
+        if len(ents) > 10 or not all(re.fullmatch(r"[a-z0-9_]+\.[a-z0-9_]+", e) for e in ents):
+            raise err(400, "up to 10 valid entity ids")
+        new["cams"]["entities"] = list(dict.fromkeys(ents))
+        new["cams"]["cooldown_min"] = max(1, min(720, int(b["cams"].get("cooldown_min") or 10)))
     for tid, v in (b.get("tasks") or {}).items():
         if tid not in TASK_IDS or not isinstance(v, dict):
             continue
@@ -583,8 +678,33 @@ async def h_settings(request):
     except (ValueError, TypeError):
         raise err(400, "invalid settings")
     save()
+    restart_cams()
     asyncio.create_task(publish())
     return web.json_response({"ok": True})
+
+
+async def h_entities(request):
+    """Candidates for the camera/detection picker (fetched on demand, nothing cached)."""
+    q = request.query.get("q", "").strip().lower()[:40]
+    try:
+        async with session.get(f"{HA}/states", headers=hdr(), timeout=ClientTimeout(total=15)) as r:
+            states = await r.json()
+    except Exception:  # noqa: BLE001
+        raise err(502, "Home Assistant unreachable")
+    pref = ("cat", "animal", "pet", "motion", "person", "camera", "detect", "garden", "ogrod", "kot", "frigate", "reolink")
+    out = []
+    for st in states if isinstance(states, list) else []:
+        eid = st.get("entity_id", "")
+        if eid.split(".")[0] not in ("binary_sensor", "event", "image_processing", "sensor"):
+            continue
+        name = (st.get("attributes") or {}).get("friendly_name", "")
+        hay = (eid + " " + name).lower()
+        if q and q not in hay:
+            continue
+        if not q and not any(p in hay for p in pref):
+            continue
+        out.append({"id": eid, "name": name})
+    return web.json_response(sorted(out, key=lambda x: x["id"])[:60])
 
 
 async def h_avatar_get(request):
@@ -693,7 +813,7 @@ async def h_token_del(request):
 def build_apps():
     ui = web.Application(middlewares=[ingress_guard], client_max_size=2 * 1024 * 1024)
     ui.add_routes([web.get("/", h_index), web.static("/static", STATIC), web.get("/avatar", h_avatar_get), web.post("/api/avatar", h_avatar_set),
-                   web.delete("/api/avatar", h_avatar_del), web.get("/api/state", h_state), web.post("/api/log", h_log),
+                   web.delete("/api/avatar", h_avatar_del), web.get("/api/state", h_state), web.get("/api/entities", h_entities), web.post("/api/log", h_log),
                    web.delete("/api/event/{id}", h_event_delete), web.post("/api/settings", h_settings), web.post("/api/test", h_test),
                    web.get("/api/tokens", h_tokens), web.post("/api/tokens", h_token_new), web.get("/api/tokens/{id}/secret", h_token_secret),
                    web.delete("/api/tokens/{id}", h_token_del)])
@@ -736,6 +856,7 @@ async def main():
             log.error("Cannot listen on port %s for the Shortcuts endpoint: %s", API_PORT, exc)
     log.info("HAFreudTeo by %s (%s) - panel via ingress; notifications to: %s", CREDIT, CREDIT_URL, ", ".join(notify_services()) or "none")
     asyncio.create_task(scheduler())
+    restart_cams()
     await publish()
     await asyncio.Event().wait()
 

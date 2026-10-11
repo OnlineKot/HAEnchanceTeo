@@ -61,7 +61,8 @@ footer{margin-top:32px}
 const $ = id => document.getElementById(id), tr = HL.tr, esc = HL.esc;
 let S = null, tab = "today";
 const NAMES = {feed:tr("Karmienie","Feeding"), water:tr("Woda","Water"), litter:tr("Kuweta","Litter box"), litter_full:tr("Kuweta - pełna wymiana","Litter box - full change"),
-  flea:tr("Pchły i kleszcze","Flea and tick"), deworm:tr("Odrobaczanie","Deworming"), vaccine:tr("Szczepienie","Vaccination"), vet:tr("Wizyta u weterynarza","Vet visit"), weight:tr("Waga","Weight")};
+  flea:tr("Pchły i kleszcze","Flea and tick"), deworm:tr("Odrobaczanie","Deworming"), vaccine:tr("Szczepienie","Vaccination"), vet:tr("Wizyta u weterynarza","Vet visit"), weight:tr("Waga","Weight"), garden_cat:tr("Kot w ogrodzie","Cat in the garden"), behavior:tr("Zachowanie","Behaviour")};
+const KINDS = {vomit:tr("Wymioty","Vomiting"), appetite:tr("Brak apetytu","Poor appetite"), limp:tr("Kulawizna","Limping"), hiding:tr("Chowa się","Hiding"), thirst:tr("Dużo pije","Drinking a lot"), litter:tr("Problem z kuwetą","Litter box problem"), night:tr("Miauczy w nocy","Night yowling"), sneeze:tr("Kicha","Sneezing"), other:tr("Inne","Other")};
 const loc = HL.lang === "pl" ? "pl-PL" : "en-GB";
 const hm = ts => new Date(ts * 1000).toLocaleTimeString(loc, {hour:"2-digit", minute:"2-digit"});
 const dayKey = ts => new Date(ts * 1000).toLocaleDateString(loc, {weekday:"long", day:"numeric", month:"long"});
@@ -94,26 +95,47 @@ function stText(s){
   if(s.state === "due") t.push(tr("do zrobienia","due")); else t.push(tr("za ","in ") + (s.due_at - S.now < 172800 ? Math.max(1, Math.round((s.due_at - S.now) / 3600)) + " h" : Math.round((s.due_at - S.now) / 86400) + " " + tr("dni","days")));
   return t.join(" · ");
 }
+const openRows = new Set(); let behOpen = false, behKind = "";
 function rToday(){
   const due = S.status.filter(s => s.state === "due").map(s => NAMES[s.id]);
   $("attn").className = "line" + (due.length ? " warn" : ""); $("attn").textContent = due.length ? tr("Do zrobienia: ","To do: ") + due.join(", ") : tr("Wszystko w porządku.","All good.");
   const box = $("rows"); box.innerHTML = "";
   S.status.forEach(s => {
-    const r = document.createElement("div"); r.className = "r";
+    const r = document.createElement("div"); r.className = "r" + (openRows.has(s.id) ? " open" : "");
     r.innerHTML = `<div class="n"><b></b><div class="hint"></div></div><button class="link mo">…</button><button class="b ${s.id === "feed" || s.state === "due" ? "" : "alt"} sm go"></button>
       <div class="more"><input type="datetime-local" class="dt"><button class="b alt sm ok"></button></div>`;
     r.querySelector("b").textContent = NAMES[s.id]; r.querySelector(".hint").textContent = stText(s);
     r.querySelector(".go").textContent = s.id === "feed" ? tr("Nakarmiony","Fed") : tr("Zrobione","Done");
     r.querySelector(".ok").textContent = tr("Zapisz","Save");
     r.querySelector(".go").onclick = () => doLog(s.id);
-    r.querySelector(".mo").onclick = () => r.classList.toggle("open");
+    r.querySelector(".mo").onclick = () => { r.classList.toggle("open"); r.classList.contains("open") ? openRows.add(s.id) : openRows.delete(s.id); };
     r.querySelector(".ok").onclick = () => { const v = r.querySelector(".dt").value; if(v) doLog(s.id, {ts: new Date(v).getTime() / 1000}); };
     box.append(r);
   });
+  const cams = S.cfg.cams.entities.length;
+  if(cams){ const g = S.events.find(e => e.task === "garden_cat"), t0 = new Date().setHours(0,0,0,0) / 1000, n = S.events.filter(e => e.task === "garden_cat" && e.ts >= t0).length;
+    const r = document.createElement("div"); r.className = "r"; r.innerHTML = `<div class="n"><b>${NAMES.garden_cat}</b><div class="hint"></div></div>`;
+    r.querySelector(".hint").textContent = g ? `${HL.ago(g.ts)} · ${hm(g.ts)} · ${tr("dziś ","today ")}${n}${g.who ? " · " + g.who : ""}` : tr("jeszcze nie widziany","not seen yet"); box.append(r); }
+  const b = document.createElement("div"); b.className = "r" + (behOpen ? " open" : "");
+  b.innerHTML = `<div class="n"><b>${NAMES.behavior}</b><div class="hint">${tr("Zapisz coś niezwykłego","Note anything unusual")}</div></div><button class="b alt sm">${tr("Dodaj","Add")}</button>
+    <div class="more" style="flex-wrap:wrap"><div class="chips" style="display:flex;gap:6px;flex-wrap:wrap;flex-basis:100%"></div><input type="text" class="bn" maxlength="200" placeholder="${tr("Notatka (opcjonalnie)","Note (optional)")}" style="flex:1;min-width:160px"><button class="b sm bs">${tr("Zapisz","Save")}</button></div>`;
+  const ch = b.querySelector(".chips");
+  S.kinds.forEach(k => { const c = document.createElement("button"); c.className = "b sm " + (behKind === k ? "" : "alt"); c.textContent = KINDS[k]; c.onclick = () => { behKind = k; ch.querySelectorAll("button").forEach(x => x.classList.add("alt")); c.classList.remove("alt"); }; ch.append(c); });
+  b.querySelector(".b.alt.sm").onclick = () => { behOpen = !behOpen; b.classList.toggle("open", behOpen); };
+  b.querySelector(".bs").onclick = async () => { if(!behKind) return HL.toast(tr("Wybierz rodzaj","Pick a kind"), true); const note = b.querySelector(".bn").value;
+    try{ await HL.post("log", {task:"behavior", kind:behKind, note, who:who()}); behKind = ""; behOpen = false; HL.toast(tr("Zapisano","Saved")); load(); }catch(e){ HL.toast(e.message, true); } };
+  box.append(b);
+}
+function patchLocal(task){   // show the result of a tap at once; the server reply then replaces it
+  const s = S.status.find(x => x.id === task); if(!s) return; const now = Date.now() / 1000;
+  s.last = now; s.who = who() || s.who;
+  if(task === "feed"){ s.fed_today++; s.state = s.fed_today < s.passed ? "due" : "ok"; } else { s.state = "ok"; s.due_at = now + (S.cfg.tasks[task].every_h || 24) * 3600; }
+  render();
 }
 async function doLog(task, extra = {}, force = false){
+  const snap = JSON.stringify(S.status); if(!extra.ts) patchLocal(task);
   try{ await HL.post("log", {task, who: who(), force, ...extra}); HL.toast(tr("Zapisano","Saved")); await load(); }
-  catch(e){ if(/409|min/.test(e.message) && !force && task === "feed" && !extra.ts){ if(confirm(e.message + "\n" + tr("Zapisać mimo to?","Log it anyway?"))) doLog(task, extra, true); } else HL.toast(e.message, true); }
+  catch(e){ S.status = JSON.parse(snap); render(); if(/409|min/.test(e.message) && !force && task === "feed" && !extra.ts){ if(confirm(e.message + "\n" + tr("Zapisać mimo to?","Log it anyway?"))) doLog(task, extra, true); } else HL.toast(e.message, true); }
 }
 
 /* ---- history */
@@ -124,7 +146,7 @@ function rHist(){
     const k = dayKey(e.ts); if(k !== cur){ cur = k; const d = document.createElement("div"); d.className = "day"; d.textContent = k; box.append(d); }
     const r = document.createElement("div"); r.className = "ev";
     r.innerHTML = `<span class="t">${hm(e.ts)}</span><span class="n"></span><button class="link">${tr("Usuń","Delete")}</button>`;
-    r.querySelector(".n").innerHTML = `${esc(NAMES[e.task] || e.task)}${e.value != null ? " " + e.value + " kg" : ""} <small>${esc(e.who || "")}</small>`;
+    r.querySelector(".n").innerHTML = e.task === "behavior" ? `${esc(KINDS[e.kind] || NAMES.behavior)} <small>${esc(e.note || "")}</small>` : e.task === "garden_cat" ? `${NAMES.garden_cat} <small>${esc(e.who || "")}</small>` : `${esc(NAMES[e.task] || e.task)}${e.value != null ? " " + e.value + " kg" : ""} <small>${esc(e.who || "")}</small>`;
     r.querySelector("button").onclick = async () => { if(!confirm(tr("Usunąć wpis?","Delete this entry?"))) return; await HL.api("event/" + e.id, {method:"DELETE"}); load(); };
     box.append(r);
   });
@@ -156,7 +178,7 @@ function rSet(){
     <div class="row"><button class="b alt sm" id="avUp">${tr("Zmień zdjęcie","Change photo")}</button><button class="b alt sm" id="avDel">${tr("Przywróć domyślne","Reset photo")}</button><input type="file" id="avFile" accept="image/*" hidden></div>
     <label class="f">${tr("Kto zapisuje na tym urządzeniu","Who is logging on this device")}</label><input type="text" id="sWho" maxlength="30" placeholder="${tr("np. Tomek","e.g. Tom")}" value="${esc(who())}">`);
   const t = h(tr("Zadania","Tasks"), "");
-  Object.keys(NAMES).filter(k => k !== "weight").forEach(id => {
+  Object.keys(NAMES).filter(k => S.cfg.tasks[k]).forEach(id => {
     const tk = c.tasks[id], r = document.createElement("div"); r.className = "tk"; r.dataset.id = id;
     r.innerHTML = `<span>${NAMES[id]}</span><input type="checkbox" class="en" ${tk.enabled ? "checked" : ""} aria-label="on">` +
       (id === "feed" ? `<span></span><label class="chk" style="margin:0"><input type="checkbox" class="rm" ${tk.remind ? "checked" : ""}></label>` :
@@ -171,6 +193,14 @@ function rSet(){
     <label class="f">${tr("Powtarzaj co (min)","Repeat every (min)")}</label><input type="number" id="sRep" min="10" max="720" value="${c.repeat_min}">
     <div class="hint" style="margin-top:8px">${S.notify.length ? tr("Telefony: ","Phones: ") + esc(S.notify.join(", ")) : tr("Telefony ustawisz w Konfiguracji dodatku (notify_services).","Set phones in the add-on Configuration (notify_services).")}</div>
     ${S.notify.length ? `<div class="row"><button class="b alt sm" id="tst">${tr("Wyślij test","Send a test")}</button></div>` : ""}`);
+  camList = [...S.cfg.cams.entities];
+  h(tr("Wykrywanie kota w ogrodzie","Cat in the garden"), `<div class="hint">${tr("Wybierz encję z kamery (wykrycie zwierzęcia / ruchu). Gdy się uaktywni, zapisujemy tylko, że kamera zobaczyła jakiegoś kota - bez rozpoznawania, czy to Freud.","Pick the entity from the camera (animal / motion detection). When it triggers we only log that the camera saw a cat - no guessing whether it is Freud.")}</div>
+    <div id="camList"></div><div class="in" style="margin-top:8px"><input type="text" id="camIn" list="camDl" placeholder="binary_sensor.garden_cat" autocomplete="off" autocapitalize="off"><datalist id="camDl"></datalist><button class="b alt" id="camAdd">${tr("Dodaj","Add")}</button></div>
+    <label class="f">${tr("Nie zapisuj ponownie przez (min)","Do not log again for (min)")}</label><input type="number" id="camCool" min="1" max="720" value="${c.cams.cooldown_min}">`);
+  renderCams();
+  let camT; $("camIn").oninput = () => { clearTimeout(camT); camT = setTimeout(async () => { try{ const r = await HL.api("entities?q=" + encodeURIComponent($("camIn").value)); $("camDl").innerHTML = r.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join(""); }catch{} }, 250); };
+  $("camIn").onfocus = $("camIn").oninput;
+  $("camAdd").onclick = () => { const v = $("camIn").value.trim(); if(/^[a-z0-9_]+\.[a-z0-9_]+$/.test(v) && !camList.includes(v)){ camList.push(v); $("camIn").value = ""; renderCams(); } };
   const sv = document.createElement("div"); sv.className = "row"; sv.innerHTML = `<button class="b" id="save">${tr("Zapisz","Save")}</button>`; b.append(sv);
   h("Home Assistant", `<div class="kv"><span>${tr("Sensory","Sensors")}</span><span>sensor.${esc(S.sensors)}_last_fed, sensor.${esc(S.sensors)}_litter, ... binary_sensor.${esc(S.sensors)}_needs_attention</span><span>${tr("Zdarzenie","Event")}</span><span>hafreudteo_logged</span></div>`);
   if(S.api_enabled) tokensUI(h(tr("Skróty i Siri","Shortcuts and Siri"), `<div class="hint">${tr("Skrót: Pobierz zawartość URL → POST na ","Shortcut: Get Contents of URL → POST to ")}<code>http://&lt;HA-IP&gt;:${S.api_port}/api/log</code>${tr(" z nagłówkiem Authorization: Bearer <token> i treścią JSON ",' with header Authorization: Bearer &lt;token&gt; and JSON body ')}<code>{"task":"feed"}</code>. ${tr("Odpowiedź w polu reply można odczytać na głos.","Read the reply field aloud.")}</div><div class="in" style="margin-top:8px"><input type="text" id="tkName" placeholder="iPhone"><button class="b alt" id="tkNew">${tr("Utwórz token","Create token")}</button></div><div id="tkOut"></div><div id="tkList"></div>`));
@@ -180,6 +210,8 @@ function rSet(){
   if($("tst")) $("tst").onclick = async () => { try{ await HL.post("test"); HL.toast(tr("Wysłano","Sent")); }catch(x){ HL.toast(x.message, true); } };
   $("save").onclick = saveSettings;
 }
+let camList = [];
+function renderCams(){ const box = $("camList"); box.innerHTML = ""; camList.forEach(id => { const d = document.createElement("div"); d.className = "ev"; d.innerHTML = `<span class="n"></span><button class="link">${tr("Usuń","Remove")}</button>`; d.querySelector(".n").textContent = id; d.querySelector("button").onclick = () => { camList = camList.filter(x => x !== id); renderCams(); }; box.append(d); }); }
 async function upAvatar(file){
   const img = await createImageBitmap(file), n = 384, k = Math.min(img.width, img.height), cv = document.createElement("canvas"); cv.width = cv.height = n;
   cv.getContext("2d").drawImage(img, (img.width - k) / 2, (img.height - k) / 2, k, k, 0, 0, n, n);
@@ -192,7 +224,7 @@ async function saveSettings(){
   document.querySelectorAll(".tk").forEach(r => { const id = r.dataset.id; tasks[id] = {enabled: r.querySelector(".en").checked, remind: r.querySelector(".rm").checked}; if(id !== "feed") tasks[id].every_h = Math.max(1, Math.round(+r.querySelector(".iv").value * 24)); });
   tasks.feed.times = [...document.querySelectorAll("#times input[type=time]")].map(i => i.value).filter(Boolean); tasks.feed.grace_min = +$("sGrace").value;
   try{ localStorage.setItem("hft_who", $("sWho").value.trim()); }catch{}
-  try{ await HL.post("settings", {name:$("sName").value, birthday:$("sBd").value, portion_g:+$("sPortion").value, quiet:[$("sQ0").value, $("sQ1").value], repeat_min:+$("sRep").value, tasks}); HL.toast(tr("Zapisano","Saved")); await load(); }
+  try{ await HL.post("settings", {name:$("sName").value, birthday:$("sBd").value, portion_g:+$("sPortion").value, quiet:[$("sQ0").value, $("sQ1").value], repeat_min:+$("sRep").value, cams:{entities:camList, cooldown_min:+$("camCool").value || 10}, tasks}); HL.toast(tr("Zapisano","Saved")); await load(); }
   catch(e){ HL.toast(e.message, true); }
 }
 function tokensUI(card){
