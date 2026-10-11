@@ -1,0 +1,37 @@
+configuration:
+  public_url:
+    name: Public URL
+    description: "Your DDNS name, e.g. https://freud.duckdns.org:8443 (the port you forward on the router). Claude connects to <this>/mcp."
+  allowed_users:
+    name: Allowed Home Assistant users
+    description: HA usernames (login names) allowed to authorize Claude. Empty = nobody can sign in.
+  require_mfa:
+    name: Require HA two-factor authentication
+    description: Sign-in is refused unless the HA account has 2FA (TOTP) enabled and the code is correct. Strongly recommended.
+  tls:
+    name: TLS
+    description: auto = serve HTTPS with the certificate from /ssl (e.g. made by HACertTeo). off = plain HTTP, only behind your own HTTPS reverse proxy.
+  certfile:
+    name: Certificate file
+    description: File name in /ssl.
+  keyfile:
+    name: Key file
+    description: File name in /ssl.
+  ha_url:
+    name: Home Assistant address (internal)
+    description: Used to verify the HA login and 2FA. Use https:// if your HA serves HTTPS on 8123.
+  notify_service:
+    name: Phone for approvals
+    description: Companion app notify service, e.g. mobile_app_iphone. Risky actions wait for Approve / Reject there.
+  approve_risky:
+    name: Approve risky actions on the phone
+    description: Unlocking locks, opening garage doors / gates / doors and running scripts need an approval. Without a notify_service they are refused.
+  allowed_ips:
+    name: Allowed source IPs (optional)
+    description: CIDR list. If set, only these addresses may call the MCP endpoint. Empty = any address (the token still protects it).
+  allowed_redirects:
+    name: Allowed OAuth redirect prefixes
+    description: Where the sign-in may send the browser back to. Defaults are Claude's callbacks. Add http://localhost for Claude Code.
+  log_level:
+    name: Log level
+    description: Verbosity of the add-on log.

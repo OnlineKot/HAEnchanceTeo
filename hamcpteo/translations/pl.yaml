@@ -1,0 +1,37 @@
+configuration:
+  public_url:
+    name: Adres publiczny
+    description: "Twoja nazwa DDNS, np. https://freud.duckdns.org:8443 (port przekierowany na routerze). Claude łączy się z <adres>/mcp."
+  allowed_users:
+    name: Dozwoleni użytkownicy Home Assistanta
+    description: Nazwy logowania w HA, którzy mogą autoryzować Claude. Puste = nikt się nie zaloguje.
+  require_mfa:
+    name: Wymagaj uwierzytelniania dwuskładnikowego HA
+    description: Logowanie jest odrzucane, jeśli konto HA nie ma włączonego 2FA (TOTP) albo kod jest zły. Zdecydowanie zalecane.
+  tls:
+    name: TLS
+    description: auto = HTTPS z certyfikatem z /ssl (np. z HACertTeo). off = zwykły HTTP, tylko za własnym reverse proxy z HTTPS.
+  certfile:
+    name: Plik certyfikatu
+    description: Nazwa pliku w /ssl.
+  keyfile:
+    name: Plik klucza
+    description: Nazwa pliku w /ssl.
+  ha_url:
+    name: Adres Home Assistanta (wewnętrzny)
+    description: Służy do weryfikacji logowania i 2FA w HA. Użyj https://, jeśli HA działa przez HTTPS na 8123.
+  notify_service:
+    name: Telefon do zatwierdzeń
+    description: Usługa powiadomień aplikacji mobilnej, np. mobile_app_iphone. Ryzykowne akcje czekają tam na Zatwierdź / Odrzuć.
+  approve_risky:
+    name: Zatwierdzaj ryzykowne akcje na telefonie
+    description: Odblokowanie zamków, otwarcie garażu / bramy / drzwi i uruchomienie skryptów wymaga zatwierdzenia. Bez notify_service są odrzucane.
+  allowed_ips:
+    name: Dozwolone adresy IP (opcjonalnie)
+    description: Lista CIDR. Jeśli ustawiona, tylko te adresy mogą wołać punkt MCP. Puste = dowolny adres (chroni token).
+  allowed_redirects:
+    name: Dozwolone przekierowania OAuth
+    description: Dokąd logowanie może odesłać przeglądarkę. Domyślnie callbacki Claude. Dla Claude Code dodaj http://localhost.
+  log_level:
+    name: Poziom logów
+    description: Szczegółowość logów dodatku.

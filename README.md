@@ -35,6 +35,9 @@ stop-if. Run from an iPhone Shortcut, by time or by an entity, with **live step 
 ### 🐈‍⬛ [HAFreudTeo](hafreudteo/DOCS.md)
 **A calm cat companion** (for Freud): who fed the cat and when – with protection against double feeding – plus water, litter, flea / deworming / vaccine reminders, weight chart, phone reminders with a *Done* button and HA sensors.
 
+### 🛡 [HAMcpTeo](hamcpteo/DOCS.md)
+**Claude on your Home Assistant – only what you pick.** MCP server on your own DDNS name (HTTPS), sign-in with your HA account **and its 2FA**, per-entity read / control, safe service allow-list, phone approval for risky actions, sessions and audit log.
+
 ### 🗄 [HAQnapTeo](haqnapteo/DOCS.md)
 **Backups to your QNAP and media from it.** Uploads Home Assistant backups to a QNAP share over SMB with schedule and retention,
 downloads new media into HA, lists / fetches / deletes backups on the NAS. **Private: no network ports** – panel only through Home Assistant.

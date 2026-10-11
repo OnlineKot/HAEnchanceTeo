@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HAMcpTeo</title>
+<link rel="stylesheet" href="static/common.css">
+<style>
+main{max-width:720px;margin:0 auto;padding:16px}
+.big{font-size:20px;line-height:28px}
+.warn{padding:12px 0;border-bottom:1px solid var(--divider-color)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:12px 0}.kv span:nth-child(odd){color:var(--secondary-text-color)}.kv span{word-break:break-all}
+.r{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--divider-color);flex-wrap:wrap}.r .n{flex:1;min-width:150px}.r .n small{display:block;color:var(--secondary-text-color);word-break:break-all}
+.seg{display:inline-flex;border:1px solid var(--outline-color);border-radius:18px;overflow:hidden}.seg button{background:none;border:0;padding:6px 12px;font:500 13px/20px var(--ha-font);color:var(--secondary-text-color);cursor:pointer}
+.seg button.on{background:var(--primary-color);color:#fff}.seg button:disabled{opacity:.3;cursor:default}
+button.link{background:none;border:0;color:var(--primary-color);font:500 13px/20px var(--ha-font);padding:6px 4px;cursor:pointer}
+ol{padding-left:20px;margin:8px 0}li{margin:4px 0}
+.in{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}.in>*{flex:1;min-width:140px}
+.day{font:12px/16px ui-monospace,monospace;color:var(--secondary-text-color)}
+.bad{color:var(--error-color)}.good{color:var(--success-color)}
+footer{margin-top:32px}
+</style>
+</head>
+<body>
+<div class="bar"><h1>HAMcpTeo</h1></div>
+<main>
+<div class="tabs" id="tabs"></div>
+
+<div class="view" id="v-st">
+  <div id="warns"></div>
+  <div class="kv" id="kv"></div>
+  <div class="row" style="margin-top:0"><button class="b" id="power"></button><button class="b alt" id="revokeAll"></button></div>
+  <h3 style="margin:28px 0 4px;font-size:14px;font-weight:500;color:var(--secondary-text-color)" id="hConn"></h3>
+  <ol id="steps"></ol>
+  <div id="copy"></div>
+</div>
+
+<div class="view" id="v-ac">
+  <div class="hint" id="acHint" style="margin-bottom:12px"></div>
+  <div class="in"><div><input type="search" id="q"></div><div style="flex:0 0 auto"><select id="dom"></select></div></div>
+  <div class="row" style="margin-top:8px;gap:12px;align-items:center"><label class="chk" style="margin:0"><input type="checkbox" id="onlyOn"><span id="lOnly"></span></label><span style="flex:1"></span><button class="link" id="imp"></button></div>
+  <div id="list"></div><div class="hint" id="more" style="padding:12px 0"></div>
+</div>
+
+<div class="view" id="v-se"><div id="sess"></div></div>
+<div class="view" id="v-lg"><div id="log"></div></div>
+
+<footer><span id="by"></span> <a href="https://teodorteo.com" target="_blank" rel="noopener">TeodorTeo.com</a></footer>
+</main>
+<script src="static/common.js"></script>
+<script>
+const $ = id => document.getElementById(id), tr = HL.tr, esc = HL.esc;
+let S = null, tab = "st";
+const TABS = [["st", tr("Status","Status")], ["ac", tr("Dostęp","Access")], ["se", tr("Sesje","Sessions")], ["lg", tr("Dziennik","Log")]];
+TABS.forEach(([id, l]) => { const b = document.createElement("button"); b.textContent = l; b.dataset.id = id; b.onclick = () => show(id); $("tabs").append(b); });
+function show(id){ tab = id; document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.id === id)); document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + id)); ({st: rSt, ac: rAc, se: rSe, lg: rLg})[id](); }
+$("by").textContent = tr("Stworzone przez","Created by");
+const dt = ts => ts ? new Date(ts * 1000).toLocaleString() : "-";
+async function load(){ try{ S = await HL.api("state"); }catch{ return; } if(tab === "st") rSt(); if(tab === "se") rSe(); }
+
+/* ---- status */
+function rSt(){
+  if(!S) return load().then(() => S && rSt());
+  $("warns").innerHTML = S.warnings.map(w => `<div class="warn">${esc(w)}</div>`).join("");
+  $("kv").innerHTML = [
+    [tr("Stan","State"), S.enabled ? `<span class="good">${tr("włączone","on")}</span>` : `<span class="bad">${tr("wyłączone","off")}</span>`],
+    [tr("Adres MCP","MCP address"), esc(S.mcp_url || "-")],
+    ["TLS", S.tls === "auto" ? (S.cert ? tr("certyfikat z /ssl","certificate from /ssl") : `<span class="bad">${tr("brak certyfikatu","no certificate")}</span>`) : tr("wyłączone (własne proxy)","off (own proxy)")],
+    [tr("Użytkownicy","Users"), esc(S.users.join(", ") || "-")],
+    ["2FA", S.require_mfa ? tr("wymagane (z konta HA)","required (from the HA account)") : `<span class="bad">${tr("wyłączone","off")}</span>`],
+    [tr("Zatwierdzanie na telefonie","Phone approval"), S.notify && S.approve_risky ? tr("włączone","on") : tr("brak - ryzykowne akcje odrzucane","off - risky actions refused")],
+    [tr("Widoczne / sterowalne","Visible / controllable"), `${S.read + S.control} / ${S.control}`],
+    [tr("Aktywne sesje","Active sessions"), S.sessions.length]].map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join("");
+  $("power").textContent = S.enabled ? tr("Wyłącz dostęp","Switch access off") : tr("Włącz dostęp","Switch access on");
+  $("power").className = "b " + (S.enabled ? "red" : ""); $("revokeAll").textContent = tr("Wyloguj wszystkie sesje","Sign out all sessions");
+  $("hConn").textContent = tr("Jak podłączyć Claude","How to connect Claude");
+  $("steps").innerHTML = (HL.lang === "pl" ? [
+    "W Konfiguracji dodatku ustaw <b>public_url</b> (Twoja nazwa DDNS), <b>allowed_users</b> i telefon do zatwierdzeń; w HA włącz 2FA na swoim koncie.",
+    "Wystaw certyfikat (np. dodatek HACertTeo) i przekieruj na routerze port <b>" + S.port + "</b> na Home Assistanta.",
+    "Zakładka Dostęp: wybierz encje, które Claude może widzieć lub sterować.",
+    "claude.ai → Ustawienia → Łączniki → Dodaj własny łącznik → wklej adres MCP poniżej. Na iPhonie pojawi się po synchronizacji konta.",
+    "Zalogujesz się kontem HA, wpiszesz kod 2FA i klikniesz Zezwól."] : [
+    "In the add-on Configuration set <b>public_url</b> (your DDNS name), <b>allowed_users</b> and a phone for approvals; enable 2FA on your HA account.",
+    "Issue a certificate (e.g. the HACertTeo add-on) and forward port <b>" + S.port + "</b> on your router to Home Assistant.",
+    "Access tab: pick the entities Claude may see or control.",
+    "claude.ai → Settings → Connectors → Add custom connector → paste the MCP address below. It shows up in the iPhone app after the account syncs.",
+    "Sign in with your HA account, enter the 2FA code and press Allow."]).map(x => `<li>${x}</li>`).join("");
+  $("copy").innerHTML = ""; if(S.mcp_url) $("copy").append(HL.copyRow(tr("Adres MCP","MCP address"), S.mcp_url));
+}
+$("power").onclick = async () => { if(S.enabled && !confirm(tr("Wyłączyć dostęp i wylogować Claude?","Switch access off and sign Claude out?"))) return; await HL.post("enabled", {enabled: !S.enabled}); await load(); rSt(); };
+$("revokeAll").onclick = async () => { if(!confirm(tr("Wylogować wszystkie sesje?","Sign out all sessions?"))) return; await HL.post("revoke-all"); await load(); rSt(); HL.toast(tr("Gotowe","Done")); };
+
+/* ---- access */
+let qT, items = [];
+$("q").placeholder = tr("Szukaj encji","Search entities"); $("lOnly").textContent = tr("tylko wybrane","only selected"); $("imp").textContent = tr("Dodaj z Assist","Add from Assist");
+$("acHint").textContent = tr("Claude zobaczy i może sterować tylko tym, co tu wybierzesz. Domyślnie nic. Zamki, garaże, bramy i skrypty wymagają zatwierdzenia na telefonie.","Claude only sees and controls what you pick here. Nothing by default. Locks, garage doors, gates and scripts need approval on your phone.");
+$("q").oninput = () => { clearTimeout(qT); qT = setTimeout(rAc, 250); }; $("dom").onchange = rAc; $("onlyOn").onchange = rAc;
+$("imp").onclick = async () => { try{ const r = await HL.post("exposure/import-assist"); HL.toast(tr("Dodano ","Added ") + r.added); rAc(); load(); }catch(e){ HL.toast(e.message, true); } };
+async function rAc(){
+  try{
+    const r = await HL.api(`entities?q=${encodeURIComponent($("q").value)}&domain=${$("dom").value}&exposed=${$("onlyOn").checked ? 1 : 0}`);
+    if(!$("dom").options.length || $("dom").dataset.n !== String(r.domains.length)){ const cur = $("dom").value; $("dom").innerHTML = `<option value="">${tr("wszystkie typy","all types")}</option>` + r.domains.map(d => `<option>${d}</option>`).join(""); $("dom").value = cur; $("dom").dataset.n = r.domains.length; }
+    items = r.items; $("more").textContent = r.total > r.items.length ? tr(`Pokazano ${r.items.length} z ${r.total} - zawęź wyszukiwanie.`, `Showing ${r.items.length} of ${r.total} - narrow the search.`) : "";
+    const box = $("list"); box.innerHTML = "";
+    r.items.forEach(it => {
+      const row = document.createElement("div"); row.className = "r"; row.innerHTML = `<div class="n"></div><div class="seg"><button data-l="none">${tr("Brak","None")}</button><button data-l="read">${tr("Odczyt","Read")}</button><button data-l="control"${it.can_control ? "" : " disabled"}>${tr("Sterowanie","Control")}</button></div>`;
+      row.querySelector(".n").innerHTML = `${esc(it.name || it.id)}<small>${esc(it.id)}</small>`;
+      const seg = row.querySelector(".seg"); const mark = l => seg.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.l === l)); mark(it.level);
+      seg.querySelectorAll("button").forEach(b => b.onclick = async () => { if(b.disabled) return; mark(b.dataset.l); try{ await HL.post("exposure", {changes: {[it.id]: b.dataset.l}}); it.level = b.dataset.l; load(); }catch(e){ HL.toast(e.message, true); mark(it.level); } });
+      box.append(row);
+    });
+  }catch(e){ HL.toast(e.message, true); }
+}
+
+/* ---- sessions + log */
+function rSe(){
+  const b = $("sess"); if(!S){ return; } b.innerHTML = S.sessions.length ? "" : `<div class="hint">${tr("Brak aktywnych sesji.","No active sessions.")}</div>`;
+  S.sessions.forEach(s => { const r = document.createElement("div"); r.className = "r"; r.innerHTML = `<div class="n"></div><button class="link">${tr("Wyloguj","Sign out")}</button>`;
+    r.querySelector(".n").innerHTML = `${esc(s.client)} <small>${esc(s.user)} · ${tr("od ","since ")}${dt(s.created)} · ${tr("ostatnio ","last ")}${dt(s.last)}</small>`;
+    r.querySelector("button").onclick = async () => { await HL.api("sessions/" + s.id, {method:"DELETE"}); await load(); rSe(); }; b.append(r); });
+}
+async function rLg(){
+  const r = await HL.api("log"), b = $("log"); b.innerHTML = r.rows.length ? "" : `<div class="hint">${tr("Brak wpisów.","No entries.")}</div>`;
+  r.rows.forEach(x => { const d = document.createElement("div"); d.className = "r"; d.innerHTML = `<div class="n"></div><span class="${x.outcome === "ok" ? "good" : "bad"}">${esc(x.outcome)}</span>`;
+    d.querySelector(".n").innerHTML = `<b>${esc(x.tool)}</b> <small>${esc(x.client || "")} ${esc(x.user || "")} · ${dt(x.ts)}</small><small class="day">${esc(x.args)} ${esc(x.note || "")}</small>`; b.append(d); });
+}
+show("st"); load(); setInterval(() => { if(!document.hidden && (tab === "st" || tab === "se")) load(); }, 15000);
+</script>
+</body>
+</html>
