@@ -3,7 +3,7 @@
 "use strict";
 if (window.__teoCards) return;
 window.__teoCards = 1;
-const VERSION = "1.0.1";
+const VERSION = "1.0.2";
 window.TEO_CARDS_VERSION = VERSION;
 
 /* ---------- helpers ---------- */
@@ -91,13 +91,10 @@ const CSS = `
 *{box-sizing:border-box}
 button{font:inherit;color:inherit}
 .card{position:relative;overflow:hidden;border-radius:var(--teo-r);background:var(--ha-card-background,var(--card-background-color,#fff));border:var(--ha-card-border-width,1px) solid var(--ha-card-border-color,var(--divider-color,rgba(0,0,0,.12)));box-shadow:var(--ha-card-box-shadow,none);transition:background .35s,border-color .35s,box-shadow .35s;isolation:isolate}
-.card::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(135deg,color-mix(in srgb,var(--c) var(--tint,0%),transparent),transparent 72%);transition:background .35s}
-.card.on{--tint:16%;--ic:var(--c)}
-.glow{position:absolute;left:-30px;top:-34px;width:190px;height:170px;z-index:-1;pointer-events:none;background:radial-gradient(closest-side,color-mix(in srgb,var(--c) 55%,transparent),transparent);opacity:0;transition:opacity .5s}
-.card.on .glow{opacity:var(--glow,.35)}
+.card::before{content:"";position:absolute;inset:0;z-index:-1;background:color-mix(in srgb,var(--c) var(--tint,0%),transparent);transition:background .25s}
+.card.on{--tint:10%;--ic:var(--c)}
 .hd{display:flex;align-items:center;gap:12px;padding:14px;min-height:72px}
 .ico{position:relative;flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--ic);background:color-mix(in srgb,var(--ic) 17%,transparent);--mdc-icon-size:24px;cursor:pointer;transition:color .3s,background .3s,box-shadow .4s;overflow:hidden;outline:none}
-.card.on .ico.gl{box-shadow:0 0 18px color-mix(in srgb,var(--c) 55%,transparent)}
 .ico ha-icon{display:flex}
 .ico img,.av{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .tx{min-width:0;flex:1;cursor:pointer;outline:none;border-radius:12px}
@@ -112,7 +109,7 @@ button{font:inherit;color:inherit}
 .ct{display:flex;flex-direction:column;gap:10px;padding:0 14px 14px}
 .row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1 1 0;min-width:0}
 .sl{position:relative;display:block;height:44px;border-radius:16px;background:color-mix(in srgb,var(--c) 18%,transparent);overflow:hidden;cursor:pointer;touch-action:pan-y;--p:0%}
-.sl .fl{position:absolute;inset:0 auto 0 0;width:var(--p);background:linear-gradient(90deg,color-mix(in srgb,var(--c) 78%,#fff),var(--c));transition:width .18s}
+.sl .fl{position:absolute;inset:0 auto 0 0;width:var(--p);background:var(--c);transition:width .18s}
 .sl.drag .fl,.sl.drag .th{transition:none}
 .sl .th{position:absolute;top:50%;left:clamp(10px,calc(var(--p) - 10px),calc(100% - 14px));width:4px;height:20px;margin-top:-10px;border-radius:2px;background:#fff;box-shadow:0 0 3px rgba(0,0,0,.45);pointer-events:none;transition:left .18s}
 .sl.hue,.sl.kel{background:linear-gradient(90deg,#f44,#fa0,#ee0,#4d4,#0dd,#46f,#d4d,#f44)}.sl.kel{background:linear-gradient(90deg,#ffa43a,#ffd9a5,#fff,#cfe3ff,#8fb8ff)}
@@ -252,7 +249,7 @@ class Base extends HTMLElement {
     haptic("light"); this._h.callService(d, s, data);
   }
 }
-Base.prototype.shell = function (cls, style, inner, glow) { return `<div class="card ${cls}" style="${style}">${glow == null ? "" : '<div class="glow"></div>'}${inner}</div>`; };
+Base.prototype.shell = function (cls, style, inner, glow) { return `<div class="card ${cls}" style="${style}">${inner}</div>`; };
 
 /* ---------- visual editor factory (ha-form) ---------- */
 const ACT = {selector: {ui_action: {}}};
@@ -408,7 +405,7 @@ class TeoCard extends Base {
       case "light": {
         const on = s === "on", modes = arr(a.supported_color_modes), bri = a.brightness != null ? Math.round(a.brightness / 2.55) : on ? 100 : 0;
         const hasB = modes.some(m => m !== "onoff"), hasCT = modes.includes("color_temp"), hasC = modes.some(m => ["hs", "xy", "rgb", "rgbw", "rgbww"].includes(m));
-        o.on = on; o.sw = true; o.gl = true; o.an = on ? "breathe" : ""; o.glow = on ? (0.2 + bri / 100 * 0.45).toFixed(2) : 0;
+        o.on = on; o.sw = true; o.gl = true; o.an = ""; o.glow = on ? (0.2 + bri / 100 * 0.45).toFixed(2) : 0;
         o.color = a.rgb_color && on ? `rgb(${a.rgb_color.join(",")})` : "var(--state-light-active-color,#ffb300)";
         o.sub = on ? (hasB ? `${t("on")} · ${bri}%` : t("on")) : t("off");
         if (hasB) {
@@ -643,7 +640,7 @@ reg("teo-chips", "Teo Chips", "A row of small chips: entity states, weather, ala
 /* ---------- teo-title ---------- */
 class TeoTitle extends Base {
   static css = `:host{--c:var(--primary-color,#03a9f4)}.t{padding:6px 4px}.t.c{text-align:center}.t.r{text-align:right}
-h2{margin:0;font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.02em;background:linear-gradient(100deg,var(--primary-text-color,#212121) 55%,var(--c));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{margin:0;font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.02em;color:var(--primary-text-color,#212121)}
 .t.m h2{font-size:24px}.t.s h2{font-size:19px}
 p{margin:4px 0 0;font-size:15px;color:var(--secondary-text-color,#727272)}p.dt{font-size:13px;text-transform:capitalize;letter-spacing:.02em}`;
   _norm(c) { this._dyn = true; return c; }
@@ -759,14 +756,9 @@ reg("teo-stats", "Teo Stats", "A row of big number tiles (energy, power, tempera
 const MCI = {directory: "folder", music: "music-note", track: "music-note", album: "album", artist: "account-music", playlist: "playlist-music", video: "movie", movie: "movie", tv_show: "television-play", image: "image", channel: "radio", podcast: "podcast", app: "apps", genre: "folder-music"};
 class TeoMedia extends Base {
   static css = `.card{--c:#9575cd;min-height:150px}
-.bg{position:absolute;inset:-30px;z-index:-2;background-size:cover;background-position:center;filter:blur(34px) saturate(1.4);transform:scale(1.1);opacity:0;transition:opacity .6s}
-.card.art .bg{opacity:1}.card.art::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(0,0,0,.38),rgba(0,0,0,.62))}
-.card.art{color:#fff;--primary-text-color:#fff;--secondary-text-color:rgba(255,255,255,.76);border-color:transparent}
-.card.art .btn{background:rgba(255,255,255,.16);color:#fff}.card.art .btn.on{background:#fff;color:#222}.card.art .chip{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.18);color:#fff}.card.art .chip.on{background:#fff;color:#222}.card.art select.sel{background:rgba(255,255,255,.16);color:#fff}.card.art select.sel option{color:#222}
-.card.art .sl{background:rgba(255,255,255,.22)}.card.art .sl .fl{background:#fff}
 .mp{padding:16px;display:flex;flex-direction:column;gap:14px}
 .top{display:flex;gap:14px;align-items:center}
-.cv{flex:none;width:92px;height:92px;border-radius:20px;overflow:hidden;display:grid;place-items:center;background:linear-gradient(135deg,color-mix(in srgb,var(--c) 70%,#fff),var(--c));color:#fff;box-shadow:0 8px 22px rgba(0,0,0,.28);--mdc-icon-size:42px}
+.cv{flex:none;width:92px;height:92px;border-radius:20px;overflow:hidden;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c);--mdc-icon-size:42px}
 .cv img{width:100%;height:100%;object-fit:cover}.cv ha-icon{display:flex}
 .top .tx{cursor:default}.top .nm{font-size:19px;line-height:25px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}.top .st{font-size:14px}.top .st.s2{font-size:12px;opacity:.85}
 .pr{display:flex;align-items:center;gap:10px;font-size:12px;font-variant-numeric:tabular-nums;color:var(--secondary-text-color)}.pr .sl{flex:1;height:22px;border-radius:11px}.pr .sl.ro{pointer-events:none}.pr .sl .th{display:none}.pr .sl.rw .th{display:block;width:12px;height:12px;border-radius:50%;margin-top:-6px}.pr span{min-width:38px}.pr span:last-child{text-align:right}
@@ -786,7 +778,7 @@ class TeoMedia extends Base {
 .it:hover .im{transform:scale(1.03)}.it:focus-visible .im{outline:2px solid var(--c);outline-offset:2px}
 .it .im img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.it .im ha-icon{display:flex}
 .it .tt{font-size:12px;line-height:16px;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
-.it .pl{position:absolute;right:6px;bottom:6px;width:32px;height:32px;border-radius:50%;border:0;padding:0;display:grid;place-items:center;background:var(--c);color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.35);--mdc-icon-size:20px}
+.it .pl{position:absolute;right:6px;bottom:6px;width:32px;height:32px;border-radius:50%;border:0;padding:0;display:grid;place-items:center;background:var(--c);color:#fff;cursor:pointer;--mdc-icon-size:20px}
 .msg{padding:32px 16px;text-align:center;color:var(--secondary-text-color);font-size:14px}.msg .btn{margin-top:12px}`;
   _norm(c) {
     if (!c.entity) throw new Error("teo-media: 'entity' is required");
@@ -862,7 +854,7 @@ class TeoMedia extends Base {
     const a = st.attributes, s = st.state, f = a.supported_features || 0, pl = s === "playing", idle = ["off", "standby", "unavailable"].includes(s);
     const pic = a.entity_picture ? imgUrl(h, a.entity_picture) : "", name = c.name || a.friendly_name || c.entity;
     const col = color(c.color);
-    if (this._br) { this._tick = null; this._post(); return this.shell(`${pic ? "art" : ""}`, col ? `--c:${col}` : "", `<div class="bg"${pic ? ` style="background-image:url('${esc(pic)}')"` : ""}></div>` + this._libHtml(h, c), 1).replace('<div class="glow"></div>', ""); }
+    if (this._br) { this._tick = null; this._post(); return this.shell(``, col ? `--c:${col}` : "", `` + this._libHtml(h, c), 1).replace('<div class="glow"></div>', ""); }
     const dur = num(a.media_duration), pos = () => (num(a.media_position) || 0) + (pl && a.media_position_updated_at ? (Date.now() - Date.parse(a.media_position_updated_at)) / 1000 : 0);
     const title = a.media_title || (idle ? T("nothing") : sTxt(h, st)), sub = [a.media_artist || a.media_series_title, a.media_album_name].filter(Boolean).join(" · ");
     const canSeek = !!(f & 2);
@@ -881,7 +873,7 @@ class TeoMedia extends Base {
     if (pl && dur) this._tick = () => { if (this._drag || !this._m) return; const p = pos(), n = this._m.querySelector("[data-tc]"), sl = this._m.querySelector(".pr .sl"); if (n) n.textContent = fmtDur(p); if (sl) { sl.style.setProperty("--p", pctOf(p, 0, dur) + "%"); const i = sl.querySelector("input"); if (i) i.value = Math.round(Math.min(p, dur)); } }; else this._tick = null;
     this._post();
     const cover = pic ? `<img src="${esc(pic)}" alt="" onerror="this.remove()">` : ico("mdi:music");
-    return this.shell(`${pic && !idle ? "art " : ""}${pl ? "on " : ""}`, col ? `--c:${col}` : "", `<div class="bg"${pic ? ` style="background-image:url('${esc(pic)}')"` : ""}></div><div class="mp"><div class="top"><div class="cv" aria-hidden="true">${cover}</div><div class="tx aa" role="button" tabindex="0" aria-label="${esc(name + ": " + title)}"><div class="nm">${esc(title)}</div>${sub ? `<div class="st">${esc(sub)}</div>` : ""}<div class="st s2">${esc(name)}${a.source ? " · " + esc(a.source) : ""}</div></div></div>${prog}<div class="ctl">${b.join("")}</div>${vol}<div class="act">${source}${lib}</div>${spk}</div>`, 1).replace('<div class="glow"></div>', "");
+    return this.shell(`${pl ? "on " : ""}`, col ? `--c:${col}` : "", `<div class="mp"><div class="top"><div class="cv" aria-hidden="true">${cover}</div><div class="tx aa" role="button" tabindex="0" aria-label="${esc(name + ": " + title)}"><div class="nm">${esc(title)}</div>${sub ? `<div class="st">${esc(sub)}</div>` : ""}<div class="st s2">${esc(name)}${a.source ? " · " + esc(a.source) : ""}</div></div></div>${prog}<div class="ctl">${b.join("")}</div>${vol}<div class="act">${source}${lib}</div>${spk}</div>`, 1).replace('<div class="glow"></div>', "");
   }
 }
 defineEditor("teo-media-editor", c => [{name: "entity", required: true, selector: {entity: {domain: "media_player"}}}, {name: "name", selector: {text: {}}}, {name: "speakers", selector: {entity: {domain: "media_player", multiple: true}}},
