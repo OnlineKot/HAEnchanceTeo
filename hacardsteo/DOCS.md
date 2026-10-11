@@ -101,7 +101,7 @@ entity: media_player.living_room
 speakers:
   - media_player.kitchen
   - media_player.bedroom
-start_path: media-source://media_source/qnap
+start_path: media-source://media_source/local/qnap_media
 ```
 The media player has to support `media_player/browse_media` and playing media-source items (most do: Sonos, Cast, DLNA, Music Assistant, ...).
 

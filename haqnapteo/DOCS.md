@@ -28,5 +28,5 @@ Open the panel → **Connect**: *Scan the network* (or type the address) → use
 - Use SMB 3 unless your QNAP is very old.
 
 ## QNAP as a media source (streaming)
-Panel → *Media* → **Mount QNAP as media source**. The share appears in HA *Media* (`media-source://media_source/qnap_media`), works with any player card, TeoCards `teo-media` and HAnnounce.
+Panel → *Media* → **Mount QNAP as media source**. The share appears in HA *Media* under **My media → qnap_media** (`media-source://media_source/local/qnap_media`), works with any player card, TeoCards `teo-media` and HAnnounce.
 This uses the Supervisor mounts API, so the add-on has the `manager` role. The mount is read-only. Remove it with the same panel at any time.

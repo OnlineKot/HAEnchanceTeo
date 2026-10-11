@@ -157,7 +157,7 @@ async function loadRemote(){
 }
 async function loadMount(){
   const r = await HL.api("mount"); const m = r.mount;
-  $("srcInfo").innerHTML = r.error ? `<span>${tr("Błąd","Error")}</span><span style="color:var(--error-color)">${HL.esc(r.error)}</span>` : m ? `<span>${tr("Stan","State")}</span><span>${HL.esc(m.state || "?")}</span><span>${tr("Ścieżka","Path")}</span><span>${HL.esc(r.path)}</span><span>media-source</span><span>${HL.esc(r.source)}</span>` : `<span>${tr("Stan","State")}</span><span>${tr("niepodłączone","not mounted")}</span>`;
+  $("srcInfo").innerHTML = r.error ? `<span>${tr("Błąd","Error")}</span><span style="color:var(--error-color)">${HL.esc(r.error)}</span>` : m ? `<span>${tr("Stan","State")}</span><span>${HL.esc(m.state || "?")}</span><span>${tr("Gdzie w HA","Where in HA")}</span><span>${tr("Multimedia → Moje multimedia → ","Media → My media → ")}<b>qnap_media</b></span><span>${tr("Ścieżka","Path")}</span><span>${HL.esc(r.path)}</span><span>media-source</span><span>${HL.esc(r.source)}</span>` : `<span>${tr("Stan","State")}</span><span>${tr("niepodłączone","not mounted")}</span>`;
   $("srcOff").hidden = !m; $("srcOn").textContent = m ? tr("Zaktualizuj dane logowania","Update credentials") : T.srcOn;
 }
 $("srcOn").onclick = async () => { try{ await HL.post("mount"); HL.toast("✓"); }catch(e){ HL.toast(e.message, true); } loadMount(); };

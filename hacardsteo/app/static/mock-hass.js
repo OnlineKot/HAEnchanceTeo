@@ -147,12 +147,13 @@ const arr = v => v == null ? [] : Array.isArray(v) ? v : [v];
 const dir = (title, id, n = 0) => ({title, media_class: "directory", media_content_type: "directory", media_content_id: id, can_play: false, can_expand: true, thumbnail: n ? thumb(n) : null});
 const item = (title, id, n, cls = "music") => ({title, media_class: cls, media_content_type: cls === "music" ? "audio/mpeg" : "video/mp4", media_content_id: id, can_play: true, can_expand: false, thumbnail: thumb(n)});
 const TREE = {
-  "media-source://media_source": {title: "Media", children: [dir("QNAP", "media-source://media_source/qnap", 1), dir("Local media", "media-source://media_source/local", 4)]},
-  "media-source://media_source/qnap": {title: "QNAP", children: [dir("Music", "media-source://media_source/qnap/Music", 2), dir("Movies", "media-source://media_source/qnap/Movies", 3), dir("Photos", "media-source://media_source/qnap/Photos", 5), dir("Podcasts", "media-source://media_source/qnap/Podcasts", 0)]},
-  "media-source://media_source/qnap/Music": {title: "Music", children: ["Daft Punk", "M83", "The xx", "Justice", "Boards of Canada", "Air", "Röyksopp", "Massive Attack"].map((t, i) => dir(t, "media-source://media_source/qnap/Music/" + t, i + 1))},
-  "media-source://media_source/qnap/Movies": {title: "Movies", children: ["Blade Runner.mp4", "Arrival.mp4", "Dune.mp4", "Her.mp4", "Drive.mp4"].map((t, i) => item(t.replace(".mp4", ""), "media-source://media_source/qnap/Movies/" + t, i + 3, "video"))},
+  "media-source://media_source": {title: "Media", children: [dir("My media", "media-source://media_source/local", 4)]},
+  "media-source://media_source/local": {title: "My media", children: [dir("qnap_media", "media-source://media_source/local/qnap_media", 1)]},
+  "media-source://media_source/local/qnap_media": {title: "QNAP", children: [dir("Music", "media-source://media_source/local/qnap_media/Music", 2), dir("Movies", "media-source://media_source/local/qnap_media/Movies", 3), dir("Photos", "media-source://media_source/local/qnap_media/Photos", 5), dir("Podcasts", "media-source://media_source/local/qnap_media/Podcasts", 0)]},
+  "media-source://media_source/local/qnap_media/Music": {title: "Music", children: ["Daft Punk", "M83", "The xx", "Justice", "Boards of Canada", "Air", "Röyksopp", "Massive Attack"].map((t, i) => dir(t, "media-source://media_source/local/qnap_media/Music/" + t, i + 1))},
+  "media-source://media_source/local/qnap_media/Movies": {title: "Movies", children: ["Blade Runner.mp4", "Arrival.mp4", "Dune.mp4", "Her.mp4", "Drive.mp4"].map((t, i) => item(t.replace(".mp4", ""), "media-source://media_source/local/qnap_media/Movies/" + t, i + 3, "video"))},
 };
-for (const a of ["Daft Punk", "M83", "The xx", "Justice", "Boards of Canada", "Air", "Röyksopp", "Massive Attack"]) TREE["media-source://media_source/qnap/Music/" + a] = {title: a, can_play: true, children: ["Track one", "Track two", "Track three", "Track four", "Track five", "Track six"].map((t, i) => item(a + " - " + t, `media-source://media_source/qnap/Music/${a}/${t}.mp3`, i + a.length))};
+for (const a of ["Daft Punk", "M83", "The xx", "Justice", "Boards of Canada", "Air", "Röyksopp", "Massive Attack"]) TREE["media-source://media_source/local/qnap_media/Music/" + a] = {title: a, can_play: true, children: ["Track one", "Track two", "Track three", "Track four", "Track five", "Track six"].map((t, i) => item(a + " - " + t, `media-source://media_source/local/qnap_media/Music/${a}/${t}.mp3`, i + a.length))};
 const hist = id => {
   let seed = 0; for (const c of id) seed = (seed * 31 + c.charCodeAt(0)) % 997;
   const v = parseFloat(S[id] && S[id].state) || 10, out = [], t0 = Date.now() / 1000 - 86400;

@@ -3,7 +3,7 @@
 "use strict";
 if (window.__teoCards) return;
 window.__teoCards = 1;
-const VERSION = "1.0.3";
+const VERSION = "1.0.4";
 window.TEO_CARDS_VERSION = VERSION;
 
 /* ---------- helpers ---------- */

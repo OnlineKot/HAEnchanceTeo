@@ -637,7 +637,7 @@ async def h_mount_get(request):
     except web.HTTPException as exc:
         return web.json_response({"error": json.loads(exc.text)["error"]})
     m = next((x for x in data.get("mounts", []) if x.get("name") == MOUNT), None)
-    return web.json_response({"mount": m, "path": f"/media/{MOUNT}", "source": f"media-source://media_source/{MOUNT}"})
+    return web.json_response({"mount": m, "path": f"/media/{MOUNT}", "source": f"media-source://media_source/local/{MOUNT}", "where": f"Media > My media > {MOUNT}"})
 
 
 async def h_mount_set(request):
@@ -651,8 +651,18 @@ async def h_mount_set(request):
         await sup_mount("PUT", f"/{MOUNT}", json=body)
     else:
         await sup_mount("POST", json={"name": MOUNT, **body})
+    state_ = "unknown"
+    for _ in range(12):                      # the Supervisor mounts asynchronously: wait for the result
+        await asyncio.sleep(1)
+        cur = next((x for x in (await sup_mount("GET")).get("mounts", []) if x.get("name") == MOUNT), None)
+        state_ = (cur or {}).get("state", "unknown")
+        if state_ in ("active", "failed"):
+            break
+    if state_ != "active":
+        history("mount", False, f"mount state: {state_}")
+        raise err(502, f"Mount state: {state_}. Check the share name (a share, not a folder), user/password, and that the QNAP allows SMB access from Home Assistant (SMB 2/3, no guest-only). Details: Settings > System > Logs > Supervisor.")
     history("mount", True, f"QNAP share mounted as media source ({MOUNT}, read-only)")
-    return web.json_response({"ok": True})
+    return web.json_response({"ok": True, "state": state_})
 
 
 async def h_mount_delete(request):

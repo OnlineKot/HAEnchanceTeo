@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.4
+- Media card: the QNAP example / default path is `media-source://media_source/local/qnap_media` (the QNAP mount of HAQnapTeo lives under HA "My media").
+
 ## 1.0.3
 - Speed: taps show their result instantly (optimistic state for on/off, toggle, open/close, lock/unlock, brightness) and are corrected as soon as Home Assistant reports the real state; sliders now send while dragging (every 150 ms) so the device follows the finger; transitions cut from 250-400 ms to ~100 ms; slider fill no longer lags; climate +/- applies after 450 ms instead of 700 ms.
 
