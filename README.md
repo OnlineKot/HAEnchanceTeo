@@ -38,6 +38,10 @@ stop-if. Run from an iPhone Shortcut, by time or by an entity, with **live step 
 ### 🛡 [HAMcpTeo](hamcpteo/DOCS.md)
 **Claude on your Home Assistant – only what you pick.** MCP server on your own DDNS name (HTTPS), sign-in with your HA account **and its 2FA**, per-entity read / control, safe service allow-list, phone approval for risky actions, sessions and audit log.
 
+### 🧰 [HAMcpFullTeo](hamcpfullteo/DOCS.md)
+**The full HA-MCP toolbox (87+ tools) for Claude and other AI clients**, built locally from the bundled source (based on ha-mcp, MIT).
+**No telemetry, no analytics, no update phone-home.** Complements HAMcpTeo, which is the small, locked-down variant.
+
 ### 🗄 [HAQnapTeo](haqnapteo/DOCS.md)
 **Backups to your QNAP and media from it.** Uploads Home Assistant backups to a QNAP share over SMB with schedule and retention,
 downloads new media into HA, lists / fetches / deletes backups on the NAS. **Private: no network ports** – panel only through Home Assistant.
