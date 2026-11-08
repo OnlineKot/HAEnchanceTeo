@@ -172,6 +172,11 @@ configuration:
       Tools tab and cannot be unpinned from the web Settings UI without unsetting
       this option first. Useful in combination with Tool Search. Comma-separated tool
       names.
+  public_url:
+    name: Public address (tunnel / DNS name)
+    description: 'Optional. Your public HTTPS name, e.g. ha.example.com. Leave empty to
+      use the External URL from Home Assistant. The ready address for claude.ai is
+      shown in the add-on log.'
   secret_path:
     name: Secret path override
     description: 'Optional custom HTTP path for the MCP server. Leave empty to use

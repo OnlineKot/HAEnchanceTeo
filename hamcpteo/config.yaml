@@ -1,6 +1,6 @@
 name: "HAMcpTeo"
 description: "Full HA-MCP server (87+ tools) for Claude and other AI clients. Private: no telemetry, no analytics. By TeodorTeo.com"
-version: "1.0.0"
+version: "1.1.0"
 slug: "hamcpteo"
 url: "https://teodorteo.com"
 arch:
@@ -63,6 +63,7 @@ options:
   snapshot_delete_min_age_days: 7
   disabled_tools: ""
   pinned_tools: ""
+  public_url: ""
 schema:
   verify_ssl: bool?
   ha_tool_concurrency: int(0,32)?
@@ -87,6 +88,7 @@ schema:
   disabled_tools: str?
   pinned_tools: str?
   secret_path: str?
+  public_url: str?
 # Add-on exposes HTTP port for MCP communication (fixed internal port)
 ports:
   9583/tcp: 9583

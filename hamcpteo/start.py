@@ -569,16 +569,69 @@ def export_options_env(config: dict[str, Any]) -> None:
     os.environ.setdefault("CODE_MODE_SAVED_TOOLS_PATH", "/data/saved_tools.json")
 
 
-def _log_server_url(secret_path: str) -> None:
+def _normalize_public_url(raw: Any) -> str:
+    """Return ``https://host`` (no trailing slash) from what the user typed, or ""."""
+    if not isinstance(raw, str):
+        return ""
+    value = raw.strip().rstrip("/")
+    if not value:
+        return ""
+    if "://" not in value:
+        value = "https://" + value
+    return value
+
+
+def detect_public_url(config: dict[str, Any], supervisor_token: str) -> tuple[str, str]:
+    """Find the public address of this Home Assistant: ``(url, source)``.
+
+    1. the ``public_url`` add-on option (what the user typed),
+    2. ``external_url`` from Home Assistant itself (Settings -> System -> Network).
+
+    Only Home Assistant is asked, so nothing leaves the machine. ``("", "")``
+    when neither is set.
+    """
+    typed = _normalize_public_url(config.get("public_url", ""))
+    if typed:
+        return typed, "add-on option public_url"
+    try:
+        req = urllib.request.Request(
+            "http://supervisor/core/api/config",
+            headers={"Authorization": f"Bearer {supervisor_token}"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            ha_config = json.loads(resp.read())
+        found = _normalize_public_url(ha_config.get("external_url") or "")
+        if found:
+            return found, "Home Assistant external_url"
+    except (OSError, ValueError) as err:
+        log_warning(f"Could not read external_url from Home Assistant: {err}")
+    return "", ""
+
+
+def _log_server_url(secret_path: str, public_url: str = "", source: str = "") -> None:
     """Log the MCP server URL the user copies into their client."""
     log_info("")
     log_info("=" * 80)
-    log_info(f"🔐 MCP Server URL: http://<home-assistant-ip>:9583{secret_path}")
+    if public_url:
+        log_info("🔐 READY ADDRESS for claude.ai -> Settings -> Connectors -> Add custom connector:")
+        log_info("")
+        log_info(f"   {public_url}{secret_path}")
+        log_info("")
+        log_info(f"   (address taken from: {source})")
+        log_info("   Your tunnel / reverse proxy must forward that name to this add-on: http://<home-assistant-ip>:9583")
+    else:
+        log_info("🔐 No public address found, so only the local address is known:")
+        log_info("")
+        log_info(f"   http://<home-assistant-ip>:9583{secret_path}")
+        log_info("")
+        log_info("   For claude.ai type your tunnel / DNS name once in this add-on's")
+        log_info("   Configuration -> public_url (e.g. ha.example.com), or set it in")
+        log_info("   Home Assistant -> Settings -> System -> Network -> External URL.")
+        log_info("   The ready address will then appear here.")
     log_info("")
     log_info(f"   Secret Path: {secret_path}")
-    log_info("")
-    log_info("   ⚠️  IMPORTANT: Copy this exact URL - the secret path is required!")
-    log_info("   💡 This path is auto-generated and persisted to /data/secret_path.txt")
+    log_info("   ⚠️  The secret path is required - copy the whole address!")
+    log_info("   💡 It is auto-generated and persisted to /data/secret_path.txt")
     log_info("=" * 80)
     log_info("")
 
@@ -623,7 +676,8 @@ def main() -> int:
     # Fixed port (internal container port)
     port = 9583
 
-    _log_server_url(secret_path)
+    public_url, public_source = detect_public_url(config, supervisor_token)
+    _log_server_url(secret_path, public_url, public_source)
 
     # Configure logging before server start (v3 removed log_level from run())
     import logging

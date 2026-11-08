@@ -19,6 +19,18 @@ Add-on by https://teodorteo.com · upstream docs: https://github.com/homeassista
 
 ---
 
+## Quick connect to claude.ai (almost zero config)
+
+1. Start the add-on. It looks for your public address by itself: first the `public_url` option, then the
+   **External URL** set in Home Assistant (Settings → System → Network). Nothing is sent outside – only Home Assistant is asked.
+2. Open the add-on **Log**: it prints a **ready address** (`https://your-name/private_…`).
+3. Not found? Type your tunnel / DNS name once in **Configuration → public_url** and restart.
+4. claude.ai → Settings → Connectors → Add custom connector → paste the ready address.
+
+Your tunnel / reverse proxy must forward that name to this add-on (`http://<home-assistant-ip>:9583`).
+
+---
+
 ## Installation
 
 

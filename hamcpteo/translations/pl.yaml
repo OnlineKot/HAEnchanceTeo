@@ -194,6 +194,11 @@ configuration:
       się na górze zakładki „Narzędzia” i nie można ich odpiąć z interfejsu ustawień
       sieciowych bez wcześniejszego usunięcia tej opcji. Przydatne w połączeniu z
       wyszukiwaniem narzędzi. Nazwy narzędzi oddzielone przecinkami.
+  public_url:
+    name: Adres publiczny (tunel / nazwa DNS)
+    description: 'Opcjonalnie. Twoja publiczna nazwa HTTPS, np. ha.example.com. Zostaw
+      puste, aby użyć External URL z Home Assistanta. Gotowy adres dla claude.ai
+      pokaże się w logu dodatku.'
   secret_path:
     name: Nadpisanie tajnej ścieżki
     description: 'Opcjonalna niestandardowa ścieżka HTTP dla serwera MCP. Pozostaw
