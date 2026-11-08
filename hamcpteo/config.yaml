@@ -1,6 +1,6 @@
 name: "HAMcpTeo"
 description: "Full HA-MCP server (87+ tools) for Claude and other AI clients. Private: no telemetry, no analytics. By TeodorTeo.com"
-version: "1.1.0"
+version: "1.2.0"
 slug: "hamcpteo"
 url: "https://teodorteo.com"
 arch:

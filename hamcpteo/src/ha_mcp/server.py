@@ -282,6 +282,7 @@ class HomeAssistantSmartMCPServer:
         # PolicyMiddleware so a write blocked by Read Only Mode never
         # queues a pointless approval request.
         self._apply_read_only_middleware()
+        self._apply_access_control_middleware()
 
         # Strict mandatory best-practices gate (#1779) — always installed,
         # self-no-ops at call time. Registered immediately AFTER the
@@ -736,6 +737,15 @@ class HomeAssistantSmartMCPServer:
             return await self.mcp.local_provider._list_tools()
 
         self.mcp.add_middleware(ReadOnlyMiddleware(list_tools=_list_all_tools))
+
+    def _apply_access_control_middleware(self) -> None:
+        """Install the per-category access levels (HAMcpTeo, see access_control)."""
+        from .access_control import AccessControlMiddleware
+
+        async def _list_all_tools() -> Any:
+            return await self.mcp.local_provider._list_tools()
+
+        self.mcp.add_middleware(AccessControlMiddleware(list_tools=_list_all_tools))
 
     def _apply_strict_bps_middleware(self) -> None:
         """Install the strict best-practices gate (#1779).

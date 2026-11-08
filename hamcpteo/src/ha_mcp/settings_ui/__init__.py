@@ -23,6 +23,7 @@ from starlette.responses import HTMLResponse, JSONResponse, Response
 from .._version import is_embedded, is_running_in_addon
 from ..transforms import DEFAULT_PINNED_TOOLS
 from ..utils.data_paths import get_data_dir
+from . import access_page
 from ._handlers_advanced import build_advanced_handlers
 from ._handlers_backups import build_backups_handlers
 from ._handlers_fs import build_fs_handlers
@@ -463,6 +464,9 @@ def build_settings_handlers(
     handlers: dict[str, Any] = {
         "root_page": _root_page,
         "settings_page": _settings_page,
+        "access_page": access_page.access_page,
+        "get_access": access_page.get_access,
+        "save_access": access_page.save_access,
     }
 
     # Tool security policies. The main server attaches an
@@ -603,6 +607,10 @@ def is_http_settings_mounted() -> bool:
 # handlers work at any prefix.
 SETTINGS_ROUTES: tuple[tuple[str, list[str], str], ...] = (
     ("/settings", ["GET"], "settings_page"),
+    # Per-category AI access levels (HAMcpTeo)
+    ("/access", ["GET"], "access_page"),
+    ("/api/access", ["GET"], "get_access"),
+    ("/api/access", ["POST"], "save_access"),
     ("/api/settings/tools", ["GET"], "get_tools"),
     ("/api/settings/tools", ["POST"], "save_tools"),
     ("/api/settings/restart", ["POST"], "restart_addon"),

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.0
+- AI access levels per category (alarms, locks, security, covers, climate, lights, switches, media, automations, sensors, other, system): none / read / full, colour-coded page `Access` in the panel, one-click "everything" row. Alarms, locks and security default to read-only.
+
 ## 1.1.0
 - Public address auto-detect (`public_url` option or Home Assistant External URL); the log prints a ready address for claude.ai.
 
