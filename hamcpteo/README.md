@@ -1,4 +1,4 @@
-# HAMcpFullTeo
+# HAMcpTeo
 
 Full-featured **Home Assistant MCP server** (87+ tools: entities, automations, scripts, dashboards, backups,
 history, calendars, todo, cameras, system) for Claude and other AI clients – packaged by
@@ -13,5 +13,4 @@ Based on [ha-mcp](https://github.com/homeassistant-ai/ha-mcp) by Julien (MIT).
 - **Built locally.** No external image registry: Home Assistant builds the add-on from the bundled source.
 - **TeodorTeo.com branding** in the add-on, the settings panel and the landing page.
 
-Next to [HAMcpTeo](../hamcpteo/DOCS.md) (a small server with per-entity access, 2FA and phone approval), this one is the
-complete toolbox. See [DOCS.md](DOCS.md) for setup and [PRIVACY.md](PRIVACY.md) for the data policy.
+See [DOCS.md](DOCS.md) for setup and [PRIVACY.md](PRIVACY.md) for the data policy.

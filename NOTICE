@@ -1,5 +1,5 @@
 Icons: Material Design Icons by Pictogrammers (https://pictogrammers.com/library/mdi/), Apache License 2.0
 (bundled in haliveteo/app/static/icons.js). Theme colors follow the Home Assistant frontend default theme.
 
-hamcpfullteo/ is based on ha-mcp (https://github.com/homeassistant-ai/ha-mcp), MIT License, Copyright (c) 2024 Julien
-(license text: hamcpfullteo/LICENSE). Modified by TeodorTeo.com: branding, removed update check / demo token / telemetry hooks.
+hamcpteo/ is based on ha-mcp (https://github.com/homeassistant-ai/ha-mcp), MIT License, Copyright (c) 2024 Julien
+(license text: hamcpteo/LICENSE). Modified by TeodorTeo.com: branding, removed update check / demo token / telemetry hooks.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""HAMcpFullTeo (TeodorTeo.com) add-on startup script."""
+"""HAMcpTeo (TeodorTeo.com) add-on startup script."""
 
 import json
 import os
@@ -585,7 +585,7 @@ def _log_server_url(secret_path: str) -> None:
 
 def main() -> int:
     """Start the Home Assistant MCP Server."""
-    log_info("Starting HAMcpFullTeo by TeodorTeo.com (no telemetry, no analytics)...")
+    log_info("Starting HAMcpTeo by TeodorTeo.com (no telemetry, no analytics)...")
 
     # Read configuration from Supervisor
     config_file = Path("/data/options.json")

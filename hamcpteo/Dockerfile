@@ -1,12 +1,68 @@
-ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.19
-FROM $BUILD_FROM
+# Home Assistant MCP Server Add-on
+# Multi-stage build: uv for dependency resolution, slim Python for runtime
+# Python 3.13 - Security support until 2029-10
+# No bashio needed - pure Python startup script
 
-LABEL maintainer="TeodorTeo.com <https://teodorteo.com>"
+# PYTHON_BASE lets CI point the runtime base at another registry holding the
+# same digest when ECR Public rate-limits the pull; the default is the pin.
+ARG PYTHON_BASE=public.ecr.aws/docker/library/python:3.13-slim@sha256:ae14d4ce8771606477a81446e7ef429edd6762305fc50c84507c1041fa8285d1
 
-RUN apk add --no-cache python3 py3-aiohttp
+# --- Build stage: install dependencies with uv ---
+FROM ghcr.io/astral-sh/uv:0.13.6-python3.13-trixie-slim@sha256:e586c1c65b7071aec78f02c5587c76c5011159cd76b3d6f1255f40e48e850abc AS builder
 
-COPY run.sh /run.sh
-COPY app /app
-RUN chmod a+x /run.sh
+WORKDIR /app
 
-CMD ["/run.sh"]
+# Compile bytecode for faster startup; copy mode required with cache mounts
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+
+# Install dependencies first (cached separately from source changes). The
+# dev-only test-env pyproject is copied because --locked reads every
+# package in the lock file, including dev ones that are not installed.
+COPY pyproject.toml uv.lock ./
+COPY tests/test-env/pyproject.toml ./tests/test-env/
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-install-project --no-dev
+
+# Copy source and install the project itself
+COPY README.md LICENSE ./
+COPY src/ ./src/
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-dev --no-editable
+
+# --- Runtime stage: clean image without uv ---
+FROM ${PYTHON_BASE}
+
+WORKDIR /app
+
+# Copy the virtual environment and startup script from builder
+COPY --from=builder /app/.venv /app/.venv
+COPY start.py /
+COPY app_options.json /
+
+# Activate virtual environment via PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Propagate the build version into the runtime so startup logs report the
+# correct version. The addon workflow always passes BUILD_VERSION; standalone
+# Docker pulls that don't pass it fall through to package metadata.
+ARG BUILD_VERSION
+ARG BUILD_ARCH
+ENV HA_MCP_BUILD_VERSION=${BUILD_VERSION}
+
+ENV OTEL_SDK_DISABLED=true \
+    OTEL_TRACES_EXPORTER=none \
+    OTEL_METRICS_EXPORTER=none \
+    OTEL_LOGS_EXPORTER=none \
+    HA_MCP_DISABLE_UPDATE_CHECK=1 \
+    DO_NOT_TRACK=1
+
+LABEL \
+    io.hass.name="HAMcpTeo" \
+    io.hass.description="Full HA-MCP server by TeodorTeo.com (no telemetry)" \
+    org.opencontainers.image.authors="TeodorTeo.com" \
+    org.opencontainers.image.url="https://teodorteo.com" \
+    io.hass.version="${BUILD_VERSION}" \
+    io.hass.type="addon" \
+    io.hass.arch="${BUILD_ARCH}"
+
+CMD ["python3", "/start.py"]

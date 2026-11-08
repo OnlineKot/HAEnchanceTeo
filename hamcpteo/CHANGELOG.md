@@ -1,4 +1,6 @@
 # Changelog
 
 ## 1.0.0
-- Initial release: MCP server for Claude (Streamable HTTP) on your DDNS name, OAuth 2.1 + PKCE sign-in that verifies the Home Assistant account and its 2FA, per-entity access (none / read / control), safe service allow-list, phone approval for risky actions, sessions, kill switch and audit log.
+- First TeodorTeo.com release, based on ha-mcp 9.1.1.
+- Removed PyPI update check and the public demo token; OpenTelemetry exporters disabled by default.
+- Local image build (no external registry), TeodorTeo.com branding.

@@ -1,4 +1,4 @@
-# Privacy – HAMcpFullTeo (TeodorTeo.com)
+# Privacy – HAMcpTeo (TeodorTeo.com)
 
 This build sends **nothing** to TeodorTeo.com or to any analytics service.
 

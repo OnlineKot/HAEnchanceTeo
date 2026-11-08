@@ -43,7 +43,7 @@ class CustomRouteServer(Protocol):
 # so it survives the ha_mcp_tools webhook proxy (which forwards text/plain but
 # coerces text/html to JSON as an XSS guard).
 LANDING_MESSAGE = (
-    "HAMcpFullTeo is up and running!  (TeodorTeo.com, no telemetry)\n"
+    "HAMcpTeo is up and running!  (TeodorTeo.com, no telemetry)\n"
     "\n"
     "To connect, paste the full URL (including the /private_... key) into the\n"
     "connector or MCP settings of your AI/LLM client. No username or password required.\n"
