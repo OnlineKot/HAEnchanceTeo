@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.1
+- Lighter image build for Raspberry Pi (no bytecode pre-compile, single install job) after a 1.2.0 build that never finished.
+
 ## 1.2.0
 - AI access levels per category (alarms, locks, security, covers, climate, lights, switches, media, automations, sensors, other, system): none / read / full, colour-coded page `Access` in the panel, one-click "everything" row. Alarms, locks and security default to read-only.
 

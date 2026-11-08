@@ -13,7 +13,9 @@ FROM ghcr.io/astral-sh/uv:0.13.6-python3.13-trixie-slim@sha256:e586c1c65b7071aec
 WORKDIR /app
 
 # Compile bytecode for faster startup; copy mode required with cache mounts
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+# Kept light on purpose: a Raspberry Pi builds this image on the device itself, so no
+# bytecode pre-compilation and one install job at a time (less RAM / CPU spike).
+ENV UV_LINK_MODE=copy UV_CONCURRENT_DOWNLOADS=2 UV_CONCURRENT_INSTALLS=1 UV_CONCURRENT_BUILDS=1
 
 # Install dependencies first (cached separately from source changes). The
 # dev-only test-env pyproject is copied because --locked reads every
