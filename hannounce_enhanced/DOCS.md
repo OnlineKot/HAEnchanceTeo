@@ -150,3 +150,13 @@ rest_command:
 
 ---
 Created by **TeodorTeo.com** · MIT License
+
+
+## Users and language (1.17)
+
+- The sidebar panel is open to every Home Assistant user. The panel asks Home Assistant who is signed in:
+  **administrators** see all tabs and the whole history, **other users** see Quick, Say and History (only their own announcements).
+  The server enforces this, hiding the tabs is only cosmetic.
+- First time you open it, you pick **Polski** or **English**. Switch any time with the button at the top. The choice is saved
+  per Home Assistant user, so it follows you to your other devices. Set `default_language` in Configuration to skip the question.
+- The standalone Quick app (`/?quick=1` on port 8765) has no Home Assistant user, so the language is kept in that browser.

@@ -1,5 +1,5 @@
 name: HAnnounce Enhanced
-version: "1.16.0"
+version: "1.17.0"
 slug: hannounce_enhanced
 description: Announce on speakers - TTS, your own recordings, uploads, generated sounds, one-time or saved. By TeodorTeo.com
 url: https://teodorteo.com
@@ -16,7 +16,7 @@ homeassistant_api: true
 hassio_api: true
 ingress: true
 ingress_port: 8099
-panel_admin: true
+panel_admin: false
 panel_icon: mdi:bullhorn
 panel_title: HAnnounce
 ports:
@@ -31,6 +31,7 @@ options:
   check_external_ip: true
   external_host: ""
   log_level: info
+  default_language: auto
 schema:
   base_url: str?
   api_key: password?
@@ -39,3 +40,4 @@ schema:
   check_external_ip: bool
   external_host: str?
   log_level: list(debug|info|warning)
+  default_language: list(auto|pl|en)

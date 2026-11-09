@@ -17,6 +17,9 @@ configuration:
   external_host:
     name: Zewnętrzny host (DDNS)
     description: "Opcjonalna nazwa hosta lub IP używane w linkach spoza domu (np. mojadomena.duckdns.org). Puste = wykryty zewnętrzny IP."
+  default_language:
+    name: Język domyślny
+    description: "Język panelu, gdy użytkownik jeszcze go nie wybrał. „auto” = zapytaj przy pierwszym otwarciu."
   log_level:
     name: Poziom logów
     description: Szczegółowość logów dodatku.

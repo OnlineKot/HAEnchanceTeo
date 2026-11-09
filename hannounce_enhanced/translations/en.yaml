@@ -17,6 +17,9 @@ configuration:
   external_host:
     name: External host (DDNS)
     description: "Optional hostname or IP to use in links from outside the home (e.g. mydomain.duckdns.org). Leave empty to use the detected external IP."
+  default_language:
+    name: Default language
+    description: "Panel language when the user has not chosen one yet. auto = ask on first open."
   log_level:
     name: Log level
     description: Verbosity of the add-on log.

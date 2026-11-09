@@ -320,6 +320,64 @@ async def ws_call(msg):
         return reply.get("result")
 
 
+# ---------------------------------------------------------------- who is looking (HA ingress user)
+_users = {"at": 0.0, "by_id": {}}
+
+
+async def ha_users():
+    """HA users with their admin flag, cached for a minute."""
+    if time.time() - _users["at"] < 60 and _users["by_id"]:
+        return _users["by_id"]
+    try:
+        rows = await ws_call({"type": "config/auth/list"})
+        _users["by_id"] = {u["id"]: {"name": u.get("name") or "", "admin": bool(u.get("is_owner")) or "system-admin" in (u.get("group_ids") or [])}
+                           for u in rows if not u.get("system_generated")}
+        _users["at"] = time.time()
+    except Exception as exc:   # noqa: BLE001 - never block the panel because the user list failed
+        log.warning("Could not read the HA user list: %s", exc)
+    return _users["by_id"]
+
+
+@web.middleware
+async def user_middleware(request, handler):
+    """The Supervisor puts the signed-in HA user into the ingress headers (only it can reach this port)."""
+    uid = request.headers.get("X-Remote-User-Id", "")
+    name = request.headers.get("X-Remote-User-Display-Name") or request.headers.get("X-Remote-User-Name") or ""
+    if uid:
+        info = (await ha_users()).get(uid)
+        request["user"] = {"id": uid, "name": name or (info or {}).get("name", ""), "admin": bool(info and info["admin"])}
+    else:   # no header: local development only
+        request["user"] = {"id": "", "name": "dev" if DEV else "", "admin": DEV}
+    if not request["user"]["admin"]:
+        path = request.path
+        allowed = path in USER_PATHS or path.startswith(("/media/", "/icon-"))
+        if path == "/api/log" and request.method != "GET":
+            allowed = False                                                # clearing the history is for the administrator
+        if not allowed:
+            raise _json_error(403, "administrator only")
+    return await handler(request)
+
+
+# what a normal (non-admin) Home Assistant user may use: announce, stop, history of their own, their language
+USER_PATHS = {"/", "/manifest.webmanifest", "/api/state", "/api/sounds", "/api/announce", "/api/stop",
+              "/api/status", "/api/tts/voices", "/api/log", "/api/prefs"}
+
+PREFS_FILE = DATA / "prefs.json"
+
+
+def load_prefs():
+    try:
+        return json.loads(PREFS_FILE.read_text())
+    except (OSError, ValueError):
+        return {}
+
+
+def save_prefs(prefs):
+    tmp = PREFS_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(prefs, indent=1))
+    tmp.replace(PREFS_FILE)
+
+
 async def tts_engines(states=None):
     """TTS engines configured in Home Assistant, with their supported languages."""
     names = {s["entity_id"]: s["attributes"].get("friendly_name", s["entity_id"])
@@ -1237,7 +1295,9 @@ def log_entry(request, tok, body, result=None, error=None):
     said = body.get("message") if body.get("message") else (
         (find_item(body.get("item") or body.get("sound")) or {}).get("name") or str(body.get("item") or body.get("sound") or ""))
     write_log({
-        "source": "panel/admin" if tok is None else tok["name"], "token_id": tok["id"] if tok else "",
+        "source": ("panel/" + ((request.get("user") or {}).get("name") or "admin")) if tok is None else tok["name"],
+        "token_id": tok["id"] if tok else "", "ha_user_id": (request.get("user") or {}).get("id", ""),
+        "ha_user": (request.get("user") or {}).get("name", ""),
         "supervised": bool(tok and tok.get("supervised")), "ip": request.remote,
         "kind": "tts" if body.get("message") else "sound",
         "said": said if full else ("(text not recorded)" if body.get("message") else said),
@@ -1305,6 +1365,29 @@ async def h_media(request):
     raise _json_error(404, "not found")
 
 
+def user_info(request):
+    u = request.get("user")
+    if not u:
+        return None
+    return {"name": u["name"], "admin": u["admin"], "lang": load_prefs().get(u["id"], {}).get("lang", "") if u["id"] else ""}
+
+
+async def h_prefs(request):
+    u = request.get("user")
+    if not u or not u["id"]:
+        raise _json_error(400, "no Home Assistant user - the language is kept in this browser")
+    try:
+        lang = (await request.json()).get("lang")
+    except (ValueError, TypeError):
+        lang = None
+    if lang not in ("pl", "en"):
+        raise _json_error(400, "lang must be pl or en")
+    prefs = load_prefs()
+    prefs.setdefault(u["id"], {})["lang"] = lang
+    save_prefs(prefs)
+    return web.json_response({"ok": True, "lang": lang})
+
+
 async def h_state(request):
     states = await ha_get("/states")
     return web.json_response({
@@ -1318,6 +1401,8 @@ async def h_state(request):
         "base_url": await base_url(),
         "api_enabled": bool(OPTIONS.get("api_key") or tokens),
         "admin": is_admin_panel(request),
+        "user": user_info(request),
+        "default_language": OPTIONS.get("default_language", "auto"),
         "credit": {"name": CREDIT, "url": CREDIT_URL},
     })
 
@@ -1545,7 +1630,10 @@ async def do_announce(request, body):
             body.pop("live", None)                                         # per-announcement Live Activity override: admin only
             body["_source"], body["_user"], body["_live_phones"] = tok["name"], tok["name"], tok.get("live_phones") or []
         else:
-            body["_source"], body["_user"] = "panel/admin", ""
+            u = request.get("user") or {}
+            body["_source"], body["_user"] = ("panel/" + u["name"] if u.get("name") else "panel/admin"), ""
+            if u and not u.get("admin"):
+                body.pop("live", None)                                     # Live Activity override: admin only
         result = await announce(body)
     except web.HTTPException as exc:
         try:
@@ -1610,6 +1698,9 @@ async def h_log(request):
     limit = max(1, min(int(request.query.get("limit", 100)), 1000))
     who = request.query.get("token", "")
     rows = [e for e in audit if not who or e.get("token_id") == who]
+    if not is_admin_panel(request) and not request.app.get("public"):   # a normal user sees only their own history, the administrator sees everything
+        uid = (request.get("user") or {}).get("id", "")
+        rows = [e for e in rows if uid and e.get("ha_user_id") == uid]
     return web.json_response(list(reversed(rows))[:limit])
 
 
@@ -1620,7 +1711,7 @@ async def h_log_clear(request):
 
 
 def is_admin_panel(request):
-    return not request.app.get("public")
+    return not request.app.get("public") and bool((request.get("user") or {}).get("admin"))
 
 
 async def h_version(request):
@@ -1897,6 +1988,7 @@ def routes(with_index=True):
         web.get("/api/tokens/{id}/secret", h_token_secret),
         web.delete("/api/tokens/{id}", h_token_delete),
         web.get("/api/log", h_log),
+        web.post("/api/prefs", h_prefs),
         web.delete("/api/log", h_log_clear),
         web.get("/api/tts/voices", h_tts_voices),
         web.post("/api/generate", h_generate),
@@ -1922,7 +2014,7 @@ def routes(with_index=True):
 
 def build_apps():
     # Home Assistant sidebar panel (ingress, only reachable through HA)
-    ui = web.Application(middlewares=[ingress_guard], client_max_size=2 * 1024 * 1024)
+    ui = web.Application(middlewares=[ingress_guard, user_middleware], client_max_size=2 * 1024 * 1024)
     ui.add_routes(routes())
     # Standalone interface on the public port: same UI, API protected by api_key
     ext = web.Application(middlewares=[key_guard], client_max_size=2 * 1024 * 1024)

@@ -37,6 +37,13 @@ code{background:var(--input-fill-color);padding:1px 4px;border-radius:6px;word-b
 pre{background:var(--input-fill-color);padding:8px 16px;border-radius:var(--r);overflow:auto;margin:8px 0 0}
 
 /* tabs */
+.whobar{display:flex;align-items:center;gap:8px;padding:4px 8px 0 16px;color:var(--mut);font:400 13px/20px var(--ha-font)}
+.whobar .sp{flex:1}.whobar b{color:var(--fg);font-weight:500}
+#langAsk{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:20px}
+#langAsk[hidden]{display:none}
+.langbox{background:var(--card);border-radius:16px;padding:24px;max-width:340px;width:100%;text-align:center}
+.langbox h2{margin:0 0 6px;font:500 20px/28px var(--ha-font)}.langbox p{margin:0 0 16px;color:var(--mut)}
+.langbox .b{width:100%;margin-top:8px}
 .tabs{display:flex;overflow-x:auto;padding:0 8px;border-bottom:1px solid var(--bd);scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tabs button{flex:none;background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);padding:12px 8px;margin:0 4px;cursor:pointer;font:500 14px/20px var(--ha-font);white-space:nowrap}
@@ -166,12 +173,15 @@ body:not(.ready) main>:not(header){visibility:hidden}   /* first paint waits for
 <script>try{if(window.self!==window.top)document.documentElement.classList.add("embedded")}catch(e){document.documentElement.classList.add("embedded")}</script>
 </head>
 <body>
+<div id="langAsk" hidden><div class="langbox"><h2 id="laT"></h2><p id="laS"></p>
+  <button class="b" data-l="pl">Polski</button><button class="b" data-l="en">English</button></div></div>
 <main>
 <header><h1>HAnnounce Enhanced</h1></header>
 
 <div class="card pad" id="nowBar" hidden></div>
 
 <div class="card" id="main">
+<div class="whobar"><span id="whoName"></span><span class="sp"></span><button class="link" id="langBtn"></button></div>
 <div class="tabs" id="tabs"></div>
 <div class="body">
 
@@ -326,6 +336,13 @@ body:not(.ready) main>:not(header){visibility:hidden}   /* first paint waits for
     </div>
   </div>
 
+  <div class="pane" id="p-hist">
+    <div class="part">
+      <div class="sec"><span id="histTitle"></span><span class="sp"></span><button class="link" id="histRefresh" data-i="refresh"></button></div>
+      <div id="hisList"></div>
+    </div>
+  </div>
+
   <div class="pane" id="p-help"><div id="helpBox"></div></div>
 </div>
 </div>
@@ -370,7 +387,8 @@ const L = {
   dDefault:"Default for all speakers",dVol:"Announce volume % (empty = unchanged)",dRestVol:"Restore volume afterwards",dResume:"After announcement",
   dAuto:"Let the player handle it (announce)",dManual:"Restore what was playing (media + position)",dNone:"Do nothing",dBefore:"Wait before playing (s)",dAfter:"Wait after it ends, then restore (s)",
   dPower:"Turn on if off, turn off afterwards",dUnmute:"Unmute during announcement",dQuiet:"Quiet hours",dQFrom:"from",dQTo:"to",dQVol:"Quiet volume % (empty = skip speaker)",
-  dSave:"Save",dReset:"Reset",dCopy:"Copy to all speakers",dSaved:"Settings saved ✓"},
+  dSave:"Save",dReset:"Reset",dCopy:"Copy to all speakers",dSaved:"Settings saved ✓",
+  tabHist:"History",histMine:"Your announcements",histAllTxt:"Everyone's announcements",histEmpty:"Nothing here yet.",roleAdmin:"Administrator",roleUser:"User",langPickTitle:"Choose your language",langPickSub:"You can switch it any time at the top.",langSwitch:"Polski",adminOnly:"This is for the administrator."},
  pl:{help:"Pomoc",netTitle:"Sieć",netLocal:"Adres lokalny",netExt:"Adres zewnętrzny",netChecked:"sprawdzono",netRefresh:"Odśwież",netCopy:"Kopiuj",netErr:"Nie udało się sprawdzić zewnętrznego IP",netOff:"Sprawdzanie zewnętrznego IP jest wyłączone (opcja check_external_ip).",netChanged:"IP się zmieniło",netWarn:"Spoza domu potrzebujesz przekierowania portu na routerze (albo VPN, np. Tailscale/WireGuard). Ten adres to zwykłe HTTP – token wysłany przez internet można podsłuchać; lepiej użyć VPN lub reverse proxy z HTTPS.",tokURLext:"Adres (spoza domu)",tabLive:"Live",nowPlaying:"Teraz ogłaszam",nowQueued:"W kolejce",nowOn:"na",liveTitle:"Live Activity – Dynamic Island i ekran blokady",
   liveInfo:"Pokazuje trwające ogłoszenie (co, gdzie, odliczanie) na Dynamic Island i ekranie blokady iPhone'a (Android: Live Update) przez aplikację Home Assistant Companion. Wymaga iOS 17.2+, Home Assistant Core 2026.7+ i włączonych Live Activities w aplikacji (Ustawienia → Live Activities). Status jest też publikowany jako sensor.hannounce_status. Admin może dać komuś własny status na żywo: per token (zakładka Tokeny) lub per ogłoszenie (pole live w API).",
   lvOn:"Pokazuj ogłoszenia jako Live Activity",lvPhones:"Telefony (aplikacja Companion)",lvOnly:"Tylko dla ogłoszeń z (puste = wszystkie)",lvOnlyHint:"Źródła: panel/admin albo nazwa tokenu.",
@@ -403,9 +421,14 @@ const L = {
   dDefault:"Domyślne dla wszystkich głośników",dVol:"Głośność ogłoszenia % (puste = bez zmian)",dRestVol:"Przywróć głośność po ogłoszeniu",dResume:"Po ogłoszeniu",
   dAuto:"Zostaw odtwarzaczowi (announce)",dManual:"Przywróć to, co grało (utwór + pozycja)",dNone:"Nic nie rób",dBefore:"Czekaj przed odtworzeniem (s)",dAfter:"Czekaj po zakończeniu i przywróć (s)",
   dPower:"Włącz jeśli wyłączony, po wszystkim wyłącz",dUnmute:"Wyłącz wyciszenie na czas ogłoszenia",dQuiet:"Godziny ciszy",dQFrom:"od",dQTo:"do",dQVol:"Głośność w ciszy % (puste = pomiń głośnik)",
-  dSave:"Zapisz",dReset:"Resetuj",dCopy:"Kopiuj do wszystkich głośników",dSaved:"Zapisano ustawienia ✓"}
+  dSave:"Zapisz",dReset:"Resetuj",dCopy:"Kopiuj do wszystkich głośników",dSaved:"Zapisano ustawienia ✓",
+  tabHist:"Historia",histMine:"Twoje ogłoszenia",histAllTxt:"Ogłoszenia wszystkich",histEmpty:"Na razie pusto.",roleAdmin:"Administrator",roleUser:"Użytkownik",langPickTitle:"Wybierz język",langPickSub:"Zmienisz go w każdej chwili u góry.",langSwitch:"English",adminOnly:"To jest tylko dla administratora."}
 };
-const lang = (navigator.language||"en").toLowerCase().startsWith("pl") ? "pl" : "en";
+let langChosen = false;
+const lang = (() => {   // saved choice first, otherwise the browser language
+  try{ const v = localStorage.getItem("hae_lang"); if(v === "pl" || v === "en"){ langChosen = true; return v; } }catch{}
+  return (navigator.language||"en").toLowerCase().startsWith("pl") ? "pl" : "en";
+})();
 const t = k => L[lang][k] || L.en[k] || k;
 const $ = id => document.getElementById(id);
 const esc = x => String(x).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -465,7 +488,7 @@ const bdg = l => l.filter(Boolean).map(([h,c]) => `<span class="badge${c?" "+c:"
 const mk = (tag, cls, html) => { const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; };
 
 // ---- tabs
-const TABS = [["quick","quick"],["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"],["spk","speakers"],["tok","tokens"],["live","tabLive"],["help","app"]];
+const TABS = [["quick","quick"],["say","say"],["rec","record"],["up","upload"],["gen","generate"],["lib","library"],["spk","speakers"],["hist","tabHist"],["tok","tokens"],["live","tabLive"],["help","app"]];
 TABS.forEach(([id, k]) => {
   const b = document.createElement("button"); b.textContent = t(k); b.dataset.id = id;
   b.onclick = () => showTab(id); $("tabs").append(b);
@@ -475,7 +498,7 @@ function showTab(id){
   document.querySelectorAll(".tabs button").forEach(b=>{ b.classList.toggle("on",b.dataset.id===id); if(b.dataset.id===id) try{ b.scrollIntoView({inline:"center",block:"nearest"}); }catch{} });
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="p-"+id));
   $("tgt").hidden = !NEEDS_TARGETS.has(id); holdLib = holdSpk = false;
-  if(id==="lib") renderLib(); if(id==="spk") renderSpk(); if(id==="tok") renderTokens(); if(id==="live" && !LV) renderLiveCfg(); if(id==="help") renderHelp();
+  if(id==="hist") renderHist(); if(id==="lib") renderLib(); if(id==="spk") renderSpk(); if(id==="tok") renderTokens(); if(id==="live" && !LV) renderLiveCfg(); if(id==="help") renderHelp();
 }
 
 // ---- state
@@ -1100,9 +1123,59 @@ setInterval(live, 8000);
 setInterval(checkVersion, 10*60*1000);
 document.addEventListener("visibilitychange", () => { if(!document.hidden){ live(); checkVersion(); } });
 
+// ---- who is using the panel, language, history
+const ADMIN_TABS = new Set(["rec","up","gen","lib","spk","tok","live","help"]);   // a normal HA user gets Quick, Say and their History
+function reloadOnce(){   // never loop if the browser refuses to keep the language
+  try{ if(sessionStorage.getItem("hae_rl")){ sessionStorage.removeItem("hae_rl"); return; } sessionStorage.setItem("hae_rl","1"); }catch{ return; }
+  location.reload();
+}
+function setLang(l){
+  store.set("hae_lang", l);
+  const done = () => { try{ sessionStorage.removeItem("hae_rl"); }catch{} location.reload(); };
+  if(S.user) api("prefs", {method:"POST", body:JSON.stringify({lang:l})}).catch(()=>{}).finally(done); else done();
+}
+function askLang(){
+  $("laT").textContent = t("langPickTitle"); $("laS").textContent = t("langPickSub");
+  $("langAsk").hidden = false;
+  $("langAsk").querySelectorAll("button").forEach(b => b.onclick = () => setLang(b.dataset.l));
+}
+function setupUser(){
+  const u = S.user, srv = u && u.lang;
+  if(srv && srv !== lang){ store.set("hae_lang", srv); reloadOnce(); return; }   // this HA user already picked a language on another device
+  if(!langChosen && !srv){
+    const d = S.default_language;
+    if(d === "pl" || d === "en"){ if(d !== lang){ store.set("hae_lang", d); reloadOnce(); return; } store.set("hae_lang", d); }
+    else askLang();
+  }
+  $("langBtn").textContent = t("langSwitch"); $("langBtn").onclick = () => setLang(lang === "pl" ? "en" : "pl");
+  $("whoName").innerHTML = u && u.name ? `<b>${esc(u.name)}</b> · ${t(u.admin ? "roleAdmin" : "roleUser")}` : "";
+  document.querySelectorAll(".tabs button").forEach(b => {
+    b.hidden = !!u && ((!u.admin && ADMIN_TABS.has(b.dataset.id))) || (!u && b.dataset.id === "hist");
+  });
+  $("histTitle").textContent = t(u && u.admin ? "histAllTxt" : "histMine");
+}
+async function renderHist(){
+  const box = $("hisList");
+  try{
+    const rows = await api("log?limit=100");
+    const seen = {}; rows.forEach(e => { const b = e.ts + "|" + e.source + "|" + e.said; seen[b] = (seen[b]||0) + 1; e._k = b + "#" + seen[b]; });
+    patchList(box, rows, {
+      key: e => e._k, empty: rows.length ? "" : t("histEmpty"),
+      make: e => {
+        const d = mk("div", "item", `<div class="n"><div class="badges"></div><div class="tx" style="margin-top:4px"></div><small></small></div>`);
+        d.querySelector(".badges").innerHTML = bdg([[esc(new Date(e.ts*1000).toLocaleString())], [esc(e.ha_user || e.source)], [e.ok?"✓":"✗ "+esc(e.error), e.ok?"ok":"err"]]);
+        d.querySelector(".tx").textContent = e.said === "(text not recorded)" ? t("logNoText") : e.said;
+        d.querySelector("small").textContent = "→ " + (e.targets||[]).map(x => (S.players.find(p=>p.entity_id===x)||{name:x}).name).join(", ");
+        return d;
+      }
+    });
+  }catch(e){ toast(e.message,true); }
+}
+$("histRefresh").onclick = () => busy($("histRefresh"), renderHist);
+
 if(new URLSearchParams(location.search).has("quick")) document.body.classList.add("kiosk");
 showTab((location.hash||"").slice(1) || "quick");
-refresh().then(()=>{ lastP=sigP(S); lastL=sigL(S); checkVersion();
+refresh().then(()=>{ lastP=sigP(S); lastL=sigL(S); setupUser(); checkVersion();
   if(S.admin && !document.body.classList.contains("kiosk")){ renderTokens(); renderLiveCfg(); renderHelp(); }   // admin panel: prepare the other tabs in the background, so they open without content popping in
 }).catch(e => toast(e.message,true)).finally(() => document.body.classList.add("ready"));
 setTimeout(() => document.body.classList.add("ready"), 4000);
