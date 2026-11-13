@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.0
+- Sparuj z BriskBot: in the panel (Open Web UI) a page where you type the 6-character code from BriskBot (Ustawienia, Dodatki, Home Assistant). The add-on sends BriskBot its private MCP address and your BriskBot bots get this Home Assistant. Only through Home Assistant ingress; needs a public https address (public_url or External URL).
+
 ## 1.2.1
 - Lighter image build for Raspberry Pi (no bytecode pre-compile, single install job) after a 1.2.0 build that never finished.
 
