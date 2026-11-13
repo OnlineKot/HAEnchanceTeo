@@ -43,7 +43,7 @@ ol{padding-left:20px;color:var(--muted);margin:24px 0 0}li{margin:0 0 6px}
 <p>Wpisz kod z BriskBota, a Twoje boty dostaną ten Home Assistant.</p>
 <form id="f"><input id="c" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Kod, np. K7Q2MX" aria-label="Kod z BriskBota"><button id="b">Sparuj</button></form>
 <div id="msg" aria-live="polite"></div>
-<ol><li>W BriskBocie: Ustawienia, Dodatki, Home Assistant, Sparuj z HAMcpTeo.</li><li>Przepisz tutaj kod (działa 10 minut).</li><li>Dodatek potrzebuje publicznego adresu https: public_url w konfiguracji albo External URL w Home Assistancie.</li></ol>
+<ol><li>W BriskBocie: Ustawienia, Dodatki, Home Assistant, Sparuj z HAMcpTeo.</li><li>Przepisz tutaj kod (działa 10 minut).</li><li>W BriskBocie wklej zewnętrzny adres tego Home Assistanta (https), zanim weźmiesz kod.</li></ol>
 </main><script>
 const f=document.getElementById('f'),c=document.getElementById('c'),b=document.getElementById('b'),m=document.getElementById('msg');
 f.onsubmit=async(e)=>{e.preventDefault();b.disabled=true;m.className='';m.textContent='Łączę…';
@@ -66,9 +66,12 @@ def register_briskbot_routes(mcp, guard, secret_path: str, public_url: str) -> N
         code = "".join(ch for ch in str(body.get("code", "")).upper() if ch.isalnum())
         if len(code) != 6:
             return JSONResponse({"ok": False, "message": "Kod ma 6 znaków."})
-        if not public_url:
-            return JSONResponse({"ok": False, "message": "Dodatek nie zna swojego publicznego adresu. Ustaw public_url w konfiguracji dodatku (np. ha.twojadomena.pl) albo External URL w Home Assistancie i uruchom dodatek ponownie."})
-        data = json.dumps({"code": code, "url": public_url.rstrip("/") + secret_path, "name": "Home Assistant"}).encode()
+        # BriskBot already has the external address the person pasted there; the add-on adds its secret path
+        # (and its own public address too, if it knows one)
+        payload = {"code": code, "path": secret_path, "name": "Home Assistant"}
+        if public_url:
+            payload["url"] = public_url.rstrip("/") + secret_path
+        data = json.dumps(payload).encode()
         req = urllib.request.Request(f"{BRISKBOT}/api/hamcp/pair", data=data, method="POST", headers={"content-type": "application/json", "user-agent": "HAMcpTeo"})
         try:
             with urllib.request.urlopen(req, timeout=30) as resp:

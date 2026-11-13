@@ -21,9 +21,9 @@ Add-on by https://teodorteo.com · upstream docs: https://github.com/homeassista
 
 ## Sparuj z BriskBot
 
-1. In [BriskBot](https://briskbot.teodorteo.com): Ustawienia → Dodatki → Home Assistant → **Sparuj z HAMcpTeo**. You get a 6-character code (valid 10 minutes).
+1. In [BriskBot](https://briskbot.teodorteo.com): Ustawienia → Dodatki → Home Assistant → paste your Home Assistant's external https address → **Sparuj z HAMcpTeo**. You get a 6-character code (valid 10 minutes).
 2. Here: open the add-on (**Open Web UI**) → **Sparuj z BriskBot** → type the code → Sparuj.
-3. Done: your BriskBot bots can now use this Home Assistant. The add-on needs a public https address (the `public_url` option or Home Assistant's External URL) that your tunnel forwards to port 9583.
+3. Done: your BriskBot bots can now use this Home Assistant. The add-on sends only its secret path; your external address must forward to this add-on (port 9583).
 
 ---
 
