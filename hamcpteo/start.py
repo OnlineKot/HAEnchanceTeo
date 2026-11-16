@@ -739,6 +739,11 @@ def main() -> int:
     register_settings_routes(
         server_instance.mcp, server_instance, secret_path=secret_path
     )
+    # "Sparuj z BriskBot" (TeodorTeo.com): only through Home Assistant ingress, like the settings UI root
+    from ha_mcp.briskbot_pair import register_briskbot_routes
+    from ha_mcp.settings_ui import _ingress_only
+
+    register_briskbot_routes(server_instance.mcp, _ingress_only, secret_path, public_url)
     install_sdk_log_filters()
 
     # fastmcp's DNS-rebinding guard is defaulted off in ha_mcp's _create_server
