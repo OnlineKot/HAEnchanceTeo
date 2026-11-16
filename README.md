@@ -43,4 +43,11 @@ stop-if. Run from an iPhone Shortcut, by time or by an entity, with **live step 
 **Backups to your QNAP and media from it.** Uploads Home Assistant backups to a QNAP share over SMB with schedule and retention,
 downloads new media into HA, lists / fetches / deletes backups on the NAS. **Private: no network ports** – panel only through Home Assistant.
 
+## Strona z biblioteką dodatków (Cloudflare)
+
+Katalog `site/` to statyczna strona **HAEnhanceTeo** z listą dodatków (wersje, opisy PL/EN, linki do dokumentacji), przyciskiem „Dodaj do mojego Home Assistanta” i wyszukiwarką.
+`wrangler.jsonc` w głównym katalogu wskazuje `site/` jako zasoby, więc repozytorium można podpiąć pod Cloudflare Workers (Workers & Pages, Create, Import a repository)
+bez komendy budowania. Po zmianie wersji albo dodaniu dodatku: `python3 tools/build-site.py` (odświeża `site/index.html` z plików `config.yaml`).
+Katalog `site/` i `tools/` nie mają `config.yaml`, więc Home Assistant ich nie widzi jako dodatków.
+
 MIT License © TeodorTeo.com

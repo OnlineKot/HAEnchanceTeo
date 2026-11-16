@@ -1,0 +1,8 @@
+{
+  "name": "haenhanceteo",
+  "compatibility_date": "2026-08-19",
+  "assets": {
+    "directory": "./site",
+    "not_found_handling": "404-page"
+  }
+}

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAEnhanceTeo: dodatki do Home Assistanta</title>
+<meta name="description" content="Biblioteka dodatków (add-onów) do Home Assistanta od TeodorTeo.com: ogłoszenia, akcje na żywo, rutyny, certyfikaty, karty, AI, MCP i kopie na QNAP.">
+<meta property="og:title" content="HAEnhanceTeo">
+<meta property="og:description" content="Dodatki do Home Assistanta od TeodorTeo.com w jednym repozytorium.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ffc531'/%3E%3Cpath d='M7 17 16 8l9 9v8h-6v-6h-6v6H7z' fill='%23231c00'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f7; --text: #1d1d1f; --text2: #525256; --blue: #0071e3; --blue-h: #0077ed;
+    --accent: #ffc531; --ink: #231c00; --border: rgba(0,0,0,0.1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #000; --bg2: #1a1a1c; --text: #f5f5f7; --text2: #a6a6ab; --blue: #2997ff; --blue-h: #4dabff; --border: rgba(255,255,255,0.14); }
+  }
+  * { box-sizing: border-box; }
+  html:not([lang="en"]) .lang-en { display: none; }
+  html[lang="en"] .lang-pl { display: none; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased; font-size: 16px; line-height: 1.5; min-height: 100vh; display: flex; flex-direction: column; }
+  a { color: var(--blue); text-decoration: none; } a:hover { text-decoration: underline; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+  .wrap { width: 100%; max-width: 980px; margin: 0 auto; padding: 0 1.25rem; }
+  header { padding: 1.5rem 0 0.5rem; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .mark { margin: 0; font-size: 1.6rem; font-weight: 800; letter-spacing: -0.03em; }
+  .mark span { color: var(--accent); }
+  .lang { display: inline-flex; padding: 3px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg2); }
+  .lang button { border: 0; background: none; color: var(--text2); font: inherit; font-size: 0.8rem; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 999px; cursor: pointer; }
+  .lang button[aria-pressed="true"] { background: var(--accent); color: var(--ink); }
+  .tag { margin: 0.4rem 0 0; color: var(--text2); max-width: 40rem; }
+  main { flex: 1; padding: 1.25rem 0 2rem; display: flex; flex-direction: column; gap: 1rem; }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 24px; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.8rem; }
+  .card h2 { margin: 0; font-size: 1.3rem; letter-spacing: -0.02em; }
+  .card p { margin: 0; color: var(--text2); }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+  .btn { display: inline-flex; align-items: center; padding: 0.62rem 1.2rem; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); color: var(--text);
+    font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-decoration: none !important; }
+  .btn:hover { background: var(--bg2); }
+  .btn.primary { background: var(--blue); border-color: transparent; color: #fff; } .btn.primary:hover { background: var(--blue-h); }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; padding: 0.55rem 0.8rem; border-radius: 12px; background: var(--bg); border: 1px solid var(--border); overflow-wrap: anywhere; flex: 1 1 18rem; min-width: 0; }
+  ol { margin: 0; padding-left: 1.2rem; color: var(--text2); font-size: 0.92rem; }
+  .lib-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.8rem; margin-top: 0.6rem; }
+  .lib-head h2 { margin: 0; font-size: 1.3rem; letter-spacing: -0.02em; }
+  .search { flex: 1 1 14rem; max-width: 22rem; padding: 0.6rem 1rem; border-radius: 999px; border: 1px solid var(--border); background: var(--bg2); color: var(--text); font: inherit; font-size: 0.92rem; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 0.8rem; }
+  @media (min-width: 680px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 960px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  .item { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 1.1rem 1.15rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .item[hidden] { display: none; }
+  .item-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+  .item h3 { margin: 0; font-size: 1.05rem; letter-spacing: -0.01em; }
+  .ver { font-size: 0.75rem; font-weight: 700; color: var(--ink); background: var(--accent); border-radius: 999px; padding: 0.1rem 0.55rem; }
+  .item p { margin: 0; font-size: 0.88rem; line-height: 1.5; color: var(--text2); }
+  .links { display: flex; gap: 1rem; margin-top: auto; padding-top: 0.3rem; font-size: 0.86rem; font-weight: 600; }
+  .empty { color: var(--text2); text-align: center; padding: 1rem; }
+  footer { border-top: 1px solid var(--border); padding: 1.2rem 0 1.6rem; font-size: 0.85rem; color: var(--text2); }
+  footer .row { flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<header class="wrap">
+  <div class="row">
+    <h1 class="mark">HAEnhance<span>Teo</span></h1>
+    <div class="lang" role="group" aria-label="Language / Język">
+      <button type="button" data-lang="pl" aria-pressed="true">PL</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+  </div>
+  <p class="tag lang-pl">Biblioteka dodatków do Home Assistanta od TeodorTeo.com: 9 dodatków w jednym repozytorium, na licencji MIT.</p>
+  <p class="tag lang-en">A library of Home Assistant add-ons by TeodorTeo.com: 9 add-ons in one repository, MIT licensed.</p>
+</header>
+
+<main class="wrap">
+  <section class="card" aria-labelledby="install-h">
+    <h2 id="install-h"><span class="lang-pl">Dodaj repozytorium do Home Assistanta</span><span class="lang-en">Add the repository to Home Assistant</span></h2>
+    <div class="actions">
+      <a class="btn primary" href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FOnlineKot%2FHAEnchanceTeo%23claude%2Fhannounce-enhanced" target="_blank" rel="noopener"><span class="lang-pl">Dodaj do mojego Home Assistanta</span><span class="lang-en">Add to my Home Assistant</span></a>
+      <a class="btn" href="https://github.com/OnlineKot/HAEnchanceTeo" target="_blank" rel="noopener"><span class="lang-pl">Zobacz na GitHubie</span><span class="lang-en">View on GitHub</span></a>
+    </div>
+    <div class="actions">
+      <code id="repo-url">https://github.com/OnlineKot/HAEnchanceTeo#claude/hannounce-enhanced</code>
+      <button class="btn" id="copy" type="button"><span class="lang-pl">Skopiuj adres</span><span class="lang-en">Copy address</span></button>
+    </div>
+    <ol class="lang-pl"><li>Home Assistant: Ustawienia, Dodatki, Sklep z dodatkami.</li><li>Menu ⋮ w prawym górnym rogu, Repozytoria.</li><li>Wklej powyższy adres, dodaj, wybierz dodatek z listy, zainstaluj i uruchom.</li></ol>
+    <ol class="lang-en"><li>Home Assistant: Settings, Add-ons, Add-on Store.</li><li>The ⋮ menu in the top right corner, Repositories.</li><li>Paste the address above, add it, pick an add-on from the list, install and start it.</li></ol>
+  </section>
+
+  <div class="lib-head">
+    <h2 id="lib-h"><span class="lang-pl">Biblioteka dodatków</span><span class="lang-en">Add-on library</span></h2>
+    <input class="search" id="q" type="search" placeholder="Szukaj / Search" aria-label="Szukaj / Search" autocomplete="off">
+  </div>
+  <div class="grid" id="grid">
+      <article class="item" data-q="hannounce enhanced ogłoszenia na głośnikach: tts dowolnego silnika ha, własne nagrania, wgrywane i generowane dźwięki, jednorazowe lub zapisane. pamięć każdego głośnika (wznawianie, głośność, opóźnienia, godziny ciszy), ulubione, kalibracja, tokeny api dla skrótów z nadzorowanym logiem. announce on your speakers with tts (any ha tts engine), your own recordings, uploads and generated sounds, one-time or saved. per-speaker memory (resume playback, volume, delays, quiet hours), favorites, calibration, api tokens for shortcuts with a supervised log.">
+        <div class="item-head"><h3>HAnnounce Enhanced</h3><span class="ver">v1.17.0</span></div>
+        <p class="lang-pl">Ogłoszenia na głośnikach: TTS dowolnego silnika HA, własne nagrania, wgrywane i generowane dźwięki, jednorazowe lub zapisane. Pamięć każdego głośnika (wznawianie, głośność, opóźnienia, godziny ciszy), ulubione, kalibracja, tokeny API dla Skrótów z nadzorowanym logiem.</p>
+        <p class="lang-en">Announce on your speakers with TTS (any HA TTS engine), your own recordings, uploads and generated sounds, one-time or saved. Per-speaker memory (resume playback, volume, delays, quiet hours), favorites, calibration, API tokens for Shortcuts with a supervised log.</p>
+        <div class="links">
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/hannounce_enhanced/DOCS.md" target="_blank" rel="noopener"><span class="lang-pl">Dokumentacja</span><span class="lang-en">Documentation</span></a>
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/hannounce_enhanced/CHANGELOG.md" target="_blank" rel="noopener"><span class="lang-pl">Lista zmian</span><span class="lang-en">Changelog</span></a>
+        </div>
+      </article>
+      <article class="item" data-q="haliveteo akcje na żywo z wielu urządzeń. każdy telefon, tablet i panel ścienny dostaje własny token i własny układ kafelków (przyciski, przełączniki, suwaki, stany), akcje w czasie rzeczywistym, live activities na dynamic island, zdarzenia dla automatyzacji i rest api. live actions from many devices. every phone, tablet or wall panel gets its own token and its own layout of live tiles (buttons, toggles, sliders, states), a real-time action feed, live activities on the dynamic island, events for automations and a rest api.">
+        <div class="item-head"><h3>HALiveTeo</h3><span class="ver">v1.5.0</span></div>
+        <p class="lang-pl">Akcje na żywo z wielu urządzeń. Każdy telefon, tablet i panel ścienny dostaje własny token i własny układ kafelków (przyciski, przełączniki, suwaki, stany), akcje w czasie rzeczywistym, Live Activities na Dynamic Island, zdarzenia dla automatyzacji i REST API.</p>
+        <p class="lang-en">Live actions from many devices. Every phone, tablet or wall panel gets its own token and its own layout of live tiles (buttons, toggles, sliders, states), a real-time action feed, Live Activities on the Dynamic Island, events for automations and a REST API.</p>
+        <div class="links">
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/haliveteo/DOCS.md" target="_blank" rel="noopener"><span class="lang-pl">Dokumentacja</span><span class="lang-en">Documentation</span></a>
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/haliveteo/CHANGELOG.md" target="_blank" rel="noopener"><span class="lang-pl">Lista zmian</span><span class="lang-en">Changelog</span></a>
+        </div>
+      </article>
+      <article class="item" data-q="haroutineteo rutyny z krokami zamiast skryptów yaml: ogłoszenia, ściszanie świateł przez minuty, sceny, czekanie, warunki. uruchamiane ze skrótu na iphonie, o czasie albo przez encję, z postępem kroków na dynamic island. routines with steps instead of yaml scripts: announce, fade lights over minutes, scenes, waits, conditions. run from an iphone shortcut, by time or by an entity, with live step progress on the dynamic island.">
+        <div class="item-head"><h3>HARoutineTeo</h3><span class="ver">v1.1.0</span></div>
+        <p class="lang-pl">Rutyny z krokami zamiast skryptów YAML: ogłoszenia, ściszanie świateł przez minuty, sceny, czekanie, warunki. Uruchamiane ze Skrótu na iPhonie, o czasie albo przez encję, z postępem kroków na Dynamic Island.</p>
+        <p class="lang-en">Routines with steps instead of YAML scripts: announce, fade lights over minutes, scenes, waits, conditions. Run from an iPhone Shortcut, by time or by an entity, with live step progress on the Dynamic Island.</p>
+        <div class="links">
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/haroutineteo/DOCS.md" target="_blank" rel="noopener"><span class="lang-pl">Dokumentacja</span><span class="lang-en">Documentation</span></a>
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/haroutineteo/CHANGELOG.md" target="_blank" rel="noopener"><span class="lang-pl">Lista zmian</span><span class="lang-en">Changelog</span></a>
+        </div>
+      </article>
+      <article class="item" data-q="hacertteo darmowy certyfikat let’s encrypt dla home assistanta przez dns-01 (cloudflare lub duckdns). bez otwartych portów, z automatycznym odnawianiem, czujnikiem dni do końca i powiadomieniem o błędzie. a free let’s encrypt certificate for home assistant via dns-01 (cloudflare or duckdns). no open ports, automatic renewal, a days-left sensor and a failure notification.">
+        <div class="item-head"><h3>HACertTeo</h3><span class="ver">v1.0.2</span></div>
+        <p class="lang-pl">Darmowy certyfikat Let’s Encrypt dla Home Assistanta przez DNS-01 (Cloudflare lub DuckDNS). Bez otwartych portów, z automatycznym odnawianiem, czujnikiem dni do końca i powiadomieniem o błędzie.</p>
+        <p class="lang-en">A free Let’s Encrypt certificate for Home Assistant via DNS-01 (Cloudflare or DuckDNS). No open ports, automatic renewal, a days-left sensor and a failure notification.</p>
+        <div class="links">
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/hacertteo/DOCS.md" target="_blank" rel="noopener"><span class="lang-pl">Dokumentacja</span><span class="lang-en">Documentation</span></a>
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/hacertteo/CHANGELOG.md" target="_blank" rel="noopener"><span class="lang-pl">Lista zmian</span><span class="lang-en">Changelog</span></a>
+        </div>
+      </article>
+      <article class="item" data-q="hacardsteo karty lovelace w stylu mushroom dla każdego typu encji: karta uniwersalna, chipy, pokój, statystyki, tytuł oraz karta mediów z przeglądarką biblioteki. dodatek sam je instaluje i rejestruje. mushroom-style lovelace cards for every entity type: a universal card, chips, room, stats, title and a media card with a library browser. the add-on installs and registers them for you.">
+        <div class="item-head"><h3>HACardsTeo</h3><span class="ver">v1.0.4</span></div>
+        <p class="lang-pl">Karty Lovelace w stylu Mushroom dla każdego typu encji: karta uniwersalna, chipy, pokój, statystyki, tytuł oraz karta mediów z przeglądarką biblioteki. Dodatek sam je instaluje i rejestruje.</p>
+        <p class="lang-en">Mushroom-style Lovelace cards for every entity type: a universal card, chips, room, stats, title and a media card with a library browser. The add-on installs and registers them for you.</p>
+        <div class="links">
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/hacardsteo/DOCS.md" target="_blank" rel="noopener"><span class="lang-pl">Dokumentacja</span><span class="lang-en">Documentation</span></a>
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/hacardsteo/CHANGELOG.md" target="_blank" rel="noopener"><span class="lang-pl">Lista zmian</span><span class="lang-en">Changelog</span></a>
+        </div>
+      </article>
+      <article class="item" data-q="haaiteo claude albo gemini w home assistancie: pytania, sterowanie i zmiany. zmiany czekają na twoje zatwierdzenie (z podglądem różnic i cofaniem), groźne domeny są blokowane po stronie serwera. opcjonalny skrót z ekranu blokady albo siri. claude or gemini inside home assistant: ask, control and modify. changes are staged with a diff and need your approval (with undo); dangerous domains are blocked server-side. optional lock-screen / siri shortcut.">
+        <div class="item-head"><h3>HAAITeo</h3><span class="ver">v1.1.2</span></div>
+        <p class="lang-pl">Claude albo Gemini w Home Assistancie: pytania, sterowanie i zmiany. Zmiany czekają na Twoje zatwierdzenie (z podglądem różnic i cofaniem), groźne domeny są blokowane po stronie serwera. Opcjonalny skrót z ekranu blokady albo Siri.</p>
+        <p class="lang-en">Claude or Gemini inside Home Assistant: ask, control and modify. Changes are staged with a diff and need your approval (with undo); dangerous domains are blocked server-side. Optional lock-screen / Siri shortcut.</p>
+        <div class="links">
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/haaiteo/DOCS.md" target="_blank" rel="noopener"><span class="lang-pl">Dokumentacja</span><span class="lang-en">Documentation</span></a>
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/haaiteo/CHANGELOG.md" target="_blank" rel="noopener"><span class="lang-pl">Lista zmian</span><span class="lang-en">Changelog</span></a>
+        </div>
+      </article>
+      <article class="item" data-q="hafreudteo spokojna pomoc w opiece nad kotem (dla freuda): kto i kiedy nakarmił, z ochroną przed podwójnym karmieniem, woda, żwirek, przypomnienia o pchłach, odrobaczaniu i szczepieniach, wykres wagi, przypomnienia na telefonie z przyciskiem zrobione. a calm cat companion (for freud): who fed the cat and when, with protection against double feeding, plus water, litter, flea / deworming / vaccine reminders, a weight chart and phone reminders with a done button.">
+        <div class="item-head"><h3>HAFreudTeo</h3><span class="ver">v1.3.0</span></div>
+        <p class="lang-pl">Spokojna pomoc w opiece nad kotem (dla Freuda): kto i kiedy nakarmił, z ochroną przed podwójnym karmieniem, woda, żwirek, przypomnienia o pchłach, odrobaczaniu i szczepieniach, wykres wagi, przypomnienia na telefonie z przyciskiem Zrobione.</p>
+        <p class="lang-en">A calm cat companion (for Freud): who fed the cat and when, with protection against double feeding, plus water, litter, flea / deworming / vaccine reminders, a weight chart and phone reminders with a Done button.</p>
+        <div class="links">
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/hafreudteo/DOCS.md" target="_blank" rel="noopener"><span class="lang-pl">Dokumentacja</span><span class="lang-en">Documentation</span></a>
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/hafreudteo/CHANGELOG.md" target="_blank" rel="noopener"><span class="lang-pl">Lista zmian</span><span class="lang-en">Changelog</span></a>
+        </div>
+      </article>
+      <article class="item" data-q="hamcpteo pełny zestaw narzędzi ha-mcp (ponad 87) dla claude i innych klientów ai, budowany lokalnie z dołączonych źródeł (na bazie ha-mcp, mit). bez telemetrii, bez analityki, bez zapytań o aktualizacje. the full ha-mcp toolbox (87+ tools) for claude and other ai clients, built locally from the bundled source (based on ha-mcp, mit). no telemetry, no analytics, no update phone-home.">
+        <div class="item-head"><h3>HAMcpTeo</h3><span class="ver">v1.2.1</span></div>
+        <p class="lang-pl">Pełny zestaw narzędzi HA-MCP (ponad 87) dla Claude i innych klientów AI, budowany lokalnie z dołączonych źródeł (na bazie ha-mcp, MIT). Bez telemetrii, bez analityki, bez zapytań o aktualizacje.</p>
+        <p class="lang-en">The full HA-MCP toolbox (87+ tools) for Claude and other AI clients, built locally from the bundled source (based on ha-mcp, MIT). No telemetry, no analytics, no update phone-home.</p>
+        <div class="links">
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/hamcpteo/DOCS.md" target="_blank" rel="noopener"><span class="lang-pl">Dokumentacja</span><span class="lang-en">Documentation</span></a>
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/hamcpteo/CHANGELOG.md" target="_blank" rel="noopener"><span class="lang-pl">Lista zmian</span><span class="lang-en">Changelog</span></a>
+        </div>
+      </article>
+      <article class="item" data-q="haqnapteo kopie zapasowe home assistanta na qnap przez smb (harmonogram i retencja) oraz pobieranie multimediów z dysku do ha. lista, pobieranie i kasowanie kopii na nas. bez otwartych portów, panel tylko przez home assistanta. back up home assistant to your qnap over smb with schedule and retention, and download media from it into ha. list, fetch and delete backups on the nas. no open ports, the panel is reachable only through home assistant.">
+        <div class="item-head"><h3>HAQnapTeo</h3><span class="ver">v1.2.2</span></div>
+        <p class="lang-pl">Kopie zapasowe Home Assistanta na QNAP przez SMB (harmonogram i retencja) oraz pobieranie multimediów z dysku do HA. Lista, pobieranie i kasowanie kopii na NAS. Bez otwartych portów, panel tylko przez Home Assistanta.</p>
+        <p class="lang-en">Back up Home Assistant to your QNAP over SMB with schedule and retention, and download media from it into HA. List, fetch and delete backups on the NAS. No open ports, the panel is reachable only through Home Assistant.</p>
+        <div class="links">
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/haqnapteo/DOCS.md" target="_blank" rel="noopener"><span class="lang-pl">Dokumentacja</span><span class="lang-en">Documentation</span></a>
+          <a href="https://github.com/OnlineKot/HAEnchanceTeo/blob/claude/hannounce-enhanced/haqnapteo/CHANGELOG.md" target="_blank" rel="noopener"><span class="lang-pl">Lista zmian</span><span class="lang-en">Changelog</span></a>
+        </div>
+      </article>
+  </div>
+  <p class="empty" id="empty" hidden><span class="lang-pl">Nic nie pasuje do wyszukiwania.</span><span class="lang-en">Nothing matches your search.</span></p>
+
+  <section class="card" aria-labelledby="int-h">
+    <h2 id="int-h"><span class="lang-pl">Osobna integracja: Philips Air Purifier</span><span class="lang-en">Separate integration: Philips Air Purifier</span></h2>
+    <p class="lang-pl">Integracja (custom component) do oczyszczaczy powietrza Philips z serii AC/AMF przez lokalne API CoAP: wentylator, prędkości, tryby (Auto, Allergen, Sleep, Turbo), blokada rodzicielska i wyświetlacz. Działa w sieci lokalnej, bez konta w chmurze.</p>
+    <p class="lang-en">A custom integration for Philips AC/AMF series air purifiers over the local CoAP API: fan, speeds, preset modes (Auto, Allergen, Sleep, Turbo), child lock and display. Works on your local network, no cloud account.</p>
+    <div class="actions"><a class="btn" href="https://github.com/OnlineKot/PhilipsAirPurifierHA" target="_blank" rel="noopener"><span class="lang-pl">Zobacz na GitHubie</span><span class="lang-en">View on GitHub</span></a></div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap row">
+    <span>MIT &copy; <a href="https://teodorteo.com">TeodorTeo.com</a></span>
+    <span><a href="https://github.com/OnlineKot/HAEnchanceTeo" target="_blank" rel="noopener">GitHub</a></span>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var KEY = "haenhanceteo_lang", html = document.documentElement, btns = document.querySelectorAll(".lang button");
+    function setLang(l) { html.lang = l; btns.forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-lang") === l)); }); try { localStorage.setItem(KEY, l); } catch (e) {} }
+    btns.forEach(function (b) { b.addEventListener("click", function () { setLang(b.getAttribute("data-lang")); }); });
+    var saved = null; try { saved = localStorage.getItem(KEY); } catch (e) {}
+    setLang(saved === "en" || (!saved && (navigator.language || "").slice(0, 2) !== "pl") ? "en" : "pl");
+    var q = document.getElementById("q"), items = document.querySelectorAll(".item"), empty = document.getElementById("empty");
+    q.addEventListener("input", function () {
+      var t = q.value.trim().toLowerCase(), n = 0;
+      items.forEach(function (it) { var ok = !t || it.getAttribute("data-q").indexOf(t) >= 0; it.hidden = !ok; if (ok) { n++; } });
+      empty.hidden = n > 0;
+    });
+    var copy = document.getElementById("copy"), code = document.getElementById("repo-url");
+    copy.addEventListener("click", function () {
+      var done = function () { var old = copy.innerHTML; copy.textContent = html.lang === "en" ? "Copied" : "Skopiowano"; setTimeout(function () { copy.innerHTML = old; }, 1800); };
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(code.textContent.trim()).then(done, function () {}); }
+      else { var r = document.createRange(); r.selectNodeContents(code); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+    });
+  })();
+</script>
+</body>
+</html>
